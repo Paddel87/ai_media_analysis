@@ -6,7 +6,7 @@ services:
     image: redis:7
     container_name: media-redis
     ports:
-      - "${REDIS_PORT}:6379"
+      - "6379:6379"
     networks:
       - media-net
 
@@ -14,23 +14,48 @@ services:
     image: qdrant/qdrant
     container_name: media-qdrant
     ports:
-      - "${QDRANT_PORT}:6333"
+      - "6333:6333"
     networks:
       - media-net
     volumes:
       - qdrant_data:/qdrant/storage
 
   streamlit_ui:
-    build: ./services/ui
+    build:
+      context: ./services/ui
     container_name: media-ui
     ports:
-      - "${STREAMLIT_PORT}:8501"
+      - "8501:8501"
     env_file:
       - .env
-    networks:
-      - media-net
     volumes:
       - ./data:/app/data
+    networks:
+      - media-net
+
+  vision_pipeline:
+    build:
+      context: ./services/vision_pipeline
+    container_name: media-vision
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    networks:
+      - media-net
+    command: tail -f /dev/null  # Dummy für Entwicklung
+
+  control:
+    build:
+      context: ./services/control
+    container_name: media-control
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    networks:
+      - media-net
+    command: tail -f /dev/null  # Steuerung/LLM/Scheduler später hier
 
 networks:
   media-net:
