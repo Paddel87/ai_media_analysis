@@ -1,69 +1,52 @@
-version: "3.9"
 
-services:
-  redis:
-    image: redis:7-alpine
-    container_name: ai_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
+# Additional AI Modules
 
-  vision_pipeline:
-    build: ./services/vision_pipeline
-    container_name: ai_vision
+  pose_estimation:
+    build: ./services/pose_estimation
+    container_name: ai_pose_estimation
     restart: unless-stopped
-    environment:
-      - REDIS_HOST=redis
-      - NVIDIA_VISIBLE_DEVICES=all
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    volumes:
-      - ./data/videos:/data/videos
-      - ./data/frames:/data/frames
-    depends_on:
-      - redis
-
-  object_review:
-    build: ./services/object_review
-    container_name: ai_object_review
-    restart: unless-stopped
-    ports:
-      - "8001:8000"
-    volumes:
-      - ./data/review:/app/data
-
-  control:
-    build: ./services/control
-    container_name: ai_control
-    restart: unless-stopped
-    environment:
-      - REDIS_HOST=redis
     depends_on:
       - redis
     volumes:
-      - ./data/control:/app/data
-
-  ui:
-    build: ./services/ui
-    container_name: ai_ui
-    restart: unless-stopped
-    ports:
-      - "8501:8501"
-    volumes:
       - ./data/results:/app/results
+    
+
+  ocr_detection:
+    build: ./services/ocr_detection
+    container_name: ai_ocr_detection
+    restart: unless-stopped
     depends_on:
-      - control
-
-
-  llm_summarizer:
-    build: ./services/llm_summarizer
-    container_name: ai_llm
-    restart: unless-stopped
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - redis
     volumes:
       - ./data/results:/app/results
+    
+
+  clip_nsfw:
+    build: ./services/clip_nsfw
+    container_name: ai_clip_nsfw
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    
+
+  face_reid:
+    build: ./services/face_reid
+    container_name: ai_face_reid
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    
+
+  whisper_transcriber:
+    build: ./services/whisper_transcriber
+    container_name: ai_whisper_transcriber
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    

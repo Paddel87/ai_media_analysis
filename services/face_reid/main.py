@@ -1,0 +1,1 @@
+print('Service started: face_reid')
