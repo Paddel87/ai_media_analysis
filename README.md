@@ -65,15 +65,24 @@ This project is under active development. First prototype deployment scripts and
 MIT — All components are fully open-source. Only optional LLM APIs (e.g. Gemini, Claude, Llama-3) may involve costs.
 
 
-
 ## 🧠 AI Architecture
 
 The pipeline follows a modular, GPU-on-demand structure:
 
-1. **Ingest:** Scene detection and frame extraction
-2. **Vision Pipeline:** Person detection, ReID, action/emotion/pose recognition, OCR for titles/logos
-3. **Vector Storage & Metadata:** Qdrant for embeddings, JSONs for structured metadata
-4. **LLM Layer:** Gemini / OpenAI / Claude via OpenRouter for summarization & safety-checks
-5. **UI Tools:** Streamlit-based interface for review, labeling and feedback
+- **Ingest Module:** Scene detection and key-frame extraction (FFmpeg, PySceneDetect)
+- **Vision Pipeline:** 
+  - YOLOv9 for object detection
+  - DeepSORT for tracking
+  - Face and body ReID (SCRFD, ArcFace, OSNet)
+  - Pose estimation (PARE), action recognition (MMAction2), emotion detection (DeepFace)
+  - OCR for logos/titles, NSFW classification
+  - Whisper for speech-to-text
+- **Storage:**
+  - Qdrant for vector embeddings
+  - Metadata stored in structured JSON files
+- **LLM Processing:**
+  - Summarization and safety-checks via Gemini, OpenAI, or Claude (via OpenRouter)
+- **Manual Review:**
+  - Streamlit-based UI for data inspection, merging, feedback, and training
 
-All services are containerized. GPU nodes are activated on demand using control logic from the `control` module.
+Each component runs in its own Docker container, orchestrated from a central control node.
