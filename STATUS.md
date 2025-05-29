@@ -1,52 +1,49 @@
-# 📊 Project Status: AI Media Analysis
+# 📊 Project Status – AI Media Analysis
 
-This repository contains a modular, scalable, and privacy-aware AI pipeline for automatic analysis of video and image content.
-
-## ✅ Project Overview
-
-- **Project Name:** AI Media Analysis
-- **Purpose:** Automated filtering and categorization of content featuring NSFW, intimate scenes, fetishes, nudity, pornographic material, or bondage (consensual and non-consensual)
-- **Current Status:** 🟢 In Development (Initial setup complete, core modules implemented)
-- **Target Host:** Node C (Netcup VPS 1000 G11)
-- **Frontend & Orchestration:** Streamlit, n8n, OpenInterpreter (optional)
+**Last updated:** 2025-05-29  
+**Maintainer:** [Paddel87](https://github.com/Paddel87)
 
 ---
 
-## 🧱 Current Modules Included
+## ✅ Current Modules in `/services/`
 
-| Category             | Module Files                           | Status     |
-|----------------------|-----------------------------------------|------------|
-| 🛠️ Setup             | `init_structure.sh`                     | ✔️ Complete |
-| 🛠️ Setup             | `install_docker.sh`                     | ✔️ Complete |
-| 🧠 Control            | `summarizer.py`                         | ✔️ Complete |
-| 🧠 Control            | `llm_fallback.py`                       | ✔️ Complete |
-| 🧠 Control            | `run_all_modules.py`                    | ✔️ Complete |
-| 🧠 Control            | `safe_wrapper.py`                       | ✔️ Complete |
-| 🧠 Control            | `llm_config.json`, `provider_router.py` | ✔️ Complete |
-| 👁️ Vision Pipeline   | `detect_track.py`, `nsfw_check.py`      | ✔️ Complete |
-| 👁️ Vision Pipeline   | `embeddings.py`                         | ✔️ Complete |
-| 🖼️ UI                 | `streamlit_review.py`                   | ✔️ Complete |
-| 📐 Data Schema        | `chunk-meta.schema.json`                | ✔️ Complete |
-| 📐 Data Schema        | `meta-summary.schema.json`              | ✔️ Complete |
+| Module             | Description                                                                 |
+|--------------------|-----------------------------------------------------------------------------|
+| `control`          | Orchestration layer (startup logic, job monitoring, Prefect integration)   |
+| `embedding_server` | Dummy for future ArcFace / OSNet ReID embedding APIs                        |
+| `llm_summarizer`   | Interface to Gemini Flash & fallback LLMs via API                           |
+| `object_review`    | Human-in-the-loop module for object labeling & learning                     |
+| `ui`               | Streamlit-based frontend for manual ID editing and visual output            |
+| `vector_db`        | Qdrant-compatible vector database                                            |
+| `vision_pipeline`  | Main processing pipeline (video/image ingest, detection, speech, OCR, etc.) |
 
 ---
 
-## 🔄 Next Steps
+## 🧠 Features Implemented
 
-1. 🔼 **Manual upload** of all files to GitHub (completed via ZIP)
-2. 🧪 Local module testing (e.g. Whisper, NSFW detection)
-3. 🚀 Deployment to Node C (once VPS is provisioned)
-4. 🧠 OpenInterpreter integration (future automation)
-5. 🔁 Extensions: Image set analysis, manual object feedback with learning loop
-
----
-
-## 📦 Latest Package
-
-- **Bundle:** `ai_media_analysis_full_repo_upload.zip`
-- **Contents:** All modules and files in production-ready state
-- **Status:** Up to date
+- [x] Modular microservice architecture
+- [x] Docker-ready structure for each service
+- [x] Redis/Queue-based auto-scaling (planned via control module)
+- [x] OpenLLM-compatible fallback system (Anthropic/OpenAI supported)
+- [x] Manual override and learning via object review module
+- [x] Full support for both video files and image series
 
 ---
 
-> ⚠️ This project is designed for private use only. No SaaS components or hidden third-party costs – maximum control and modularity.
+## 🧩 Pending Tasks
+
+- [ ] Integrate real ArcFace / OSNet models into `embedding_server`
+- [ ] Finalize LLM summarizer prompt templates and token usage tracking
+- [ ] Expand OCR detection to multi-language subtitle regions
+- [ ] Define internal API schemas between services
+- [ ] Deployment testing on Node C (VPS 1000 G11 @ Netcup)
+- [ ] Logging & monitoring setup (Prefect, Prometheus optional)
+
+---
+
+## 🚧 Notes
+
+- This project is still **pre-deployment** and **never run in production**.
+- First live test will occur **after VPS deployment**.
+- GitHub repository is private. The operator is solely responsible for use.
+
