@@ -1,64 +1,58 @@
-version: '3.8'
+version: "3.9"
 
 services:
-
   redis:
-    image: redis:7
-    container_name: media-redis
+    image: redis:7-alpine
+    container_name: ai_redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
-    networks:
-      - media-net
-
-  vector_db:
-    image: qdrant/qdrant
-    container_name: media-qdrant
-    ports:
-      - "6333:6333"
-    networks:
-      - media-net
-    volumes:
-      - qdrant_data:/qdrant/storage
-
-  streamlit_ui:
-    build:
-      context: ./services/ui
-    container_name: media-ui
-    ports:
-      - "8501:8501"
-    env_file:
-      - .env
-    volumes:
-      - ./data:/app/data
-    networks:
-      - media-net
 
   vision_pipeline:
-    build:
-      context: ./services/vision_pipeline
-    container_name: media-vision
-    env_file:
-      - .env
+    build: ./services/vision_pipeline
+    container_name: ai_vision
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
     volumes:
-      - ./data:/app/data
-    networks:
-      - media-net
-    command: tail -f /dev/null  # Dummy für Entwicklung
+      - ./data/videos:/data/videos
+      - ./data/frames:/data/frames
+    depends_on:
+      - redis
+
+  object_review:
+    build: ./services/object_review
+    container_name: ai_object_review
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data/review:/app/data
 
   control:
-    build:
-      context: ./services/control
-    container_name: media-control
-    env_file:
-      - .env
+    build: ./services/control
+    container_name: ai_control
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
     volumes:
-      - ./data:/app/data
-    networks:
-      - media-net
-    command: tail -f /dev/null  # Steuerung/LLM/Scheduler später hier
+      - ./data/control:/app/data
 
-networks:
-  media-net:
-
-volumes:
-  qdrant_data:
+  ui:
+    build: ./services/ui
+    container_name: ai_ui
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data/results:/app/results
+    depends_on:
+      - control

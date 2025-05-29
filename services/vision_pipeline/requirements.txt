@@ -1,47 +1,9 @@
-# Grundlegendes
+torch
+torchvision
 numpy
-pandas
-opencv-python-headless
-scikit-learn
-matplotlib
-tqdm
-
-# PyTorch mit CUDA (12.2)
-torch==2.2.0+cu122
-torchvision==0.17.0+cu122
-torchaudio==2.2.0+cu122
--f https://download.pytorch.org/whl/torch_stable.html
-
-# YOLOv9 (Ultralytics)
-ultralytics==8.1.34
-
-# DeepSORT / Torchreid
-torchreid==1.4.0
-
-# Gesichtserkennung & Re-ID
-insightface==0.7.3
-facenet-pytorch
-
-# Whisper (Speech-to-Text)
-openai-whisper
-ffmpeg-python
-
-# Handlungserkennung, Pose, Emotion
-mmpose
-mmdet
-mmcv-full
-deepface
-
-# Dateiverarbeitung & JSON
-orjson
-python-multipart
-
-# Szenenerkennung
-pyscenedetect
-
-# NSFW Detection
-clip-by-openai
-Pillow
-
-# Logging, Utils
+opencv-python
+transformers
 loguru
+orjson
+pydantic
+Pillow

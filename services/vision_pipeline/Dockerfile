@@ -1,22 +1,9 @@
-FROM nvidia/cuda:12.2.0-cudnn8-runtime-ubuntu22.04
-
-# System-Voraussetzungen
-RUN apt-get update && \
-    apt-get install -y git ffmpeg libgl1 python3 python3-pip && \
-    rm -rf /var/lib/apt/lists/*
-
-# Arbeitsverzeichnis
+FROM python:3.10-slim
 WORKDIR /app
-
-# Anforderungen kopieren
+RUN apt-get update && \
+    apt-get install -y ffmpeg git libgl1 && \
+    rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
-
-# Python-Abhängigkeiten installieren
-RUN pip3 install --upgrade pip && \
-    pip3 install -r requirements.txt
-
-# Source Code kopieren
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-
-# Startbefehl
-CMD ["python3", "main.py"]
+CMD ["python", "main.py"]
