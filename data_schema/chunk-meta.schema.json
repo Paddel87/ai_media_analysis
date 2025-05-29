@@ -1,16 +1,1 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Chunk Meta",
-  "type": "object",
-  "properties": {
-    "persons": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "nsfw_scores": {
-      "type": "object",
-      "additionalProperties": { "type": "number" }
-    }
-  },
-  "required": ["persons", "nsfw_scores"]
-}
+{ "type": "object", "properties": { "id": { "type": "string" } } }
