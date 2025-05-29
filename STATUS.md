@@ -47,3 +47,11 @@
 - First live test will occur **after VPS deployment**.
 - GitHub repository is private. The operator is solely responsible for use.
 
+
+| `vision_pipeline`   | Core module: person detection, tracking, NSFW detection, OCR, STT          |
+| `object_review`     | Manual object validation & vocabulary learning                             |
+
+## 📂 Recent Additions
+
+- OCR-based logo/title recognition (May 2025)
+- Static image sequence analysis support (May 2025)
