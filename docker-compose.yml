@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  redis:
+    image: redis:7
+    container_name: media-redis
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - media-net
+
+  vector_db:
+    image: qdrant/qdrant
+    container_name: media-qdrant
+    ports:
+      - "${QDRANT_PORT}:6333"
+    networks:
+      - media-net
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  streamlit_ui:
+    build: ./services/ui
+    container_name: media-ui
+    ports:
+      - "${STREAMLIT_PORT}:8501"
+    env_file:
+      - .env
+    networks:
+      - media-net
+    volumes:
+      - ./data:/app/data
+
+networks:
+  media-net:
+
+volumes:
+  qdrant_data:
