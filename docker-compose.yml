@@ -56,3 +56,14 @@ services:
       - ./data/results:/app/results
     depends_on:
       - control
+
+
+  llm_summarizer:
+    build: ./services/llm_summarizer
+    container_name: ai_llm
+    restart: unless-stopped
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./data/results:/app/results
