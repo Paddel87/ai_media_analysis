@@ -1,0 +1,21 @@
+{
+  "providers": {
+    "gemini": {
+      "enabled": true,
+      "api_key_env": "GEMINI_API_KEY"
+    },
+    "openrouter": {
+      "enabled": true,
+      "api_key_env": "OPENROUTER_API_KEY"
+    },
+    "openai": {
+      "enabled": true,
+      "api_key_env": "OPENAI_API_KEY"
+    },
+    "anthropic": {
+      "enabled": true,
+      "api_key_env": "ANTHROPIC_API_KEY"
+    }
+  },
+  "fallback_order": ["gemini", "openrouter", "openai", "anthropic"]
+}
