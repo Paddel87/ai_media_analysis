@@ -1,14 +1,19 @@
-# Changelog
-
-## [0.4.0] – 2025-05-29
-
+## [Unreleased]
 ### Added
-- Initial support for image sequence processing
-- OCR-based detection of logos, watermarks, and intro titles
-- New service: `object_review` for manual object labeling & training loop
+- Integrated missing services:
+  - `pose_estimation`
+  - `ocr_detection`
+  - `clip_nsfw`
+  - `face_reid`
+  - `whisper_transcriber`
+- Extended docker-compose.yml to include all modules
+- Created `README.md` placeholders for new services
 
 ### Changed
-- `vision_pipeline` extended with OCR, logo mapping, and image handling logic
+- Updated docker-compose to mount new volumes for extended processing
+- `vision_pipeline` now supports image series
 
-### Fixed
-- Docker-compose updated with Redis service
+### Pending
+- GPU runtime validation
+- Inter-service signaling via Redis (jobs, results, scaling triggers)
+- Shared logging and healthchecks
