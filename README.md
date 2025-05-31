@@ -35,9 +35,32 @@ A comprehensive media analysis platform that leverages artificial intelligence t
 ### Prerequisites
 
 - Docker and Docker Compose
-- NVIDIA GPU with CUDA support
+- NVIDIA GPU with CUDA support:
+  - Consumer GPUs: RTX 3060, 3070, 3080, 3090, 4070, 4080, 4090
+  - Professional GPUs: RTX A4000, A5000, A6000
+  - Data Center GPUs: A100, H100 (via cloud providers)
 - NVIDIA Container Toolkit
 - Git
+
+### GPU Scaling
+
+The platform supports different GPU configurations:
+
+1. **Local Deployment**:
+   - Single GPU: RTX 3060 or better
+   - Multi-GPU: Up to 4x RTX 4090 or A6000
+   - Automatic workload distribution across GPUs
+
+2. **Cloud Deployment**:
+   - Vast.ai: On-demand GPU instances
+   - RunPod: Pay-per-use GPU access
+   - Automatic scaling based on job queue
+   - Support for A100/H100 instances
+
+3. **Hybrid Setup**:
+   - Local GPU for basic tasks
+   - Cloud GPU for heavy workloads
+   - Automatic failover and load balancing
 
 ### Installation
 
@@ -121,8 +144,14 @@ ai_media_analysis/
 - Batch processing for efficient resource utilization
 - LRU caching for repeated frame analysis
 - Asynchronous processing for concurrent tasks
-- GPU acceleration for ML inference
+- GPU acceleration for ML inference:
+  - CUDA optimization for all models
+  - Mixed precision (FP16) support
+  - TensorRT optimization for RTX series
+  - Multi-GPU scaling for A100/H100
 - Resource limits and reservations for stability
+- Automatic GPU memory management
+- Dynamic batch size adjustment based on GPU memory
 
 ## 🔒 Security
 
