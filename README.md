@@ -86,3 +86,94 @@ The pipeline follows a modular, GPU-on-demand structure:
   - Streamlit-based UI for data inspection, merging, feedback, and training
 
 Each component runs in its own Docker container, orchestrated from a central control node.
+
+## Job-Management
+
+Das System unterstützt sowohl automatische als auch manuelle Job-Verarbeitung. Standardmäßig ist die automatische Verarbeitung deaktiviert, sodass Jobs nur manuell durch den Operator gestartet werden können.
+
+### API-Endpunkte
+
+Der Job-Manager bietet folgende API-Endpunkte:
+
+#### Batch-Erstellung
+```http
+POST /batches
+{
+  "job_ids": ["job1", "job2", "job3"],
+  "batch_name": "mein_batch"
+}
+```
+
+#### Batch-Start
+```http
+POST /batches/{batch_id}/start
+```
+
+#### Batch-Informationen
+```http
+GET /batches/{batch_id}
+```
+
+#### Batch-Liste
+```http
+GET /batches
+```
+
+#### Wartende Jobs
+```http
+GET /jobs/pending
+```
+
+#### Auto-Process-Einstellung
+```http
+GET /settings/auto-process
+POST /settings/auto-process?enabled=true
+```
+
+### Umgebungsvariablen
+
+Die folgenden Umgebungsvariablen können konfiguriert werden:
+
+- `REDIS_HOST`: Redis-Host (Standard: redis)
+- `REDIS_PORT`: Redis-Port (Standard: 6379)
+- `BATCH_THRESHOLD_HOURS`: Maximale Batch-Dauer in Stunden (Standard: 4)
+- `MIN_JOBS_PER_BATCH`: Minimale Anzahl von Jobs pro Batch (Standard: 3)
+- `AUTO_PROCESS_JOBS`: Automatische Job-Verarbeitung aktivieren (Standard: false)
+- `VAST_API_KEY`: API-Key für Vast.ai
+- `RUNPOD_API_KEY`: API-Key für RunPod
+
+### Installation
+
+1. Repository klonen
+2. Umgebungsvariablen konfigurieren (siehe `.env.example`)
+3. Docker Compose starten:
+   ```bash
+   docker-compose up -d
+   ```
+
+### Verwendung
+
+1. Medien in das `data/incoming`-Verzeichnis hochladen
+2. Jobs werden automatisch erkannt und in der Warteschlange gespeichert
+3. Über die API können Batches erstellt und gestartet werden
+4. GPU-Instanzen werden automatisch erstellt und nach Abschluss gelöscht
+
+### GPU-Provider
+
+Das System unterstützt derzeit folgende GPU-Provider:
+
+- Vast.ai
+- RunPod (in Entwicklung)
+
+### Batch-Verarbeitung
+
+- Jobs werden nach Typ (Video/Bild) gruppiert
+- Batches werden optimiert nach geschätzter Verarbeitungsdauer
+- GPU-Instanzen werden automatisch erstellt und verwaltet
+- Nach Abschluss werden alle temporären Dateien bereinigt
+
+### Fehlerbehandlung
+
+- Automatische Wiederholungsversuche bei GPU-Fehlern
+- Detaillierte Logging-Informationen
+- Status-Updates über die API

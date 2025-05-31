@@ -1,33 +1,74 @@
-# AI Media Analysis – Project Status
+# Projektstatus
 
-## Current Phase: Module Integration
+## Implementierte Komponenten
 
-The repository now includes the following service modules:
+### Job-Management (✅ Fertig)
+- Manuelle Job-Steuerung
+- Batch-Management
+- GPU-Provider Interface
+- API-Endpunkte
+- Umgebungsvariablen-Konfiguration
 
-### ✔️ Integrated Services
+### Basis-Infrastruktur (✅ Fertig)
+- Docker-Compose-Setup
+- Redis-Integration
+- Logging-System
+- Konfigurationsmanagement
 
-- **Redis** – messaging backbone
-- **Vision Pipeline**
-  - Frame sampling
-  - Person detection & tracking
-  - Face & body re-identification
-  - NSFW detection
-  - Pose estimation
-  - Emotion detection
-  - Whisper transcription
-  - Action recognition
-  - OCR (logo/title detection)
-  - Image series support
-- **Object Review** – operator-assisted object labeling and learning
-- **Control** – job management, auto-scaling logic, Redis watchdog
-- **UI** – streamlit-based manual review interface
-- **LLM Summarizer** – uses OpenAI or Anthropic API for content labeling and report generation
+### AI-Module (🔄 In Entwicklung)
+- Pose Estimation
+- OCR Detection
+- CLIP NSFW
+- Face ReID
+- Whisper Transkription
 
-### 🔜 Pending Tasks
+### UI (🔄 In Entwicklung)
+- Streamlit Interface
+- Batch-Übersicht
+- Job-Status-Anzeige
 
-- Model download logic in each service
-- Verify interoperability between services (e.g. shared volumes and Redis triggers)
-- Prepare unified test data input
-- Validate GPU availability and Docker runtime compatibility
-- Finalize `startup.sh` and `.env` templates
-- Define API routes for remote job submission (optional)
+### Vector DB (⏳ Geplant)
+- Qdrant Integration
+- Embedding-Speicherung
+- Ähnlichkeitssuche
+
+### LLM-Integration (⏳ Geplant)
+- OpenAI Integration
+- Gemini Integration
+- Claude Integration
+- Summarization
+
+## Nächste Schritte
+
+1. **AI-Module**
+   - Implementierung der einzelnen AI-Module
+   - Integration in das Batch-System
+   - Performance-Optimierung
+
+2. **UI-Entwicklung**
+   - Batch-Erstellung Interface
+   - Job-Status-Monitoring
+   - Ergebnis-Visualisierung
+
+3. **Vector DB**
+   - Qdrant-Setup
+   - Embedding-Pipeline
+   - Suchfunktionalität
+
+4. **LLM-Integration**
+   - API-Integration
+   - Prompt-Engineering
+   - Ergebnis-Verarbeitung
+
+## Bekannte Probleme
+
+- GPU-Provider RunPod noch nicht vollständig implementiert
+- Automatische Job-Verarbeitung standardmäßig deaktiviert
+- Temporäre Dateien müssen manuell bereinigt werden
+
+## Technische Schulden
+
+- Unit Tests fehlen
+- CI/CD Pipeline nicht eingerichtet
+- Monitoring-System nicht implementiert
+- Backup-Strategie fehlt

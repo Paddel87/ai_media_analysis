@@ -1,3 +1,75 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  job_manager:
+    build:
+      context: ./services/job_manager
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BATCH_THRESHOLD_HOURS=4
+      - MIN_JOBS_PER_BATCH=3
+      - AUTO_PROCESS_JOBS=false
+      - VAST_API_KEY=${VAST_API_KEY}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  job_manager_api:
+    build:
+      context: ./services/job_manager
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BATCH_THRESHOLD_HOURS=4
+      - MIN_JOBS_PER_BATCH=3
+      - AUTO_PROCESS_JOBS=false
+      - VAST_API_KEY=${VAST_API_KEY}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
+    depends_on:
+      - job_manager
+      - redis
+
+  thumbnail_generator:
+    build:
+      context: ./services/thumbnail_generator
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /data/redis
 
 # Additional AI Modules
 
