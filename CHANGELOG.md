@@ -5,6 +5,30 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2024-03-20
+
+### Added
+- Cloud Storage Integration
+  - Amazon S3 Unterstützung
+  - Google Cloud Storage Integration
+  - Azure Blob Storage Anbindung
+  - Dropbox Integration
+  - MEGA Cloud Storage Support
+- Erweiterte UI-Funktionen
+  - Cloud Provider Auswahl
+  - Sichere Konfigurationsspeicherung
+  - Verbesserte Dateilistenansicht
+  - Fortschrittsanzeige für Downloads
+
+### Changed
+- UI-Überarbeitung für Cloud-Integration
+- Verbesserte Fehlerbehandlung
+- Erweiterte Dokumentation
+
+### Fixed
+- Sichere Handhabung von Zugangsdaten
+- Verbesserte Fehlerbehandlung bei Cloud-Verbindungen
+
 ## [0.5.0] - 2024-03-19
 
 ### Added
