@@ -39,6 +39,23 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Basis-Docker-Konfiguration
 - README.md mit Projektbeschreibung
 
+## [0.4.0] - 2024-03-20
+### Hinzugefügt
+- Pose Estimation Service implementiert
+- Vision Pipeline mit Pose Estimation Integration
+- GPU-Beschleunigung für Pose Estimation
+- Automatische Ergebnis-Speicherung in JSON-Format
+- Detailliertes Logging-System
+
+### Geändert
+- Docker-Compose-Konfiguration für GPU-Unterstützung
+- Vision Pipeline Architektur optimiert
+- Verbesserte Fehlerbehandlung
+
+### Behoben
+- GPU-Ressourcen-Management optimiert
+- Speicherverwaltung verbessert
+
 ## [Unreleased]
 ### Added
 - Integrated missing services:

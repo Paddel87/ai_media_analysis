@@ -1,6 +1,6 @@
 # AI Media Analysis
 
-**Version:** 0.3.0 (20. März 2024)
+**Version:** 0.4.0 (20. März 2024)
 
 A modular, fully open-source AI pipeline for automated analysis of videos and image series. Designed for sensitive content filtering, structured metadata generation, and human-in-the-loop refinement.
 
@@ -32,8 +32,9 @@ flowchart LR
     F --> G[LLM Summarization (API)]
     G --> H[Safety Check → Fallback LLM if needed]
     H --> I[Streamlit Review UI]
+```
 
-🗂 Directory Structure
+## 🗂 Directory Structure
 
 ai_media_analysis/
 ├── .env.example              # Environment variable template
@@ -44,28 +45,26 @@ ai_media_analysis/
 │   ├── ui/                   # Streamlit review interface
 │   ├── vector_db/            # Qdrant vector database config
 │   ├── object_review/        # Manual labeling logic
+│   ├── pose_estimation/      # Pose detection and analysis
 │   └── vision_pipeline/      # Detection, embedding, NSFW, etc.
 ├── data_schema/              # JSON schema definitions
 └── docs/                     # Architecture notes and instructions
-⚙ Requirements
+
+## ⚙ Requirements
 
     Host: Linux VPS with at least 4 vCPU, 8 GB RAM, 100+ GB SSD
-
     Python ≥ 3.10
-
     Docker + Docker Compose
-
     Optional GPU Node via Vast.ai / RunPod
-
     Optional: OpenInterpreter for AI-assisted deployment
 
-🧪 Status
+## 🧪 Status
 
-This project is under active development. First prototype deployment scripts and LLM prompt logic are in progress.
-📜 License
+This project is under active development. Current focus is on implementing and integrating AI modules, starting with Pose Estimation.
+
+## 📜 License
 
 MIT — All components are fully open-source. Only optional LLM APIs (e.g. Gemini, Claude, Llama-3) may involve costs.
-
 
 ## 🧠 AI Architecture
 

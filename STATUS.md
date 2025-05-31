@@ -1,6 +1,6 @@
 # Projektstatus
 
-**Aktuelle Version:** 0.3.0 (20. März 2024)
+**Aktuelle Version:** 0.4.0 (20. März 2024)
 
 ## Implementierte Komponenten
 
@@ -18,11 +18,15 @@
 - Konfigurationsmanagement
 
 ### AI-Module (🔄 In Entwicklung)
-- Pose Estimation
-- OCR Detection
-- CLIP NSFW
-- Face ReID
-- Whisper Transkription
+- Pose Estimation (✅ Fertig)
+  - GPU-beschleunigte Verarbeitung
+  - REST API
+  - JSON-Ergebnisformat
+  - Vision Pipeline Integration
+- OCR Detection (🔄 In Entwicklung)
+- CLIP NSFW (⏳ Geplant)
+- Face ReID (⏳ Geplant)
+- Whisper Transkription (⏳ Geplant)
 
 ### UI (🔄 In Entwicklung)
 - Streamlit Interface
@@ -43,9 +47,10 @@
 ## Nächste Schritte
 
 1. **AI-Module**
-   - Implementierung der einzelnen AI-Module
-   - Integration in das Batch-System
-   - Performance-Optimierung
+   - OCR Detection implementieren
+   - CLIP NSFW Modul entwickeln
+   - Face ReID Integration
+   - Whisper Transkription
 
 2. **UI-Entwicklung**
    - Batch-Erstellung Interface
