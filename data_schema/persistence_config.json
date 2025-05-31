@@ -1,0 +1,23 @@
+{
+    "storage_paths": {
+        "models": "/app/models",
+        "results": "/app/data/results",
+        "redis": "/app/data/redis",
+        "media": "/app/data/media"
+    },
+    "retention_policy": {
+        "results": {
+            "max_age_days": 30,
+            "max_size_gb": 100
+        },
+        "media": {
+            "max_age_days": 90,
+            "max_size_gb": 500
+        }
+    },
+    "backup_config": {
+        "enabled": true,
+        "schedule": "0 0 * * *",
+        "target_path": "/app/data/backups"
+    }
+} 
