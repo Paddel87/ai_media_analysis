@@ -1,180 +1,157 @@
-# AI Media Analysis
+# AI Media Analysis Platform
 
-**Version:** 0.4.0 (31. Mai 2025)
+A comprehensive media analysis platform that leverages artificial intelligence to analyze images and videos for various content types, including NSFW content, poses, text, and restraints.
 
-A modular, fully open-source AI pipeline for automated analysis of videos and image series. Designed for sensitive content filtering, structured metadata generation, and human-in-the-loop refinement.
+## 🌟 Features
 
-## 🚀 Features
+- **Multi-Service Architecture**: Modular design with specialized services for different analysis tasks
+- **Real-time Processing**: Efficient batch processing and frame sampling for video analysis
+- **GPU Acceleration**: NVIDIA GPU support for high-performance inference
+- **Scalable Infrastructure**: Docker-based deployment with resource management
+- **Job Management**: Asynchronous job processing with status tracking
+- **RESTful API**: FastAPI-based endpoints for easy integration
 
-- 🔎 Person detection, tracking & ReID (face and body)
-- 🧠 Action recognition, emotion detection, pose estimation
-- 👕 Clothing & body description (optional)
-- 🎙 Speech-to-text transcription (Whisper), including translation
-- 🚫 NSFW detection and content classification
-- 🧾 OCR for watermark/logo/title extraction
-- 🧍 Manual object labeling with review UI
-- 📁 Supports both videos and sequential image folders
-- 📊 LLM-based summarization & tagging
-- 🧠 Continual learning with manual feedback
-- 🧩 Fully modular via Docker microservices
-- 🧘 On-demand GPU usage via Vast.ai or RunPod (autoscaling)
-- 🧱 Minimal base system (Netcup VPS) for orchestration and UI
+## 🏗️ Architecture
 
-## 📦 Architecture Overview
+### Core Services
 
-```mermaid
-flowchart LR
-    A[Media Input] --> B[Keyframe Sampling / Sorting]
-    B --> C[Vision Services (Dockerized)]
-    C --> D[Metadata Collector]
-    D --> E[Vector DB (Qdrant)]
-    D --> F[chunk-meta.json]
-    F --> G[LLM Summarization (API)]
-    G --> H[Safety Check → Fallback LLM if needed]
-    H --> I[Streamlit Review UI]
-```
+- **Vision Pipeline**: Central service coordinating all analysis tasks
+- **Job Manager**: Handles job queuing and processing
+- **Restraint Detection**: Specialized service for detecting restraints and related materials
+- **NSFW Detection**: Content moderation using CLIP-based models
+- **Pose Estimation**: Body pose and movement analysis
+- **OCR Detection**: Text and logo recognition
+- **Face Recognition**: Face detection and re-identification
 
-## 🗂 Directory Structure
+### Supporting Services
 
-ai_media_analysis/
-├── .env.example              # Environment variable template
-├── docker-compose.yml        # Docker stack for media services
-├── setup/                    # Deployment and folder setup scripts
-├── services/                 # Modular microservices
-│   ├── control/              # Scheduler, Watchdog
-│   ├── ui/                   # Streamlit review interface
-│   ├── vector_db/            # Qdrant vector database config
-│   ├── object_review/        # Manual labeling logic
-│   ├── pose_estimation/      # Pose detection and analysis
-│   └── vision_pipeline/      # Detection, embedding, NSFW, etc.
-├── data_schema/              # JSON schema definitions
-└── docs/                     # Architecture notes and instructions
+- **Redis**: Message broker and caching
+- **Control Service**: System orchestration
+- **Streamlit UI**: Web interface for monitoring and control
+- **Vector Database**: Efficient storage and retrieval of embeddings
 
-## ⚙ Requirements
+## 🚀 Getting Started
 
-    Host: Linux VPS with at least 4 vCPU, 8 GB RAM, 100+ GB SSD
-    Python ≥ 3.10
-    Docker + Docker Compose
-    Optional GPU Node via Vast.ai / RunPod
-    Optional: OpenInterpreter for AI-assisted deployment
+### Prerequisites
 
-## 🧪 Status
-
-This project is under active development. Current focus is on implementing and integrating AI modules, starting with Pose Estimation.
-
-## 📜 License
-
-MIT — All components are fully open-source. Only optional LLM APIs (e.g. Gemini, Claude, Llama-3) may involve costs.
-
-## 🧠 AI Architecture
-
-The pipeline follows a modular, GPU-on-demand structure:
-
-- **Ingest Module:** Scene detection and key-frame extraction (FFmpeg, PySceneDetect)
-- **Vision Pipeline:** 
-  - YOLOv9 for object detection
-  - DeepSORT for tracking
-  - Face and body ReID (SCRFD, ArcFace, OSNet)
-  - Pose estimation (PARE), action recognition (MMAction2), emotion detection (DeepFace)
-  - OCR for logos/titles, NSFW classification
-  - Whisper for speech-to-text
-- **Storage:**
-  - Qdrant for vector embeddings
-  - Metadata stored in structured JSON files
-- **LLM Processing:**
-  - Summarization and safety-checks via Gemini, OpenAI, or Claude (via OpenRouter)
-- **Manual Review:**
-  - Streamlit-based UI for data inspection, merging, feedback, and training
-
-Each component runs in its own Docker container, orchestrated from a central control node.
-
-## Job-Management
-
-Das System unterstützt sowohl automatische als auch manuelle Job-Verarbeitung. Standardmäßig ist die automatische Verarbeitung deaktiviert, sodass Jobs nur manuell durch den Operator gestartet werden können.
-
-### API-Endpunkte
-
-Der Job-Manager bietet folgende API-Endpunkte:
-
-#### Batch-Erstellung
-```http
-POST /batches
-{
-  "job_ids": ["job1", "job2", "job3"],
-  "batch_name": "mein_batch"
-}
-```
-
-#### Batch-Start
-```http
-POST /batches/{batch_id}/start
-```
-
-#### Batch-Informationen
-```http
-GET /batches/{batch_id}
-```
-
-#### Batch-Liste
-```http
-GET /batches
-```
-
-#### Wartende Jobs
-```http
-GET /jobs/pending
-```
-
-#### Auto-Process-Einstellung
-```http
-GET /settings/auto-process
-POST /settings/auto-process?enabled=true
-```
-
-### Umgebungsvariablen
-
-Die folgenden Umgebungsvariablen können konfiguriert werden:
-
-- `REDIS_HOST`: Redis-Host (Standard: redis)
-- `REDIS_PORT`: Redis-Port (Standard: 6379)
-- `BATCH_THRESHOLD_HOURS`: Maximale Batch-Dauer in Stunden (Standard: 4)
-- `MIN_JOBS_PER_BATCH`: Minimale Anzahl von Jobs pro Batch (Standard: 3)
-- `AUTO_PROCESS_JOBS`: Automatische Job-Verarbeitung aktivieren (Standard: false)
-- `VAST_API_KEY`: API-Key für Vast.ai
-- `RUNPOD_API_KEY`: API-Key für RunPod
+- Docker and Docker Compose
+- NVIDIA GPU with CUDA support
+- NVIDIA Container Toolkit
+- Git
 
 ### Installation
 
-1. Repository klonen
-2. Umgebungsvariablen konfigurieren (siehe `.env.example`)
-3. Docker Compose starten:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Paddel87/ai_media_analysis.git
+   cd ai_media_analysis
+   ```
+
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. Build and start the services:
    ```bash
    docker-compose up -d
    ```
 
-### Verwendung
+### Configuration
 
-1. Medien in das `data/incoming`-Verzeichnis hochladen
-2. Jobs werden automatisch erkannt und in der Warteschlange gespeichert
-3. Über die API können Batches erstellt und gestartet werden
-4. GPU-Instanzen werden automatisch erstellt und nach Abschluss gelöscht
+Key configuration options in `.env`:
 
-### GPU-Provider
+```env
+# API Keys
+VAST_API_KEY=your_vast_api_key
+RUNPOD_API_KEY=your_runpod_api_key
 
-Das System unterstützt derzeit folgende GPU-Provider:
+# Service URLs
+VISION_PIPELINE_URL=http://vision_pipeline:8000
+JOB_MANAGER_URL=http://job_manager_api:8000
 
-- Vast.ai
-- RunPod (in Entwicklung)
+# Processing Settings
+BATCH_SIZE=4
+FRAME_SAMPLING_RATE=2
+MAX_WORKERS=4
+```
 
-### Batch-Verarbeitung
+## 📊 API Documentation
 
-- Jobs werden nach Typ (Video/Bild) gruppiert
-- Batches werden optimiert nach geschätzter Verarbeitungsdauer
-- GPU-Instanzen werden automatisch erstellt und verwaltet
-- Nach Abschluss werden alle temporären Dateien bereinigt
+### Vision Pipeline Endpoints
 
-### Fehlerbehandlung
+- `POST /analyze/video`: Analyze video content
+- `POST /analyze/image`: Analyze single image
+- `GET /health`: Service health check
 
-- Automatische Wiederholungsversuche bei GPU-Fehlern
-- Detaillierte Logging-Informationen
-- Status-Updates über die API
+### Job Manager Endpoints
+
+- `POST /jobs`: Create new analysis job
+- `GET /jobs/{job_id}`: Get job status
+- `GET /jobs`: List all jobs
+
+## 🔧 Development
+
+### Project Structure
+
+```
+ai_media_analysis/
+├── services/
+│   ├── vision_pipeline/
+│   ├── restraint_detection/
+│   ├── job_manager/
+│   └── common/
+├── control/
+├── streamlit_ui/
+├── data/
+└── setup/
+```
+
+### Adding New Services
+
+1. Create service directory in `services/`
+2. Add Dockerfile and requirements.txt
+3. Update docker-compose.yml
+4. Implement service logic
+5. Add health check endpoint
+
+## 📈 Performance
+
+- Batch processing for efficient resource utilization
+- LRU caching for repeated frame analysis
+- Asynchronous processing for concurrent tasks
+- GPU acceleration for ML inference
+- Resource limits and reservations for stability
+
+## 🔒 Security
+
+- API key authentication
+- Secure service communication
+- Resource isolation
+- Input validation
+- Error handling and logging
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) for details.
+
+## 📞 Support
+
+For support, please open an issue in the GitHub repository.
+
+## 🔄 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and updates.
+
+## 📊 Status
+
+Current project status and roadmap can be found in [STATUS.md](STATUS.md).
