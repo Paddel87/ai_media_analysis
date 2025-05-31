@@ -15,6 +15,9 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Kostenoptimierte Ausführung
 - Parallele Modellausführung
 - Erweiterte GPU-Typen für verschiedene Anforderungen
+- API-Dokumentation
+- Beitragsrichtlinien
+- Entwicklungsstandards
 
 ### Geändert
 - Optimierte Modell-Ressourcennutzung
@@ -22,6 +25,7 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Angepasste Skalierungsfaktoren
 - Erweiterte Kostenberechnung
 - Verbesserte Fehlerbehandlung
+- Aktualisierte Dokumentation
 
 ### Entfernt
 - Statische GPU-Konfiguration
