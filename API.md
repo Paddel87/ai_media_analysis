@@ -1,5 +1,239 @@
 # API-Dokumentation
 
+## Übersicht
+
+Die API ermöglicht die Analyse von Medieninhalten mit Fokus auf Sicherheit und Zustimmung. Alle Endpunkte sind asynchron und unterstützen Batch-Verarbeitung.
+
+## Authentifizierung
+
+### API-Key
+```http
+Authorization: Bearer <api_key>
+```
+
+### Umgebungsvariablen
+```bash
+API_KEY=your_api_key
+```
+
+## Endpunkte
+
+### Frame-Analyse
+
+#### Einzelne Frame-Analyse
+```http
+POST /analyze/frame
+Content-Type: application/json
+
+{
+    "frame": [...],  // Base64-kodiertes Bild
+    "audio_data": [...],  // Optional: Audio-Daten
+    "sample_rate": 44100  // Optional: Audio-Sampling-Rate
+}
+```
+
+#### Response
+```json
+{
+    "status": "success",
+    "data": {
+        "restraints": [
+            {
+                "type": "string",
+                "confidence": 0.95,
+                "location": [x, y, width, height]
+            }
+        ],
+        "safety_score": 0.8,
+        "consent_indicators": [...],
+        "monitoring_status": "active",
+        "audio_analysis": {
+            "distress_detected": false,
+            "safeword_detected": false
+        },
+        "processing_info": {
+            "processing_time": 0.5,
+            "gpu_cost": {
+                "usd": 0.001,
+                "eur": 0.0009
+            }
+        }
+    }
+}
+```
+
+### Batch-Analyse
+
+#### Mehrere Frames analysieren
+```http
+POST /analyze/batch
+Content-Type: application/json
+
+{
+    "frames": [[...], [...]],  // Array von Base64-kodierten Bildern
+    "audio_data": [[...], [...]],  // Optional: Array von Audio-Daten
+    "sample_rates": [44100, 44100]  // Optional: Array von Sampling-Rates
+}
+```
+
+#### Response
+```json
+{
+    "status": "success",
+    "data": {
+        "results": [
+            {
+                "frame_id": 0,
+                "restraints": [...],
+                "safety_score": 0.8,
+                "consent_indicators": [...],
+                "monitoring_status": "active",
+                "audio_analysis": {...}
+            }
+        ],
+        "batch_info": {
+            "total_frames": 2,
+            "processing_time": 1.2,
+            "gpu_cost": {
+                "usd": 0.002,
+                "eur": 0.0018
+            }
+        }
+    }
+}
+```
+
+### Instanz-Management
+
+#### Instanz-Status abrufen
+```http
+GET /instances/status
+```
+
+#### Response
+```json
+{
+    "status": "success",
+    "data": {
+        "instances": [
+            {
+                "id": "instance-1",
+                "provider": "vast_ai",
+                "type": "rtx_3090",
+                "status": "running",
+                "load": 0.75,
+                "cost": {
+                    "usd": 0.45,
+                    "eur": 0.41
+                }
+            }
+        ],
+        "total_cost": {
+            "usd": 0.45,
+            "eur": 0.41
+        }
+    }
+}
+```
+
+## Fehlercodes
+
+| Code | Beschreibung |
+|------|--------------|
+| 400  | Ungültige Anfrage |
+| 401  | Nicht autorisiert |
+| 403  | Zugriff verweigert |
+| 404  | Ressource nicht gefunden |
+| 429  | Zu viele Anfragen |
+| 500  | Server-Fehler |
+
+### Fehler-Response
+```json
+{
+    "status": "error",
+    "error": {
+        "code": 400,
+        "message": "Ungültige Anfrage",
+        "details": {...}
+    }
+}
+```
+
+## Rate Limiting
+
+- 100 Anfragen pro Minute
+- 1000 Anfragen pro Stunde
+- 10000 Anfragen pro Tag
+
+## Versionierung
+
+Die API-Version wird im URL-Pfad angegeben:
+```http
+https://api.example.com/v1/analyze/frame
+```
+
+## WebSocket-Endpunkte
+
+### Echtzeit-Analyse
+```http
+WS /ws/analyze
+```
+
+#### Nachrichten-Format
+```json
+{
+    "type": "frame",
+    "data": {
+        "frame": [...],
+        "audio_data": [...]
+    }
+}
+```
+
+## Beispiele
+
+### Python
+```python
+import aiohttp
+import base64
+
+async def analyze_frame(image_path):
+    with open(image_path, 'rb') as f:
+        image_data = base64.b64encode(f.read()).decode()
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            'https://api.example.com/v1/analyze/frame',
+            json={
+                'frame': image_data
+            },
+            headers={
+                'Authorization': f'Bearer {API_KEY}'
+            }
+        ) as response:
+            return await response.json()
+```
+
+### JavaScript
+```javascript
+async function analyzeFrame(imageFile) {
+    const base64 = await convertToBase64(imageFile);
+    
+    const response = await fetch('https://api.example.com/v1/analyze/frame', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            frame: base64
+        })
+    });
+    
+    return await response.json();
+}
+```
+
 ## Vision Pipeline API
 
 ### Basis-URL
