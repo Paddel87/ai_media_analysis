@@ -21,11 +21,9 @@ COPY main.py .
 
 # Setze Umgebungsvariablen
 ENV PYTHONUNBUFFERED=1
-ENV QDRANT_HOST=qdrant
-ENV QDRANT_PORT=6333
 
 # Exponiere Port
 EXPOSE 8000
 
 # Starte den Service
-CMD ["python", "main.py"]
+CMD ["python", "main.py"] 
