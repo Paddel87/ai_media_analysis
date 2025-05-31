@@ -1,5 +1,20 @@
 # Changelog
 
+Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+
+Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
+und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.0] - 2024-03-20
+### Hinzugefügt
+- Versionssystem implementiert
+- Strukturierte Dokumentation in STATUS.md, CHANGELOG.md und README.md
+- Verbesserte Projektübersicht
+
+### Geändert
+- Dokumentation aktualisiert
+- Versionsnummern in allen relevanten Dateien synchronisiert
+
 ## [0.2.0] - 2024-03-19
 ### Hinzugefügt
 - Manuelle Job-Steuerung implementiert

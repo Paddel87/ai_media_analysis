@@ -1,5 +1,7 @@
 # Projektstatus
 
+**Aktuelle Version:** 0.3.0 (20. März 2024)
+
 ## Implementierte Komponenten
 
 ### Job-Management (✅ Fertig)

@@ -1,5 +1,7 @@
 # AI Media Analysis
 
+**Version:** 0.3.0 (20. März 2024)
+
 A modular, fully open-source AI pipeline for automated analysis of videos and image series. Designed for sensitive content filtering, structured metadata generation, and human-in-the-loop refinement.
 
 ## 🚀 Features
