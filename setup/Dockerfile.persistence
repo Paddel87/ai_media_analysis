@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1.4
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Installiere Build-Tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY setup/requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY data_schema/persistence_config.json /app/config/
+COPY setup/data_persistence.py /app/
+
+# Erstelle notwendige Verzeichnisse
+RUN mkdir -p /app/data/models \
+    /app/data/results \
+    /app/data/redis \
+    /app/data/media \
+    /app/data/backups
+
+# Setze Berechtigungen
+RUN chmod -R 755 /app/data
+
+# Starte den Service
+CMD ["python", "data_persistence.py"] 

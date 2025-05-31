@@ -3,8 +3,8 @@ version: '3.8'
 services:
   data-persistence:
     build:
-      context: ./setup
-      dockerfile: Dockerfile.persistence
+      context: .
+      dockerfile: setup/Dockerfile.persistence
     volumes:
       - ./data:/app/data
     environment:
@@ -14,14 +14,21 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1'
           memory: 1G
         reservations:
+          cpus: '0.5'
           memory: 512M
     healthcheck:
       test: ["CMD", "python", "-c", "import os; assert os.path.exists('/app/data')"]
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7.0-alpine
@@ -29,19 +36,191 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - ai_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pose_estimation:
+    build: ./services/pose_estimation
+    container_name: ai_pose_estimation
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
     networks:
       - ai_network
     deploy:
       resources:
         limits:
-          memory: 1G
+          cpus: '2'
+          memory: 4G
         reservations:
-          memory: 512M
+          cpus: '1'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ocr_detection:
+    build: ./services/ocr_detection
+    container_name: ai_ocr_detection
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    networks:
+      - ai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  clip_nsfw:
+    build: ./services/clip_nsfw
+    container_name: ai_clip_nsfw
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    networks:
+      - ai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  face_reid:
+    build: ./services/face_reid
+    container_name: ai_face_reid
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    networks:
+      - ai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  whisper_transcriber:
+    build: ./services/whisper_transcriber
+    container_name: ai_whisper_transcriber
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./data/results:/app/results
+    networks:
+      - ai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   ai_network:
@@ -52,64 +231,4 @@ volumes:
     driver: local
   data:
     driver: local
-
-# Weitere AI-Module können nach Bedarf im Bereich 'services:' ergänzt werden.
-# Beispiel:
-#   pose_estimation:
-#     build: ./services/pose_estimation
-#     depends_on:
-#       - redis
-#     volumes:
-#       - ./data/results:/app/results
-
-# Additional AI Modules
-
-  pose_estimation:
-    build: ./services/pose_estimation
-    container_name: ai_pose_estimation
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-    
-
-  ocr_detection:
-    build: ./services/ocr_detection
-    container_name: ai_ocr_detection
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-    
-
-  clip_nsfw:
-    build: ./services/clip_nsfw
-    container_name: ai_clip_nsfw
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-    
-
-  face_reid:
-    build: ./services/face_reid
-    container_name: ai_face_reid
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-    
-
-  whisper_transcriber:
-    build: ./services/whisper_transcriber
-    container_name: ai_whisper_transcriber
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
     
