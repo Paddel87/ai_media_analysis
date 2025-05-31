@@ -1,0 +1,41 @@
+{
+    "file_patterns": [
+        "*.exe",
+        "*.dll",
+        "*.bat",
+        "*.cmd",
+        "*.sh",
+        "*.php",
+        "*.asp",
+        "*.aspx",
+        "*.jsp"
+    ],
+    "content_patterns": [
+        "<?php",
+        "<script",
+        "javascript:",
+        "data:text/html",
+        "data:application/x-javascript",
+        "data:application/x-httpd-php",
+        "data:application/x-httpd-php-source",
+        "data:application/x-httpd-php3",
+        "data:application/x-httpd-php4",
+        "data:application/x-httpd-php5",
+        "data:application/x-httpd-php7",
+        "data:application/x-httpd-php8"
+    ],
+    "metadata_patterns": [
+        "<?php",
+        "<script",
+        "javascript:",
+        "data:text/html",
+        "data:application/x-javascript",
+        "data:application/x-httpd-php",
+        "data:application/x-httpd-php-source",
+        "data:application/x-httpd-php3",
+        "data:application/x-httpd-php4",
+        "data:application/x-httpd-php5",
+        "data:application/x-httpd-php7",
+        "data:application/x-httpd-php8"
+    ]
+} 
