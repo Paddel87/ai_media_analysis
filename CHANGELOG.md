@@ -127,6 +127,24 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - GPU-Ressourcen-Management optimiert
 - Speicherverwaltung verbessert
 
+## [0.7.0] - 2024-03-21
+
+### Added
+- Build-Tools für Docker-Container
+  - Installation von build-essential und g++
+  - Optimierte Container-Build-Konfiguration
+
+### Changed
+- Korrektur der Docker-Build-Pfade
+  - Anpassung der Build-Kontexte
+  - Korrektur der Dateipfade in Dockerfiles
+- Verbesserte requirements.txt Struktur
+
+### Fixed
+- Build-Fehler bei mmcv Installation
+- Pfadprobleme in Docker-Compose
+- Fehlende Build-Abhängigkeiten
+
 ## [Unreleased]
 ### Added
 - Integrated missing services:

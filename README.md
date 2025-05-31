@@ -34,153 +34,44 @@ A comprehensive media analysis platform that leverages artificial intelligence t
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- NVIDIA GPU with CUDA support:
-  - Consumer GPUs: RTX 3060, 3070, 3080, 3090, 4070, 4080, 4090
-  - Professional GPUs: RTX A4000, A5000, A6000
-  - Data Center GPUs: A100, H100 (via cloud providers)
+### Docker and Docker Compose
+- Docker Engine 24.0.0 or later
+- Docker Compose v2.20.0 or later
 - NVIDIA Container Toolkit
-- Git
 
-### GPU Scaling
+### GPU Support
+The system supports various GPU configurations:
 
-The platform supports different GPU configurations:
+#### Local GPU Setup
+- Consumer GPUs: RTX 3060, 3070, 3080, 3090, 4070, 4080, 4090
+- Professional GPUs: RTX A4000, A5000, A6000
+- Data Center GPUs: A100, H100
 
-1. **Local Deployment**:
-   - Single GPU: RTX 3060 or better
-   - Multi-GPU: Up to 4x RTX 4090 or A6000
-   - Automatic workload distribution across GPUs
+#### Cloud GPU Options
+1. **Data Center GPUs** (Enterprise Cloud Providers)
+   - AWS, GCP, Azure: A100, H100
+   - Enterprise-grade reliability
+   - 24/7 support
+   - Higher cost
 
-2. **Cloud Deployment**:
-   - Vast.ai: On-demand GPU instances
-   - RunPod: Pay-per-use GPU access
-   - Automatic scaling based on job queue
-   - Support for A100/H100 instances
+2. **Consumer GPUs** (Specialized Providers)
+   - Vast.ai, RunPod: RTX 3080, 3090, 4080, 4090
+   - Cost-effective for development
+   - Flexible hourly pricing
+   - Good for testing and medium workloads
 
-3. **Hybrid Setup**:
-   - Local GPU for basic tasks
-   - Cloud GPU for heavy workloads
-   - Automatic failover and load balancing
+3. **Professional GPUs** (Mixed Providers)
+   - RTX A4000, A5000, A6000
+   - Available on both enterprise and specialized providers
+   - Balanced performance and cost
+
+### System Requirements
+- Minimum 16GB RAM
+- 100GB free disk space
+- CUDA 12.0 or later
+- Ubuntu 20.04/22.04 or Windows 11 with WSL2
 
 ### Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/Paddel87/ai_media_analysis.git
-   cd ai_media_analysis
    ```
-
-2. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. Build and start the services:
-   ```bash
-   docker-compose up -d
-   ```
-
-### Configuration
-
-Key configuration options in `.env`:
-
-```env
-# API Keys
-VAST_API_KEY=your_vast_api_key
-RUNPOD_API_KEY=your_runpod_api_key
-
-# Service URLs
-VISION_PIPELINE_URL=http://vision_pipeline:8000
-JOB_MANAGER_URL=http://job_manager_api:8000
-
-# Processing Settings
-BATCH_SIZE=4
-FRAME_SAMPLING_RATE=2
-MAX_WORKERS=4
-```
-
-## 📊 API Documentation
-
-### Vision Pipeline Endpoints
-
-- `POST /analyze/video`: Analyze video content
-- `POST /analyze/image`: Analyze single image
-- `GET /health`: Service health check
-
-### Job Manager Endpoints
-
-- `POST /jobs`: Create new analysis job
-- `GET /jobs/{job_id}`: Get job status
-- `GET /jobs`: List all jobs
-
-## 🔧 Development
-
-### Project Structure
-
-```
-ai_media_analysis/
-├── services/
-│   ├── vision_pipeline/
-│   ├── restraint_detection/
-│   ├── job_manager/
-│   └── common/
-├── control/
-├── streamlit_ui/
-├── data/
-└── setup/
-```
-
-### Adding New Services
-
-1. Create service directory in `services/`
-2. Add Dockerfile and requirements.txt
-3. Update docker-compose.yml
-4. Implement service logic
-5. Add health check endpoint
-
-## 📈 Performance
-
-- Batch processing for efficient resource utilization
-- LRU caching for repeated frame analysis
-- Asynchronous processing for concurrent tasks
-- GPU acceleration for ML inference:
-  - CUDA optimization for all models
-  - Mixed precision (FP16) support
-  - TensorRT optimization for RTX series
-  - Multi-GPU scaling for A100/H100
-- Resource limits and reservations for stability
-- Automatic GPU memory management
-- Dynamic batch size adjustment based on GPU memory
-
-## 🔒 Security
-
-- API key authentication
-- Secure service communication
-- Resource isolation
-- Input validation
-- Error handling and logging
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) for details.
-
-## 📞 Support
-
-For support, please open an issue in the GitHub repository.
-
-## 🔄 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for version history and updates.
-
-## 📊 Status
-
-Current project status and roadmap can be found in [STATUS.md](STATUS.md).
