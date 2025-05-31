@@ -139,6 +139,21 @@
 - Cloud integration requires API key management
 - Documentation updates needed with new features
 
+## Docker-Konfiguration
+
+### Aktueller Status
+- ✅ Basis-Services (Redis, Datenpersistenz) konfiguriert
+- ✅ Netzwerk-Konfiguration optimiert
+- ✅ Volume-Mappings korrigiert
+- ✅ Health-Checks implementiert
+- ⏳ AI-Module Integration in Arbeit
+
+### Nächste Schritte
+1. Integration der AI-Module in die Docker-Compose Konfiguration
+2. Implementierung der Service-Abhängigkeiten
+3. Konfiguration der GPU-Unterstützung
+4. Einrichtung des Logging-Systems
+
 ## Implementierte Komponenten
 
 ### Job-Management (✅ Fertig)

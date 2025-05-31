@@ -141,8 +141,19 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 ### Changed
 - Updated docker-compose to mount new volumes for extended processing
 - `vision_pipeline` now supports image series
+- Bereinigung der Docker-Compose Konfiguration
+  - Entfernung invalider Volume-Definitionen
+  - Vereinfachung der Service-Konfigurationen
+  - Optimierung der Netzwerk- und Volume-Einstellungen
+  - Verbesserung der Health-Checks für Services
 
 ### Pending
 - GPU runtime validation
 - Inter-service signaling via Redis (jobs, results, scaling triggers)
 - Shared logging and healthchecks
+
+### Fixed
+- Korrektur der Docker-Compose Validierungsfehler
+  - Entfernung von `volumes.face_reid` und `volumes.whisper_transcriber`
+  - Bereinigung der Service-Definitionen
+  - Korrektur der Volume-Mappings
