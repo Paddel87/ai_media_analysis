@@ -1,15 +1,27 @@
-torch>=2.0.0
-torchvision>=0.15.0
+# Basis-Abhängigkeiten
 numpy>=1.21.0
-opencv-python>=4.5.0
-transformers
-loguru
-orjson
-pydantic
-Pillow
-requests>=2.26.0
-python-multipart>=0.0.5
-mmcv>=2.0.0
-mmpose>=1.0.0
+opencv-python>=4.5.3
+Pillow>=8.3.1
+
+# API und Server
 fastapi>=0.68.0
 uvicorn>=0.15.0
+pydantic>=1.8.2
+aiohttp>=3.8.1
+
+# GPU Support
+torch>=1.9.0
+torchvision>=0.10.0
+
+# Job Queue
+redis>=4.0.0
+rq>=1.9.0
+
+# Logging und Monitoring
+python-json-logger>=2.0.2
+prometheus-client>=0.11.0
+
+# Entwicklung
+pytest>=6.2.5
+black>=21.7b0
+flake8>=3.9.2

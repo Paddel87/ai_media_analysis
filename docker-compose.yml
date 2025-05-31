@@ -12,6 +12,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
   job_manager:
     build:
@@ -30,6 +38,19 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   job_manager_api:
     build:
@@ -50,33 +71,199 @@ services:
     depends_on:
       - job_manager
       - redis
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  thumbnail_generator:
+  vision_pipeline:
     build:
-      context: ./services/thumbnail_generator
+      context: ./services/vision_pipeline
       dockerfile: Dockerfile
+    image: ai_media_analysis/vision_pipeline:latest
+    container_name: vision_pipeline
     volumes:
       - ./data:/app/data
     environment:
+      - REDIS_URL=redis://redis:6379/0
+      - POSE_SERVICE_URL=http://pose_estimation:8000
+      - OCR_SERVICE_URL=http://ocr_detection:8000
+      - NSFW_SERVICE_URL=http://clip_nsfw:8000
+      - RESTRAINT_SERVICE_URL=http://restraint_detection:8000
+      - BATCH_SIZE=4
+      - FRAME_SAMPLING_RATE=2
+      - MAX_WORKERS=4
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - JOB_MANAGER_URL=http://job_manager_api:8000
     depends_on:
       redis:
         condition: service_healthy
+      job_manager_api:
+        condition: service_started
+      pose_estimation:
+        condition: service_healthy
+      ocr_detection:
+        condition: service_healthy
+      clip_nsfw:
+        condition: service_healthy
+      restraint_detection:
+        condition: service_healthy
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  vision_job_processor:
+    build:
+      context: ./services/vision_pipeline
+      dockerfile: Dockerfile.job_processor
+    image: ai_media_analysis/vision_job_processor:latest
+    container_name: vision_job_processor
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - POSE_SERVICE_URL=http://pose_estimation:8000
+      - OCR_SERVICE_URL=http://ocr_detection:8000
+      - NSFW_SERVICE_URL=http://clip_nsfw:8000
+      - RESTRAINT_SERVICE_URL=http://restraint_detection:8000
+      - BATCH_SIZE=4
+      - FRAME_SAMPLING_RATE=2
+      - MAX_WORKERS=4
+      - JOB_MANAGER_URL=http://job_manager_api:8000
+    depends_on:
+      - vision_pipeline
+      - pose_estimation
+      - ocr_detection
+      - clip_nsfw
+      - restraint_detection
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   pose_estimation:
-    build: 
+    build:
       context: ./services/pose_estimation
       dockerfile: Dockerfile
-    container_name: ai_pose_estimation
-    restart: unless-stopped
-    ports:
-      - "8001:8000"
+    image: ai_media_analysis/pose_estimation:latest
+    container_name: pose_estimation
     volumes:
-      - ./data/results:/app/results
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - ./data:/app/data
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ocr_detection:
+    build:
+      context: ./services/ocr_detection
+      dockerfile: Dockerfile
+    image: ai_media_analysis/ocr_detection:latest
+    container_name: ocr_detection
+    volumes:
+      - ./data:/app/data
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  clip_nsfw:
+    build:
+      context: ./services/clip_nsfw
+      dockerfile: Dockerfile
+    image: ai_media_analysis/clip_nsfw:latest
+    container_name: clip_nsfw
+    volumes:
+      - ./data:/app/data
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  restraint_detection:
+    build:
+      context: ./services/restraint_detection
+      dockerfile: Dockerfile
+    ports:
+      - "8004:8000"
+    volumes:
+      - ./data:/app/data
     deploy:
       resources:
         reservations:
@@ -84,61 +271,75 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    depends_on:
-      redis:
-        condition: service_healthy
+    networks:
+      - ai_media_network
 
-  vision_pipeline:
+  control:
     build:
-      context: ./services/vision_pipeline
+      context: ./control
       dockerfile: Dockerfile
-    container_name: ai_vision_pipeline
-    restart: unless-stopped
+    image: ai_media_analysis/control:latest
+    container_name: control
     volumes:
       - ./data:/app/data
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - POSE_SERVICE_URL=http://pose_estimation:8000
+      - VISION_PIPELINE_URL=http://vision_pipeline:8000
+      - JOB_MANAGER_URL=http://job_manager_api:8000
     depends_on:
-      - pose_estimation
-      - redis
+      vision_pipeline:
+        condition: service_healthy
+      job_manager_api:
+        condition: service_healthy
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  ocr_detection:
-    build: ./services/ocr_detection
-    container_name: ai_ocr_detection
-    restart: unless-stopped
-    depends_on:
-      - redis
+  streamlit_ui:
+    build:
+      context: ./streamlit_ui
+      dockerfile: Dockerfile
+    image: ai_media_analysis/streamlit_ui:latest
+    container_name: streamlit_ui
+    ports:
+      - "8501:8501"
     volumes:
-      - ./data/results:/app/results
+      - ./data:/app/data
+    environment:
+      - CONTROL_URL=http://control:8000
+    depends_on:
+      control:
+        condition: service_healthy
+    networks:
+      - ai_media_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  clip_nsfw:
-    build: ./services/clip_nsfw
-    container_name: ai_clip_nsfw
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-
-  face_reid:
-    build: ./services/face_reid
-    container_name: ai_face_reid
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
-
-  whisper_transcriber:
-    build: ./services/whisper_transcriber
-    container_name: ai_whisper_transcriber
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - ./data/results:/app/results
+networks:
+  ai_media_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
 
 volumes:
   redis_data:
@@ -146,6 +347,13 @@ volumes:
     driver_opts:
       type: none
       device: /data/redis
+      o: bind
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /data/media
+      o: bind
 
 # Additional AI Modules
 

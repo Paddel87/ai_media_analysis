@@ -1,6 +1,6 @@
 # Projektstatus
 
-**Aktuelle Version:** 0.4.0 (20. März 2024)
+**Aktuelle Version:** 0.4.0 (31. Mai 2025)
 
 ## Implementierte Komponenten
 

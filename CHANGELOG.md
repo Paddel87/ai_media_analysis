@@ -39,7 +39,7 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Basis-Docker-Konfiguration
 - README.md mit Projektbeschreibung
 
-## [0.4.0] - 2024-03-20
+## [0.4.0] - 2025-05-31
 ### Hinzugefügt
 - Pose Estimation Service implementiert
 - Vision Pipeline mit Pose Estimation Integration
