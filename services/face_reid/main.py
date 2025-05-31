@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 import torch
 import torch.nn as nn
@@ -17,6 +17,11 @@ import uuid
 import requests
 import io
 import base64
+import redis
+import pickle
+from functools import lru_cache
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +31,14 @@ app = FastAPI(
     title="Face Re-Identification Service",
     description="Service für Gesichtserkennung und Re-Identification in Bildern und Videos"
 )
+
+# Redis-Konfiguration
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+
+# Thread Pool für CPU-intensive Operationen
+thread_pool = ThreadPoolExecutor(max_workers=4)
 
 class ImageAnalysisRequest(BaseModel):
     image_data: bytes
@@ -52,12 +65,24 @@ class AnalysisResult(BaseModel):
     faces: List[FaceDetectionResult]
     error: Optional[str] = None
 
+class BatchAnalysisRequest(BaseModel):
+    images: List[ImageAnalysisRequest]
+    batch_size: int = 4
+
 class FaceReIDService:
     def __init__(self):
         self.clip_service_url = "http://clip-service:8000"
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.face_analyzer = FaceAnalysis(name="buffalo_l", root="./models")
         self.face_analyzer.prepare(ctx_id=0, det_size=(640, 640))
+        
+        # Redis-Verbindung
+        self.redis_client = redis.Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            db=REDIS_DB,
+            decode_responses=True
+        )
         
         # Emotion-Kategorien für CLIP
         self.emotion_categories = [
@@ -66,7 +91,10 @@ class FaceReIDService:
             "pain expression", "pleasure expression"
         ]
         
-    async def analyze_face(self, image_data: bytes) -> Dict:
+        # Cache für Embeddings
+        self.embedding_cache = {}
+        
+    async def analyze_face(self, image_data: bytes, job_id: str, media_id: str, source_type: str) -> Dict:
         """
         Analysiert ein Gesicht mit InsightFace und CLIP
         """
@@ -81,42 +109,52 @@ class FaceReIDService:
             if not faces:
                 return {"error": "Kein Gesicht gefunden"}
             
-            face = faces[0]  # Erstes erkanntes Gesicht
-            
-            # CLIP-Analyse für Emotionen
-            response = requests.post(
-                f"{self.clip_service_url}/analyze",
-                json={
-                    "image_data": base64.b64encode(image_data).decode(),
-                    "text_queries": self.emotion_categories
+            results = []
+            for face in faces:
+                # CLIP-Analyse für Emotionen
+                response = requests.post(
+                    f"{self.clip_service_url}/analyze",
+                    json={
+                        "image_data": base64.b64encode(image_data).decode(),
+                        "text_queries": self.emotion_categories
+                    }
+                )
+                
+                if response.status_code != 200:
+                    raise HTTPException(status_code=500, detail="CLIP-Service nicht erreichbar")
+                
+                emotion_results = response.json()
+                
+                # Ergebnisse formatieren
+                face_id = str(uuid.uuid4())
+                result = {
+                    "face_id": face_id,
+                    "bbox": face.bbox.tolist(),
+                    "landmarks": face.kps.tolist(),
+                    "embedding": face.embedding.tolist(),
+                    "confidence": float(face.det_score),
+                    "emotions": emotion_results,
+                    "job_id": job_id,
+                    "media_id": media_id,
+                    "source_type": source_type,
+                    "timestamp": datetime.utcnow().isoformat()
                 }
-            )
+                
+                # In Redis speichern
+                self._save_face_to_redis(face_id, result)
+                
+                results.append(result)
             
-            if response.status_code != 200:
-                raise HTTPException(status_code=500, detail="CLIP-Service nicht erreichbar")
-            
-            emotion_results = response.json()
-            
-            # Ergebnisse formatieren
-            result = {
-                "face_id": str(uuid.uuid4()),
-                "bbox": face.bbox.tolist(),
-                "landmarks": face.kps.tolist(),
-                "embedding": face.embedding.tolist(),
-                "confidence": float(face.det_score),
-                "emotions": emotion_results,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            
-            return result
+            return {"faces": results}
             
         except Exception as e:
             logger.error(f"Fehler bei der Gesichtsanalyse: {str(e)}")
             raise
 
-    async def compare_faces(self, face1_embedding: List[float], face2_embedding: List[float]) -> float:
+    @lru_cache(maxsize=1000)
+    async def compare_faces(self, face1_embedding: Tuple[float, ...], face2_embedding: Tuple[float, ...]) -> float:
         """
-        Vergleicht zwei Gesichts-Embeddings
+        Vergleicht zwei Gesichts-Embeddings mit Caching
         """
         try:
             face1 = np.array(face1_embedding)
@@ -138,8 +176,17 @@ class FaceReIDService:
         """
         try:
             matches = []
+            target_embedding_tuple = tuple(target_embedding)
+            
+            # Parallelisierung für große Datenmengen
+            tasks = []
             for i, embedding in enumerate(embeddings):
-                similarity = await self.compare_faces(target_embedding, embedding)
+                embedding_tuple = tuple(embedding)
+                tasks.append(self.compare_faces(target_embedding_tuple, embedding_tuple))
+            
+            similarities = await asyncio.gather(*tasks)
+            
+            for i, similarity in enumerate(similarities):
                 if similarity >= threshold:
                     matches.append({
                         "index": i,
@@ -154,36 +201,93 @@ class FaceReIDService:
             logger.error(f"Fehler bei der Suche nach Übereinstimmungen: {str(e)}")
             raise
 
+    def _save_face_to_redis(self, face_id: str, face_data: Dict):
+        """
+        Speichert Gesichtsdaten in Redis
+        """
+        try:
+            # Gesichtsdaten serialisieren
+            face_data_bytes = pickle.dumps(face_data)
+            
+            # In Redis speichern
+            self.redis_client.set(f"face:{face_id}", face_data_bytes)
+            
+            # Index für schnelle Suche
+            self.redis_client.sadd("faces", face_id)
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern in Redis: {str(e)}")
+            raise
+
     def get_face_history(self, face_id: str) -> Dict[str, Any]:
         """
         Gibt die Historie eines Gesichts zurück
         """
-        if face_id not in self.face_database:
-            raise HTTPException(status_code=404, detail="Gesicht nicht gefunden")
-        return self.face_database[face_id]
+        try:
+            face_data = self.redis_client.get(f"face:{face_id}")
+            if not face_data:
+                raise HTTPException(status_code=404, detail="Gesicht nicht gefunden")
+            
+            return pickle.loads(face_data)
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der Gesichtshistorie: {str(e)}")
+            raise
+
+    async def process_batch(self, batch: List[ImageAnalysisRequest]) -> List[Dict]:
+        """
+        Verarbeitet einen Batch von Bildern
+        """
+        try:
+            results = []
+            for request in batch:
+                result = await self.analyze_face(
+                    request.image_data,
+                    request.job_id,
+                    request.media_id,
+                    request.source_type
+                )
+                results.append(result)
+            return results
+            
+        except Exception as e:
+            logger.error(f"Fehler bei der Batch-Verarbeitung: {str(e)}")
+            raise
 
 # Service-Instanz erstellen
 face_reid_service = FaceReIDService()
 
-class FaceAnalysisRequest(BaseModel):
-    image_data: bytes
-
-class FaceComparisonRequest(BaseModel):
-    face1_embedding: List[float]
-    face2_embedding: List[float]
-
-class FaceMatchRequest(BaseModel):
-    target_embedding: List[float]
-    embeddings: List[List[float]]
-    threshold: float = 0.5
-
 @app.post("/analyze")
-async def analyze_face(request: FaceAnalysisRequest):
+async def analyze_face(request: ImageAnalysisRequest):
     """
     Analysiert ein Gesicht
     """
     try:
-        return await face_reid_service.analyze_face(request.image_data)
+        return await face_reid_service.analyze_face(
+            request.image_data,
+            request.job_id,
+            request.media_id,
+            request.source_type
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analyze_batch")
+async def analyze_batch(request: BatchAnalysisRequest):
+    """
+    Analysiert einen Batch von Bildern
+    """
+    try:
+        # Batch in Chunks aufteilen
+        chunks = [request.images[i:i + request.batch_size] 
+                 for i in range(0, len(request.images), request.batch_size)]
+        
+        results = []
+        for chunk in chunks:
+            chunk_results = await face_reid_service.process_batch(chunk)
+            results.extend(chunk_results)
+        
+        return {"results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -194,8 +298,8 @@ async def compare_faces(request: FaceComparisonRequest):
     """
     try:
         similarity = await face_reid_service.compare_faces(
-            request.face1_embedding,
-            request.face2_embedding
+            tuple(request.face1_embedding),
+            tuple(request.face2_embedding)
         )
         return {"similarity": similarity}
     except Exception as e:
@@ -215,17 +319,34 @@ async def find_matches(request: FaceMatchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/face/{face_id}")
+async def get_face(face_id: str):
+    """
+    Gibt die Daten eines Gesichts zurück
+    """
+    try:
+        return face_reid_service.get_face_history(face_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/health")
 async def health_check():
     """
     Health Check Endpoint
     """
     try:
+        # Redis Health Check
+        redis_healthy = face_reid_service.redis_client.ping()
+        
         # CLIP-Service Health Check
         response = requests.get(f"{face_reid_service.clip_service_url}/health")
-        if response.status_code != 200:
-            return {"status": "unhealthy", "clip_service": "unavailable"}
-        return {"status": "healthy", "clip_service": "available"}
+        clip_healthy = response.status_code == 200
+        
+        return {
+            "status": "healthy" if redis_healthy and clip_healthy else "unhealthy",
+            "redis": "available" if redis_healthy else "unavailable",
+            "clip_service": "available" if clip_healthy else "unavailable"
+        }
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
 
