@@ -190,13 +190,23 @@ services:
         max-file: "3"
 
   whisper_transcriber:
-    build: ./services/whisper_transcriber
+    build: 
+      context: ./services/whisper_transcriber
+      dockerfile: Dockerfile
     container_name: ai_whisper_transcriber
     restart: unless-stopped
+    ports:
+      - "8001:8000"
     depends_on:
       - redis
     volumes:
       - ./data/results:/app/results
+      - ./services/whisper_transcriber/models:/app/models
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
     networks:
       - ai_network
     deploy:
@@ -222,24 +232,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  whisper-transcriber:
-    build: 
-      context: ./services/whisper_transcriber
-      dockerfile: Dockerfile
-    ports:
-      - "8001:8000"
-    volumes:
-      - ./services/whisper_transcriber/models:/app/models
-    environment:
-      - PYTHONUNBUFFERED=1
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
   vector-db:
     build:
       context: ./services/vector_db
@@ -248,46 +240,6 @@ services:
       - "8002:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-    depends_on:
-      - qdrant
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-      - "6334:6334"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    environment:
-      - QDRANT_ALLOW_CORS=true
-
-  llm-service:
-    build:
-      context: ./services/llm_service
-      dockerfile: Dockerfile
-    ports:
-      - "8003:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    depends_on:
-      - vector-db
-    networks:
-      - ai_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
 networks:
   ai_network:
