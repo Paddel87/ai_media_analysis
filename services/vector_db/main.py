@@ -4,7 +4,7 @@ import qdrant_client
 from qdrant_client.http import models
 import numpy as np
 import logging
-from typing import List, Dict, Optional, Union, Any
+from typing import List, Dict, Optional, Union, Any, Tuple
 import os
 from datetime import datetime
 import json
@@ -16,6 +16,10 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
+import torch
+import faiss
+import gc
+from pathlib import Path
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
@@ -71,226 +75,306 @@ class CollectionConfig(BaseModel):
     init_from: Optional[Dict] = None
     quantization_config: Optional[Dict] = None
 
-class VectorDBService:
-    def __init__(self):
-        self.client = qdrant_client.QdrantClient(
-            host=os.getenv("QDRANT_HOST", "localhost"),
-            port=int(os.getenv("QDRANT_PORT", 6333))
-        )
-        self.collections = {}
-        
-        # Redis-Verbindung
-        self.redis_client = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=REDIS_DB,
-            decode_responses=True
-        )
-        
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    def create_collection(self, config: CollectionConfig) -> bool:
+class VectorDB:
+    def __init__(self,
+                 index_path: str = "data/vector_db",
+                 redis_host: str = "redis",
+                 redis_port: int = 6379,
+                 redis_db: int = 0,
+                 batch_size: int = 1000,
+                 gpu_memory_threshold: float = 0.8,
+                 cache_ttl: int = 3600):
         """
-        Erstellt eine neue Collection mit Retry-Logik
+        Initialisiert die Vector DB mit Performance-Optimierungen.
+        
+        Args:
+            index_path: Pfad zum Index-Verzeichnis
+            redis_host: Redis-Host
+            redis_port: Redis-Port
+            redis_db: Redis-Datenbank
+            batch_size: Optimale Batch-Größe für GPU
+            gpu_memory_threshold: GPU-Speicher-Schwellenwert
+            cache_ttl: Cache-TTL in Sekunden
         """
         try:
-            # Collection existiert bereits
-            if config.name in self.collections:
-                return True
-                
-            # Collection erstellen
-            self.client.create_collection(
-                collection_name=config.name,
-                vectors_config=models.VectorParams(
-                    size=config.vector_size,
-                    distance=models.Distance.COSINE
-                ),
-                optimizers_config=config.optimizers_config,
-                replication_factor=config.replication_factor,
-                write_consistency_factor=config.write_consistency_factor,
-                init_from=config.init_from,
-                quantization_config=config.quantization_config
+            # Konfiguration
+            self.index_path = Path(index_path)
+            self.batch_size = batch_size
+            self.gpu_memory_threshold = gpu_memory_threshold
+            self.cache_ttl = cache_ttl
+            
+            # Verzeichnis erstellen
+            self.index_path.mkdir(parents=True, exist_ok=True)
+            
+            # Redis für Caching
+            self.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                db=redis_db,
+                decode_responses=True
             )
             
-            self.collections[config.name] = config
-            return True
+            # CUDA-Optimierungen
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
+                torch.backends.cudnn.deterministic = False
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+            
+            # Indizes laden oder erstellen
+            self.indices = {}
+            self._load_indices()
+            
+            logger.info("Vector DB initialisiert", extra={
+                "index_path": str(self.index_path),
+                "batch_size": batch_size,
+                "device": str(self.device)
+            })
             
         except Exception as e:
-            logger.error(f"Fehler beim Erstellen der Collection: {str(e)}")
-            raise
-            
-    @lru_cache(maxsize=1000)
-    def get_collection_info(self, collection_name: str) -> Dict:
-        """
-        Gibt Informationen über eine Collection zurück
-        """
-        try:
-            return self.client.get_collection(collection_name=collection_name)
-        except Exception as e:
-            logger.error(f"Fehler beim Abrufen der Collection-Info: {str(e)}")
+            logger.error("Fehler bei der Initialisierung der Vector DB", exc_info=True)
             raise
 
-    async def upsert_vectors_batch(self, batch: BatchVector) -> bool:
+    def _load_indices(self):
+        """Lädt existierende Indizes oder erstellt neue."""
+        try:
+            for index_file in self.index_path.glob("*.index"):
+                collection_name = index_file.stem
+                self.indices[collection_name] = faiss.read_index(str(index_file))
+                
+            logger.info(f"Geladene Indizes: {list(self.indices.keys())}")
+            
+        except Exception as e:
+            logger.error("Fehler beim Laden der Indizes", exc_info=True)
+            raise
+
+    def _adjust_batch_size(self):
+        """Passt die Batch-Größe basierend auf GPU-Speicher an."""
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated()
+            memory_reserved = torch.cuda.memory_reserved()
+            total_memory = torch.cuda.get_device_properties(0).total_memory
+            
+            memory_usage = (memory_allocated + memory_reserved) / total_memory
+            
+            if memory_usage > self.gpu_memory_threshold:
+                self.batch_size = max(100, self.batch_size // 2)
+                logger.warning("Batch-Größe reduziert", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+            elif memory_usage < self.gpu_memory_threshold * 0.5:
+                self.batch_size = min(10000, self.batch_size * 2)
+                logger.info("Batch-Größe erhöht", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+
+    def _cleanup_gpu_memory(self):
+        """Bereinigt GPU-Speicher."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+
+    async def create_collection(self, collection_name: str, dimension: int) -> bool:
         """
-        Speichert oder aktualisiert mehrere Vektoren in einem Batch
+        Erstellt eine neue Collection.
+        
+        Args:
+            collection_name: Name der Collection
+            dimension: Dimension der Vektoren
+            
+        Returns:
+            True wenn erfolgreich
         """
         try:
-            # Collection existiert nicht
-            collection_name = batch.vectors[0].collection
-            if collection_name not in self.collections:
+            if collection_name in self.indices:
+                logger.warning(f"Collection {collection_name} existiert bereits")
+                return False
+            
+            # GPU-Index erstellen
+            if torch.cuda.is_available():
+                config = faiss.GpuIndexFlatConfig()
+                config.device = 0
+                index = faiss.GpuIndexFlatL2(
+                    faiss.StandardGpuResources(),
+                    dimension,
+                    config
+                )
+            else:
+                index = faiss.IndexFlatL2(dimension)
+            
+            self.indices[collection_name] = index
+            
+            # Index speichern
+            index_path = self.index_path / f"{collection_name}.index"
+            faiss.write_index(index, str(index_path))
+            
+            logger.info(f"Collection {collection_name} erstellt", extra={
+                "dimension": dimension
+            })
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Erstellen der Collection {collection_name}", exc_info=True)
+            raise
+
+    async def upsert_vectors(self,
+                           collection_name: str,
+                           vectors: List[np.ndarray],
+                           ids: Optional[List[int]] = None) -> bool:
+        """
+        Fügt Vektoren zur Collection hinzu oder aktualisiert sie.
+        
+        Args:
+            collection_name: Name der Collection
+            vectors: Liste von Vektoren
+            ids: Optionale IDs für die Vektoren
+            
+        Returns:
+            True wenn erfolgreich
+        """
+        try:
+            if collection_name not in self.indices:
                 raise ValueError(f"Collection {collection_name} existiert nicht")
-                
-            # Batch in Chunks aufteilen
-            chunks = [batch.vectors[i:i + batch.batch_size] 
-                     for i in range(0, len(batch.vectors), batch.batch_size)]
             
-            for chunk in chunks:
-                points = [
-                    models.PointStruct(
-                        id=vector.id,
-                        vector=vector.vector,
-                        payload=vector.metadata
-                    )
-                    for vector in chunk
-                ]
+            # Batch-Verarbeitung
+            for i in range(0, len(vectors), self.batch_size):
+                batch_vectors = vectors[i:i + self.batch_size]
+                batch_ids = ids[i:i + self.batch_size] if ids else None
                 
-                # Vektoren speichern
-                self.client.upsert(
-                    collection_name=collection_name,
-                    points=points
-                )
+                # Vektoren in GPU-Speicher laden
+                if torch.cuda.is_available():
+                    batch_vectors = torch.tensor(batch_vectors, device=self.device)
                 
-                # Cache invalidieren
-                self._invalidate_cache(collection_name)
+                # Vektoren hinzufügen
+                if batch_ids:
+                    self.indices[collection_name].add_with_ids(batch_vectors, batch_ids)
+                else:
+                    self.indices[collection_name].add(batch_vectors)
+                
+                # Batch-Größe anpassen
+                self._adjust_batch_size()
+                
+                # GPU-Speicher bereinigen
+                self._cleanup_gpu_memory()
+            
+            # Index speichern
+            index_path = self.index_path / f"{collection_name}.index"
+            faiss.write_index(self.indices[collection_name], str(index_path))
+            
+            logger.info(f"Vektoren zu {collection_name} hinzugefügt", extra={
+                "vector_count": len(vectors)
+            })
             
             return True
             
         except Exception as e:
-            logger.error(f"Fehler beim Batch-Speichern der Vektoren: {str(e)}")
+            logger.error(f"Fehler beim Hinzufügen von Vektoren zu {collection_name}", exc_info=True)
             raise
-            
-    def upsert_vector(self, vector: Vector) -> bool:
+
+    async def search_vectors(self,
+                           collection_name: str,
+                           query_vectors: List[np.ndarray],
+                           k: int = 10) -> List[Tuple[List[int], List[float]]]:
         """
-        Speichert oder aktualisiert einen Vektor
+        Sucht nach ähnlichen Vektoren.
+        
+        Args:
+            collection_name: Name der Collection
+            query_vectors: Suchvektoren
+            k: Anzahl der Ergebnisse
+            
+        Returns:
+            Liste von (IDs, Distanzen)-Tupeln
         """
         try:
-            # Collection existiert nicht
-            if vector.collection not in self.collections:
-                raise ValueError(f"Collection {vector.collection} existiert nicht")
+            if collection_name not in self.indices:
+                raise ValueError(f"Collection {collection_name} existiert nicht")
+            
+            results = []
+            
+            # Batch-Verarbeitung
+            for i in range(0, len(query_vectors), self.batch_size):
+                batch_vectors = query_vectors[i:i + self.batch_size]
                 
-            # Cache-Key generieren
-            cache_key = f"vector:{vector.collection}:{vector.id}"
+                # Cache-Key generieren
+                cache_key = f"search:{collection_name}:{hash(batch_vectors.tobytes())}:{k}"
+                
+                # Cache prüfen
+                cached_result = self.redis_client.get(cache_key)
+                if cached_result:
+                    results.extend(pickle.loads(cached_result))
+                    continue
+                
+                # Vektoren in GPU-Speicher laden
+                if torch.cuda.is_available():
+                    batch_vectors = torch.tensor(batch_vectors, device=self.device)
+                
+                # Suche durchführen
+                distances, indices = self.indices[collection_name].search(batch_vectors, k)
+                
+                # Ergebnisse cachen
+                self.redis_client.setex(
+                    cache_key,
+                    self.cache_ttl,
+                    pickle.dumps(list(zip(indices, distances)))
+                )
+                
+                results.extend(zip(indices, distances))
+                
+                # Batch-Größe anpassen
+                self._adjust_batch_size()
+                
+                # GPU-Speicher bereinigen
+                self._cleanup_gpu_memory()
             
-            # Vektor speichern
-            self.client.upsert(
-                collection_name=vector.collection,
-                points=[
-                    models.PointStruct(
-                        id=vector.id,
-                        vector=vector.vector,
-                        payload=vector.metadata
-                    )
-                ]
-            )
+            return results
             
-            # Cache aktualisieren
-            self.redis_client.set(cache_key, pickle.dumps(vector))
+        except Exception as e:
+            logger.error(f"Fehler bei der Vektorsuche in {collection_name}", exc_info=True)
+            raise
+
+    async def delete_collection(self, collection_name: str) -> bool:
+        """
+        Löscht eine Collection.
+        
+        Args:
+            collection_name: Name der Collection
+            
+        Returns:
+            True wenn erfolgreich
+        """
+        try:
+            if collection_name not in self.indices:
+                logger.warning(f"Collection {collection_name} existiert nicht")
+                return False
+            
+            # Index löschen
+            del self.indices[collection_name]
+            
+            # Datei löschen
+            index_path = self.index_path / f"{collection_name}.index"
+            if index_path.exists():
+                index_path.unlink()
+            
+            # Cache löschen
+            pattern = f"search:{collection_name}:*"
+            for key in self.redis_client.scan_iter(pattern):
+                self.redis_client.delete(key)
+            
+            logger.info(f"Collection {collection_name} gelöscht")
             
             return True
             
         except Exception as e:
-            logger.error(f"Fehler beim Speichern des Vektors: {str(e)}")
+            logger.error(f"Fehler beim Löschen der Collection {collection_name}", exc_info=True)
             raise
-            
-    async def search_vectors(self, request: SearchRequest) -> List[SearchResult]:
-        """
-        Sucht ähnliche Vektoren
-        """
-        try:
-            # Collection existiert nicht
-            if request.collection not in self.collections:
-                raise ValueError(f"Collection {request.collection} existiert nicht")
-                
-            # Cache-Key generieren
-            cache_key = f"search:{request.collection}:{hash(str(request.dict()))}"
-            
-            # Cache prüfen
-            cached_results = self.redis_client.get(cache_key)
-            if cached_results:
-                return pickle.loads(cached_results)
-                
-            # Suche durchführen
-            results = self.client.search(
-                collection_name=request.collection,
-                query_vector=request.vector,
-                limit=request.limit,
-                score_threshold=request.score_threshold,
-                query_filter=request.filter,
-                search_params=request.search_params,
-                with_payload=request.with_payload,
-                with_vectors=request.with_vectors
-            )
-            
-            # Ergebnisse formatieren
-            formatted_results = [
-                SearchResult(
-                    id=str(point.id),
-                    score=point.score,
-                    metadata=point.payload,
-                    vector=point.vector if request.with_vectors else None
-                )
-                for point in results
-            ]
-            
-            # Cache speichern
-            self.redis_client.set(cache_key, pickle.dumps(formatted_results))
-            
-            return formatted_results
-            
-        except Exception as e:
-            logger.error(f"Fehler bei der Vektorsuche: {str(e)}")
-            raise
-            
-    def delete_vector(self, collection: str, vector_id: str) -> bool:
-        """
-        Löscht einen Vektor
-        """
-        try:
-            # Collection existiert nicht
-            if collection not in self.collections:
-                raise ValueError(f"Collection {collection} existiert nicht")
-                
-            # Vektor löschen
-            self.client.delete(
-                collection_name=collection,
-                points_selector=models.PointIdsList(
-                    points=[vector_id]
-                )
-            )
-            
-            # Cache invalidieren
-            self._invalidate_cache(collection)
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Löschen des Vektors: {str(e)}")
-            raise
-            
-    def _invalidate_cache(self, collection: str):
-        """
-        Invalidiert den Cache für eine Collection
-        """
-        try:
-            # Cache-Keys für Collection löschen
-            pattern = f"*:{collection}:*"
-            keys = self.redis_client.keys(pattern)
-            if keys:
-                self.redis_client.delete(*keys)
-        except Exception as e:
-            logger.error(f"Fehler beim Invalidieren des Caches: {str(e)}")
 
 # Service-Instanz erstellen
-vector_db_service = VectorDBService()
+vector_db_service = VectorDB()
 
 @app.post("/collections")
 async def create_collection(config: CollectionConfig):
@@ -298,7 +382,7 @@ async def create_collection(config: CollectionConfig):
     Erstellt eine neue Collection
     """
     try:
-        success = vector_db_service.create_collection(config)
+        success = await vector_db_service.create_collection(config.name, config.vector_size)
         return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -320,7 +404,7 @@ async def upsert_vector(vector: Vector):
     Speichert oder aktualisiert einen Vektor
     """
     try:
-        success = vector_db_service.upsert_vector(vector)
+        success = await vector_db_service.upsert_vector(vector.collection, vector.vector, vector.id)
         return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -331,7 +415,7 @@ async def upsert_vectors_batch(batch: BatchVector):
     Speichert oder aktualisiert mehrere Vektoren in einem Batch
     """
     try:
-        success = await vector_db_service.upsert_vectors_batch(batch)
+        success = await vector_db_service.upsert_vectors(batch.collection, batch.vectors, batch.batch_size)
         return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -342,7 +426,7 @@ async def search_vectors(request: SearchRequest):
     Sucht ähnliche Vektoren
     """
     try:
-        results = await vector_db_service.search_vectors(request)
+        results = await vector_db_service.search_vectors(request.collection, request.vector, request.limit)
         return {"results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -353,7 +437,7 @@ async def delete_vector(collection: str, vector_id: str):
     Löscht einen Vektor
     """
     try:
-        success = vector_db_service.delete_vector(collection, vector_id)
+        success = await vector_db_service.delete_collection(collection)
         return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

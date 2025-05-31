@@ -21,6 +21,9 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 import openai
 from anthropic import Anthropic
+import numpy as np
+import gc
+from pathlib import Path
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
@@ -57,250 +60,371 @@ class LLMResponse(BaseModel):
     safety_ratings: Optional[Dict] = None
 
 class LLMService:
-    def __init__(self):
-        # Redis-Verbindung
-        self.redis_client = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=REDIS_DB,
-            decode_responses=True
-        )
-        
-        # API-Keys laden
-        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-        
-        # Gemini konfigurieren
-        if self.gemini_api_key:
-            genai.configure(api_key=self.gemini_api_key)
-            
-        # OpenAI konfigurieren
-        if self.openai_api_key:
-            openai.api_key = self.openai_api_key
-            
-        # Anthropic konfigurieren
-        if self.anthropic_api_key:
-            self.anthropic_client = Anthropic(api_key=self.anthropic_api_key)
-            
-        # Lokale Modelle laden
-        self.local_models = {}
-        self._load_local_models()
-        
-    def _load_local_models(self):
+    def __init__(self,
+                 model_name: str = "gpt2",
+                 cache_dir: str = "data/llm_cache",
+                 redis_host: str = "redis",
+                 redis_port: int = 6379,
+                 redis_db: int = 0,
+                 batch_size: int = 4,
+                 max_length: int = 512,
+                 gpu_memory_threshold: float = 0.8,
+                 cache_ttl: int = 3600):
         """
-        Lädt lokale Modelle
+        Initialisiert den LLM-Service mit Performance-Optimierungen.
+        
+        Args:
+            model_name: Name des zu ladenden Modells
+            cache_dir: Verzeichnis für Modell-Cache
+            redis_host: Redis-Host
+            redis_port: Redis-Port
+            redis_db: Redis-Datenbank
+            batch_size: Optimale Batch-Größe für GPU
+            max_length: Maximale Sequenzlänge
+            gpu_memory_threshold: GPU-Speicher-Schwellenwert
+            cache_ttl: Cache-TTL in Sekunden
         """
         try:
-            # Mistral 7B
-            if torch.cuda.is_available():
-                model_id = "mistralai/Mistral-7B-v0.1"
-                tokenizer = AutoTokenizer.from_pretrained(model_id)
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_id,
-                    torch_dtype=torch.float16,
-                    device_map="auto"
-                )
-                self.local_models["mistral-7b"] = {
-                    "model": model,
-                    "tokenizer": tokenizer
-                }
-                
-            # Nous-Hermes-2
-            if torch.cuda.is_available():
-                model_id = "NousResearch/Nous-Hermes-2-7B"
-                tokenizer = AutoTokenizer.from_pretrained(model_id)
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_id,
-                    torch_dtype=torch.float16,
-                    device_map="auto"
-                )
-                self.local_models["nous-hermes-2"] = {
-                    "model": model,
-                    "tokenizer": tokenizer
-                }
-                
-        except Exception as e:
-            logger.error(f"Fehler beim Laden der lokalen Modelle: {str(e)}")
+            # Konfiguration
+            self.model_name = model_name
+            self.cache_dir = Path(cache_dir)
+            self.batch_size = batch_size
+            self.max_length = max_length
+            self.gpu_memory_threshold = gpu_memory_threshold
+            self.cache_ttl = cache_ttl
             
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    async def generate_text(self, request: LLMRequest) -> LLMResponse:
+            # Verzeichnis erstellen
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Redis für Caching
+            self.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                db=redis_db,
+                decode_responses=True
+            )
+            
+            # CUDA-Optimierungen
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
+                torch.backends.cudnn.deterministic = False
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+            
+            # Modell und Tokenizer laden
+            self._load_model()
+            
+            logger.info("LLM-Service initialisiert", extra={
+                "model_name": model_name,
+                "batch_size": batch_size,
+                "device": str(self.device)
+            })
+            
+        except Exception as e:
+            logger.error("Fehler bei der Initialisierung des LLM-Services", exc_info=True)
+            raise
+
+    def _load_model(self):
+        """Lädt das Modell und den Tokenizer."""
+        try:
+            # Tokenizer laden
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                cache_dir=self.cache_dir
+            )
+            
+            # Modell laden
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                cache_dir=self.cache_dir,
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+            )
+            
+            # Modell auf GPU verschieben
+            if torch.cuda.is_available():
+                self.model = self.model.to(self.device)
+            
+            logger.info("Modell und Tokenizer geladen")
+            
+        except Exception as e:
+            logger.error("Fehler beim Laden des Modells", exc_info=True)
+            raise
+
+    def _adjust_batch_size(self):
+        """Passt die Batch-Größe basierend auf GPU-Speicher an."""
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated()
+            memory_reserved = torch.cuda.memory_reserved()
+            total_memory = torch.cuda.get_device_properties(0).total_memory
+            
+            memory_usage = (memory_allocated + memory_reserved) / total_memory
+            
+            if memory_usage > self.gpu_memory_threshold:
+                self.batch_size = max(1, self.batch_size // 2)
+                logger.warning("Batch-Größe reduziert", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+            elif memory_usage < self.gpu_memory_threshold * 0.5:
+                self.batch_size = min(32, self.batch_size * 2)
+                logger.info("Batch-Größe erhöht", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+
+    def _cleanup_gpu_memory(self):
+        """Bereinigt GPU-Speicher."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+
+    async def generate_text(self,
+                          prompt: str,
+                          max_length: Optional[int] = None,
+                          temperature: float = 0.7,
+                          top_p: float = 0.9,
+                          top_k: int = 50,
+                          num_return_sequences: int = 1) -> List[str]:
         """
-        Generiert Text mit dem gewählten LLM
+        Generiert Text basierend auf einem Prompt.
+        
+        Args:
+            prompt: Eingabetext
+            max_length: Maximale Ausgabelänge
+            temperature: Temperatur für Sampling
+            top_p: Top-p für Nucleus Sampling
+            top_k: Top-k für Sampling
+            num_return_sequences: Anzahl der zurückzugebenden Sequenzen
+            
+        Returns:
+            Liste generierter Texte
         """
         try:
             # Cache-Key generieren
-            cache_key = f"llm:{request.provider}:{request.model}:{hash(str(request.dict()))}"
+            cache_key = f"generate:{hash(prompt)}:{max_length}:{temperature}:{top_p}:{top_k}:{num_return_sequences}"
             
             # Cache prüfen
-            cached_response = self.redis_client.get(cache_key)
-            if cached_response:
-                return pickle.loads(cached_response)
-                
-            # Text generieren
-            if request.provider == "gemini":
-                response = await self._generate_gemini(request)
-            elif request.provider == "openai":
-                response = await self._generate_openai(request)
-            elif request.provider == "anthropic":
-                response = await self._generate_anthropic(request)
-            elif request.provider == "local":
-                response = await self._generate_local(request)
-            else:
-                raise ValueError(f"Unbekannter Provider: {request.provider}")
-                
-            # Cache speichern
-            self.redis_client.set(cache_key, pickle.dumps(response))
+            cached_result = self.redis_client.get(cache_key)
+            if cached_result:
+                return pickle.loads(cached_result)
             
-            return response
+            # Parameter anpassen
+            max_length = max_length or self.max_length
             
-        except Exception as e:
-            logger.error(f"Fehler bei der Textgenerierung: {str(e)}")
-            raise
-            
-    async def _generate_gemini(self, request: LLMRequest) -> LLMResponse:
-        """
-        Generiert Text mit Gemini
-        """
-        try:
-            # Safety Settings
-            safety_settings = request.safety_settings or {
-                "HARASSMENT": "block_none",
-                "HATE_SPEECH": "block_none",
-                "SEXUALLY_EXPLICIT": "block_none",
-                "DANGEROUS_CONTENT": "block_none"
-            }
-            
-            # Model initialisieren
-            model = genai.GenerativeModel(
-                model_name=request.model,
-                safety_settings=safety_settings
-            )
-            
-            # Text generieren
-            response = await model.generate_content_async(
-                request.prompt,
-                generation_config={
-                    "temperature": request.temperature,
-                    "max_output_tokens": request.max_tokens
-                }
-            )
-            
-            return LLMResponse(
-                text=response.text,
-                provider="gemini",
-                model=request.model,
-                safety_ratings=response.safety_ratings
-            )
-            
-        except Exception as e:
-            logger.error(f"Fehler bei Gemini-Generierung: {str(e)}")
-            raise
-            
-    async def _generate_openai(self, request: LLMRequest) -> LLMResponse:
-        """
-        Generiert Text mit OpenAI
-        """
-        try:
-            # Text generieren
-            response = await openai.ChatCompletion.acreate(
-                model=request.model,
-                messages=[
-                    {"role": "system", "content": request.system_prompt or "Du bist ein hilfreicher Assistent."},
-                    {"role": "user", "content": request.prompt}
-                ],
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                stream=request.stream
-            )
-            
-            return LLMResponse(
-                text=response.choices[0].message.content,
-                provider="openai",
-                model=request.model,
-                usage=response.usage
-            )
-            
-        except Exception as e:
-            logger.error(f"Fehler bei OpenAI-Generierung: {str(e)}")
-            raise
-            
-    async def _generate_anthropic(self, request: LLMRequest) -> LLMResponse:
-        """
-        Generiert Text mit Anthropic
-        """
-        try:
-            # Text generieren
-            response = await self.anthropic_client.messages.create(
-                model=request.model,
-                messages=[
-                    {"role": "user", "content": request.prompt}
-                ],
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                system=request.system_prompt
-            )
-            
-            return LLMResponse(
-                text=response.content[0].text,
-                provider="anthropic",
-                model=request.model
-            )
-            
-        except Exception as e:
-            logger.error(f"Fehler bei Anthropic-Generierung: {str(e)}")
-            raise
-            
-    async def _generate_local(self, request: LLMRequest) -> LLMResponse:
-        """
-        Generiert Text mit lokalem Modell
-        """
-        try:
-            # Modell prüfen
-            if request.model not in self.local_models:
-                raise ValueError(f"Lokales Modell {request.model} nicht verfügbar")
-                
-            model_data = self.local_models[request.model]
-            
-            # Text generieren
-            inputs = model_data["tokenizer"](
-                request.prompt,
+            # Text tokenisieren
+            inputs = self.tokenizer(
+                prompt,
                 return_tensors="pt",
-                padding=True
-            ).to(model_data["model"].device)
-            
-            outputs = model_data["model"].generate(
-                **inputs,
-                max_length=request.max_tokens,
-                temperature=request.temperature,
-                do_sample=True
+                padding=True,
+                truncation=True,
+                max_length=max_length
             )
             
-            text = model_data["tokenizer"].decode(outputs[0], skip_special_tokens=True)
+            # Eingaben auf GPU verschieben
+            if torch.cuda.is_available():
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
             
-            return LLMResponse(
-                text=text,
-                provider="local",
-                model=request.model
+            # Text generieren
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    **inputs,
+                    max_length=max_length,
+                    temperature=temperature,
+                    top_p=top_p,
+                    top_k=top_k,
+                    num_return_sequences=num_return_sequences,
+                    pad_token_id=self.tokenizer.eos_token_id
+                )
+            
+            # Text dekodieren
+            generated_texts = [
+                self.tokenizer.decode(output, skip_special_tokens=True)
+                for output in outputs
+            ]
+            
+            # Cache speichern
+            self.redis_client.setex(
+                cache_key,
+                self.cache_ttl,
+                pickle.dumps(generated_texts)
             )
+            
+            # Batch-Größe anpassen
+            self._adjust_batch_size()
+            
+            # GPU-Speicher bereinigen
+            self._cleanup_gpu_memory()
+            
+            return generated_texts
             
         except Exception as e:
-            logger.error(f"Fehler bei lokaler Generierung: {str(e)}")
+            logger.error("Fehler bei der Textgenerierung", exc_info=True)
+            raise
+
+    async def generate_text_batch(self,
+                                prompts: List[str],
+                                max_length: Optional[int] = None,
+                                temperature: float = 0.7,
+                                top_p: float = 0.9,
+                                top_k: int = 50,
+                                num_return_sequences: int = 1) -> List[List[str]]:
+        """
+        Generiert Text für mehrere Prompts in einem Batch.
+        
+        Args:
+            prompts: Liste von Eingabetexten
+            max_length: Maximale Ausgabelänge
+            temperature: Temperatur für Sampling
+            top_p: Top-p für Nucleus Sampling
+            top_k: Top-k für Sampling
+            num_return_sequences: Anzahl der zurückzugebenden Sequenzen
+            
+        Returns:
+            Liste von Listen generierter Texte
+        """
+        try:
+            results = []
+            
+            # Prompts in Batches aufteilen
+            for i in range(0, len(prompts), self.batch_size):
+                batch_prompts = prompts[i:i + self.batch_size]
+                
+                # Batch verarbeiten
+                batch_results = await asyncio.gather(*[
+                    self.generate_text(
+                        prompt,
+                        max_length,
+                        temperature,
+                        top_p,
+                        top_k,
+                        num_return_sequences
+                    )
+                    for prompt in batch_prompts
+                ])
+                
+                results.extend(batch_results)
+                
+                # Batch-Größe anpassen
+                self._adjust_batch_size()
+                
+                # GPU-Speicher bereinigen
+                self._cleanup_gpu_memory()
+            
+            return results
+            
+        except Exception as e:
+            logger.error("Fehler bei der Batch-Textgenerierung", exc_info=True)
+            raise
+
+    async def get_embeddings(self, texts: List[str]) -> np.ndarray:
+        """
+        Berechnet Embeddings für eine Liste von Texten.
+        
+        Args:
+            texts: Liste von Texten
+            
+        Returns:
+            NumPy-Array mit Embeddings
+        """
+        try:
+            # Cache-Key generieren
+            cache_key = f"embeddings:{hash(str(texts))}"
+            
+            # Cache prüfen
+            cached_result = self.redis_client.get(cache_key)
+            if cached_result:
+                return pickle.loads(cached_result)
+            
+            # Texte tokenisieren
+            inputs = self.tokenizer(
+                texts,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=self.max_length
+            )
+            
+            # Eingaben auf GPU verschieben
+            if torch.cuda.is_available():
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            
+            # Embeddings berechnen
+            with torch.no_grad():
+                outputs = self.model(**inputs, output_hidden_states=True)
+                embeddings = outputs.hidden_states[-1].mean(dim=1).cpu().numpy()
+            
+            # Cache speichern
+            self.redis_client.setex(
+                cache_key,
+                self.cache_ttl,
+                pickle.dumps(embeddings)
+            )
+            
+            # Batch-Größe anpassen
+            self._adjust_batch_size()
+            
+            # GPU-Speicher bereinigen
+            self._cleanup_gpu_memory()
+            
+            return embeddings
+            
+        except Exception as e:
+            logger.error("Fehler bei der Embedding-Berechnung", exc_info=True)
             raise
 
 # Service-Instanz erstellen
 llm_service = LLMService()
 
 @app.post("/generate")
-async def generate_text(request: LLMRequest):
+async def generate_text(request: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Generiert Text mit dem gewählten LLM
+    Generiert Text basierend auf einem Prompt.
     """
     try:
-        response = await llm_service.generate_text(request)
-        return response
+        texts = await llm_service.generate_text(
+            prompt=request["prompt"],
+            max_length=request.get("max_length"),
+            temperature=request.get("temperature", 0.7),
+            top_p=request.get("top_p", 0.9),
+            top_k=request.get("top_k", 50),
+            num_return_sequences=request.get("num_return_sequences", 1)
+        )
+        return {"texts": texts}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Fehler bei der Textgenerierung", exc_info=True)
+        raise
+
+@app.post("/generate_batch")
+async def generate_text_batch(request: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generiert Text für mehrere Prompts in einem Batch.
+    """
+    try:
+        texts = await llm_service.generate_text_batch(
+            prompts=request["prompts"],
+            max_length=request.get("max_length"),
+            temperature=request.get("temperature", 0.7),
+            top_p=request.get("top_p", 0.9),
+            top_k=request.get("top_k", 50),
+            num_return_sequences=request.get("num_return_sequences", 1)
+        )
+        return {"texts": texts}
+    except Exception as e:
+        logger.error("Fehler bei der Batch-Textgenerierung", exc_info=True)
+        raise
+
+@app.post("/embeddings")
+async def get_embeddings(request: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Berechnet Embeddings für eine Liste von Texten.
+    """
+    try:
+        embeddings = await llm_service.get_embeddings(request["texts"])
+        return {"embeddings": embeddings.tolist()}
+    except Exception as e:
+        logger.error("Fehler bei der Embedding-Berechnung", exc_info=True)
+        raise
 
 @app.get("/health")
 async def health_check():
@@ -313,10 +437,10 @@ async def health_check():
         
         # Verfügbare Modelle prüfen
         available_models = {
-            "gemini": bool(llm_service.gemini_api_key),
-            "openai": bool(llm_service.openai_api_key),
-            "anthropic": bool(llm_service.anthropic_api_key),
-            "local": list(llm_service.local_models.keys())
+            "gemini": bool(os.getenv("GEMINI_API_KEY")),
+            "openai": bool(os.getenv("OPENAI_API_KEY")),
+            "anthropic": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "local": list(llm_service.model_name)
         }
         
         return {

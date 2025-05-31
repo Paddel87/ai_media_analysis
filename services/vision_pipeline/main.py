@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
-import json
-import os
-from datetime import datetime
+import torch
 import asyncio
-from pose import PoseEstimator
-from ocr import OCRDetector
-from nsfw import NSFWDetector
-from restraint_detector import RestraintDetector
-from concurrent.futures import ThreadPoolExecutor
 import aiohttp
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+import hashlib
 import sys
+import os
+from typing import Dict, List, Optional, Tuple, Any
+from datetime import datetime
+import json
+import gc
+import redis
+import pickle
+from pathlib import Path
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger
 
@@ -19,293 +23,376 @@ from common.logging_config import ServiceLogger
 logger = ServiceLogger("vision_pipeline")
 
 class VisionPipeline:
-    def __init__(self, 
-                 output_dir: str = "/app/data/results",
+    def __init__(self,
+                 output_dir: str = "data/output",
                  pose_service_url: str = "http://pose_estimation:8000",
                  ocr_service_url: str = "http://ocr_detection:8000",
                  nsfw_service_url: str = "http://clip_nsfw:8000",
-                 restraint_service_url: str = "http://restraint_detection:8000",
                  batch_size: int = 4,
                  frame_sampling_rate: int = 2,
-                 max_workers: int = 4) -> None:
+                 max_workers: int = 4,
+                 cache_size: int = 1000,
+                 gpu_memory_threshold: float = 0.8):
         """
-        Initialisiert die Vision Pipeline.
+        Initialisiert die Vision Pipeline mit Performance-Optimierungen.
         
         Args:
-            output_dir: Verzeichnis für die Ausgabedateien
+            output_dir: Ausgabeverzeichnis für Ergebnisse
             pose_service_url: URL des Pose Estimation Services
-            ocr_service_url: URL des OCR Services
-            nsfw_service_url: URL des CLIP NSFW Services
-            restraint_service_url: URL des Restraint Detection Services
-            batch_size: Anzahl der Frames pro Batch
+            ocr_service_url: URL des OCR Detection Services
+            nsfw_service_url: URL des NSFW Detection Services
+            batch_size: Optimale Batch-Größe für GPU
             frame_sampling_rate: Jedes n-te Frame wird analysiert
             max_workers: Maximale Anzahl paralleler Worker
+            cache_size: Größe des LRU-Caches
+            gpu_memory_threshold: GPU-Speicher-Schwellenwert für Batch-Anpassung
         """
         try:
+            # Service-URLs
+            self.pose_service_url = pose_service_url
+            self.ocr_service_url = ocr_service_url
+            self.nsfw_service_url = nsfw_service_url
+            
+            # Konfiguration
             self.output_dir = output_dir
-            self.pose_estimator = PoseEstimator(pose_service_url)
-            self.ocr_detector = OCRDetector(ocr_service_url)
-            self.nsfw_detector = NSFWDetector(
-                nsfw_service_url,
-                batch_size=batch_size,
-                frame_sampling_rate=frame_sampling_rate
-            )
-            self.restraint_detector = RestraintDetector(
-                restraint_service_url,
-                batch_size=batch_size,
-                frame_sampling_rate=frame_sampling_rate
-            )
+            self.batch_size = batch_size
+            self.frame_sampling_rate = frame_sampling_rate
             self.max_workers = max_workers
+            self.gpu_memory_threshold = gpu_memory_threshold
+            
+            # Thread-Pool für parallele Verarbeitung
             self.executor = ThreadPoolExecutor(max_workers=max_workers)
-            self._ensure_output_dir()
+            
+            # Redis für Caching
+            self.redis_client = redis.Redis(
+                host=os.getenv("REDIS_HOST", "redis"),
+                port=int(os.getenv("REDIS_PORT", 6379)),
+                db=int(os.getenv("REDIS_DB", 0))
+            )
+            
+            # Cache für Frame-Hashes
+            self._frame_cache = lru_cache(maxsize=cache_size)(self._analyze_frame_internal)
+            
+            # CUDA-Optimierungen
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
+                torch.backends.cudnn.deterministic = False
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+            
+            # Ausgabeverzeichnis erstellen
+            os.makedirs(output_dir, exist_ok=True)
             
             logger.log_info("Vision Pipeline initialisiert", extra={
                 "output_dir": output_dir,
                 "batch_size": batch_size,
                 "frame_sampling_rate": frame_sampling_rate,
-                "max_workers": max_workers
+                "max_workers": max_workers,
+                "cache_size": cache_size,
+                "device": str(self.device)
             })
+            
         except Exception as e:
             logger.log_error("Fehler bei der Initialisierung der Vision Pipeline", error=e)
             raise
-        
-    def _ensure_output_dir(self) -> None:
-        """Stellt sicher, dass das Ausgabeverzeichnis existiert."""
-        os.makedirs(self.output_dir, exist_ok=True)
-        
-    async def process_multiple_videos(self, video_paths: List[str]) -> List[Dict]:
+
+    def _adjust_batch_size(self):
+        """Passt die Batch-Größe basierend auf GPU-Speicher an."""
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated()
+            memory_reserved = torch.cuda.memory_reserved()
+            total_memory = torch.cuda.get_device_properties(0).total_memory
+            
+            memory_usage = (memory_allocated + memory_reserved) / total_memory
+            
+            if memory_usage > self.gpu_memory_threshold:
+                self.batch_size = max(1, self.batch_size // 2)
+                logger.log_warning("Batch-Größe reduziert", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+            elif memory_usage < self.gpu_memory_threshold * 0.5:
+                self.batch_size = min(32, self.batch_size * 2)
+                logger.log_info("Batch-Größe erhöht", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+
+    def _cleanup_gpu_memory(self):
+        """Bereinigt GPU-Speicher."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+
+    def _compute_frame_hash(self, frame: np.ndarray) -> str:
+        """Berechnet einen Hash für ein Frame zur Caching-Identifikation."""
+        try:
+            return hashlib.md5(frame.tobytes()).hexdigest()
+        except Exception as e:
+            logger.log_error("Fehler beim Berechnen des Frame-Hashes", error=e)
+            raise
+
+    async def _analyze_frame_internal(self, frame: np.ndarray) -> Dict[str, Any]:
+        """Interne Frame-Analyse mit Caching."""
+        try:
+            # Frame-Hash für Cache-Lookup
+            frame_hash = self._compute_frame_hash(frame)
+            
+            # Cache prüfen
+            cached_result = self.redis_client.get(f"frame:{frame_hash}")
+            if cached_result:
+                return pickle.loads(cached_result)
+            
+            # Asynchrone Analyse aller Services
+            async with aiohttp.ClientSession() as session:
+                tasks = [
+                    self._analyze_pose(session, frame),
+                    self._analyze_ocr(session, frame),
+                    self._analyze_nsfw(session, frame)
+                ]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Ergebnisse zusammenführen
+            result = {
+                "pose": results[0] if not isinstance(results[0], Exception) else None,
+                "ocr": results[1] if not isinstance(results[1], Exception) else None,
+                "nsfw": results[2] if not isinstance(results[2], Exception) else None
+            }
+            
+            # Cache speichern
+            self.redis_client.setex(
+                f"frame:{frame_hash}",
+                3600,  # 1 Stunde TTL
+                pickle.dumps(result)
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.log_error("Fehler bei der Frame-Analyse", error=e)
+            raise
+
+    async def process_video(self, video_path: str, job_id: str) -> Dict[str, Any]:
         """
-        Verarbeitet mehrere Videos parallel.
+        Verarbeitet ein Video mit optimierter Batch-Verarbeitung.
         
         Args:
-            video_paths: Liste von Video-Pfaden
+            video_path: Pfad zum Video
+            job_id: Job-ID für Tracking
             
         Returns:
-            Liste von Verarbeitungsergebnissen
+            Analyseergebnisse
         """
         try:
-            logger.log_info("Starte Verarbeitung mehrerer Videos", extra={
-                "video_count": len(video_paths),
-                "video_paths": video_paths
+            logger.log_info("Starte Video-Verarbeitung", extra={
+                "video_path": video_path,
+                "job_id": job_id
             })
             
-            # Frames aus allen Videos sammeln
-            all_frames = []
-            all_frame_numbers = []
-            all_video_indices = []
-            video_metadata = []
+            # Video öffnen
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                raise ValueError(f"Konnte Video nicht öffnen: {video_path}")
             
-            for video_idx, video_path in enumerate(video_paths):
-                try:
-                    cap = cv2.VideoCapture(video_path)
-                    if not cap.isOpened():
-                        logger.log_error(f"Konnte Video nicht öffnen: {video_path}")
-                        continue
-                        
-                    fps = cap.get(cv2.CAP_PROP_FPS)
-                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            # Video-Metadaten
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration = frame_count / fps
+            
+            # Frames sammeln
+            frames = []
+            frame_numbers = []
+            frame_idx = 0
+            
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
                     
-                    video_metadata.append({
-                        "video_path": video_path,
-                        "fps": fps,
-                        "total_frames": total_frames,
-                        "processing_start": datetime.now().isoformat()
-                    })
+                if frame_idx % self.frame_sampling_rate == 0:
+                    frames.append(frame)
+                    frame_numbers.append(frame_idx)
                     
-                    frame_count = 0
-                    while True:
-                        ret, frame = cap.read()
-                        if not ret:
-                            break
-                            
-                        if frame_count % self.nsfw_detector.frame_sampling_rate == 0:
-                            all_frames.append(frame)
-                            all_frame_numbers.append(frame_count)
-                            all_video_indices.append(video_idx)
-                            
-                        frame_count += 1
-                        
-                    cap.release()
-                    
-                except Exception as e:
-                    logger.log_error(f"Fehler bei der Verarbeitung des Videos {video_path}", error=e)
-                    continue
+                frame_idx += 1
+                
+                # Batch-Größe anpassen
+                if len(frames) >= self.batch_size:
+                    self._adjust_batch_size()
+            
+            cap.release()
             
             # Frames in Batches aufteilen
             batches = []
             current_batch = []
-            current_video_indices = []
             
-            for i, (frame, frame_number, video_idx) in enumerate(zip(all_frames, all_frame_numbers, all_video_indices)):
+            for frame, frame_number in zip(frames, frame_numbers):
                 current_batch.append((frame, frame_number))
-                current_video_indices.append(video_idx)
                 
-                if len(current_batch) >= self.nsfw_detector.batch_size:
-                    batches.append((current_batch, current_video_indices))
+                if len(current_batch) >= self.batch_size:
+                    batches.append(current_batch)
                     current_batch = []
-                    current_video_indices = []
                     
             if current_batch:
-                batches.append((current_batch, current_video_indices))
+                batches.append(current_batch)
             
-            # Batch-Verarbeitung
-            results = [{"frames": []} for _ in video_paths]
-            
-            async with aiohttp.ClientSession() as session:
-                for batch, video_indices in batches:
-                    frames, frame_numbers = zip(*batch)
-                    
-                    # NSFW-Analyse
-                    nsfw_results = await self.nsfw_detector.process_video_sequence(frames, frame_numbers)
-                    
-                    # Restraint-Analyse
-                    restraint_results = await self.restraint_detector.process_video_sequence(frames, frame_numbers)
-                    
-                    # Pose und OCR parallel verarbeiten
-                    pose_tasks = []
-                    ocr_tasks = []
-                    
-                    for frame, frame_number in batch:
-                        pose_tasks.append(self.pose_estimator.process_video_frame(frame, frame_number))
-                        ocr_tasks.append(self.ocr_detector.process_video_frame(frame, frame_number))
-                    
-                    pose_results = await asyncio.gather(*pose_tasks)
-                    ocr_results = await asyncio.gather(*ocr_tasks)
-                    
-                    # Ergebnisse zuordnen
-                    for i, (frame_number, nsfw_result, restraint_result, pose_result, ocr_result, video_idx) in enumerate(
-                        zip(frame_numbers, nsfw_results, restraint_results, pose_results, ocr_results, video_indices)):
-                        
-                        frame_result = {
-                            "frame_number": frame_number,
-                            "timestamp": frame_number / video_metadata[video_idx]["fps"],
-                            "pose_data": pose_result["pose_data"],
-                            "ocr_data": ocr_result["ocr_data"],
-                            "nsfw_data": nsfw_result["nsfw_data"],
-                            "restraint_data": restraint_result["restraint_data"],
-                            "processing_time": {
-                                "pose": pose_result.get("processing_time", 0),
-                                "ocr": ocr_result.get("processing_time", 0),
-                                "nsfw": nsfw_result.get("processing_time", 0),
-                                "restraint": restraint_result.get("processing_time", 0)
-                            }
-                        }
-                        
-                        results[video_idx]["frames"].append(frame_result)
-                        
-            # Metadaten hinzufügen und speichern
-            for i, result in enumerate(results):
-                result.update(video_metadata[i])
-                result["processing_end"] = datetime.now().isoformat()
-                self._save_results(result, video_paths[i])
-            
-            return results
-        except Exception as e:
-            logger.log_error("Fehler bei der Verarbeitung mehrerer Videos", error=e)
-            raise
-
-    async def process_multiple_images(self, image_paths: List[str]) -> List[Dict]:
-        """
-        Verarbeitet mehrere Bilder parallel.
-        
-        Args:
-            image_paths: Liste von Bild-Pfaden
-            
-        Returns:
-            Liste von Verarbeitungsergebnissen
-        """
-        # Bilder laden
-        images = []
-        for path in image_paths:
-            frame = cv2.imread(path)
-            if frame is not None:
-                images.append((frame, path))
-            else:
-                logger.log_error(f"Konnte Bild nicht laden: {path}")
+            # Asynchrone Batch-Verarbeitung
+            results = []
+            for batch in batches:
+                batch_results = await asyncio.gather(*[
+                    self._analyze_frame_internal(frame)
+                    for frame, _ in batch
+                ])
+                results.extend(batch_results)
                 
-        # Bilder in Batches aufteilen
-        batches = []
-        current_batch = []
-        current_paths = []
-        
-        for frame, path in images:
-            current_batch.append(frame)
-            current_paths.append(path)
-            
-            if len(current_batch) >= self.nsfw_detector.batch_size:
-                batches.append((current_batch, current_paths))
-                current_batch = []
-                current_paths = []
-                
-        if current_batch:
-            batches.append((current_batch, current_paths))
-            
-        # Batch-Verarbeitung
-        results = []
-        
-        async with aiohttp.ClientSession() as session:
-            for batch, paths in batches:
-                # NSFW-Analyse
-                nsfw_results = await self.nsfw_detector.process_video_sequence(batch, list(range(len(batch))))
-                
-                # Restraint-Analyse
-                restraint_results = await self.restraint_detector.process_video_sequence(batch, list(range(len(batch))))
-                
-                # Pose und OCR parallel verarbeiten
-                pose_tasks = []
-                ocr_tasks = []
-                
-                for frame in batch:
-                    pose_tasks.append(self.pose_estimator.analyze_frame(frame))
-                    ocr_tasks.append(self.ocr_detector.analyze_frame(frame))
-                
-                pose_results = await asyncio.gather(*pose_tasks)
-                ocr_results = await asyncio.gather(*ocr_tasks)
-                
-                # Ergebnisse zuordnen
-                for i, (path, nsfw_result, restraint_result, pose_result, ocr_result) in enumerate(
-                    zip(paths, nsfw_results, restraint_results, pose_results, ocr_results)):
-                    
-                    result = {
-                        "image_path": path,
-                        "processing_time": datetime.now().isoformat(),
-                        "pose_data": pose_result,
-                        "ocr_data": ocr_result,
-                        "nsfw_data": nsfw_result["nsfw_data"],
-                        "restraint_data": restraint_result["restraint_data"]
-                    }
-                    
-                    results.append(result)
-                    self._save_results(result, path)
-                    
-        return results
-
-    def _save_results(self, results: Dict[str, Any], input_path: str) -> None:
-        """
-        Speichert die Ergebnisse in einer JSON-Datei.
-        
-        Args:
-            results: Verarbeitungsergebnisse
-            input_path: Pfad zur Eingabedatei
-        """
-        try:
-            # Dateinamen generieren
-            base_name = os.path.splitext(os.path.basename(input_path))[0]
-            output_path = os.path.join(self.output_dir, f"{base_name}_results.json")
+                # GPU-Speicher bereinigen
+                self._cleanup_gpu_memory()
             
             # Ergebnisse speichern
-            with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(results, f, ensure_ascii=False, indent=2)
-                
-            logger.log_info("Ergebnisse erfolgreich gespeichert", extra={
-                "input_path": input_path,
+            output_path = os.path.join(
+                self.output_dir,
+                f"{job_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
+            
+            with open(output_path, 'w') as f:
+                json.dump({
+                    "video_path": video_path,
+                    "fps": fps,
+                    "frame_count": frame_count,
+                    "duration": duration,
+                    "results": results
+                }, f, indent=2)
+            
+            logger.log_info("Video-Verarbeitung abgeschlossen", extra={
+                "video_path": video_path,
+                "job_id": job_id,
                 "output_path": output_path
             })
             
+            return {
+                "status": "completed",
+                "output_path": output_path,
+                "frame_count": frame_count,
+                "processed_frames": len(results)
+            }
+            
         except Exception as e:
-            logger.log_error("Fehler beim Speichern der Ergebnisse", error=e, extra={
-                "input_path": input_path
+            logger.log_error("Fehler bei der Video-Verarbeitung", error=e)
+            raise
+
+    async def process_image(self, image_path: str, job_id: str) -> Dict[str, Any]:
+        """
+        Verarbeitet ein Bild mit optimiertem Caching.
+        
+        Args:
+            image_path: Pfad zum Bild
+            job_id: Job-ID für Tracking
+            
+        Returns:
+            Analyseergebnisse
+        """
+        try:
+            logger.log_info("Starte Bild-Verarbeitung", extra={
+                "image_path": image_path,
+                "job_id": job_id
             })
+            
+            # Bild laden
+            image = cv2.imread(image_path)
+            if image is None:
+                raise ValueError(f"Konnte Bild nicht laden: {image_path}")
+            
+            # Frame analysieren
+            result = await self._analyze_frame_internal(image)
+            
+            # Ergebnisse speichern
+            output_path = os.path.join(
+                self.output_dir,
+                f"{job_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
+            
+            with open(output_path, 'w') as f:
+                json.dump({
+                    "image_path": image_path,
+                    "results": result
+                }, f, indent=2)
+            
+            logger.log_info("Bild-Verarbeitung abgeschlossen", extra={
+                "image_path": image_path,
+                "job_id": job_id,
+                "output_path": output_path
+            })
+            
+            return {
+                "status": "completed",
+                "output_path": output_path
+            }
+            
+        except Exception as e:
+            logger.log_error("Fehler bei der Bild-Verarbeitung", error=e)
+            raise
+
+    async def _analyze_pose(self, session: aiohttp.ClientSession, frame: np.ndarray) -> Dict[str, Any]:
+        """Analysiert die Pose in einem Frame."""
+        try:
+            # Frame in Base64 kodieren
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            
+            # API-Anfrage
+            async with session.post(
+                f"{self.pose_service_url}/analyze",
+                json={"image_data": frame_base64}
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    raise ValueError(f"Pose-Analyse fehlgeschlagen: {response.status}")
+                    
+        except Exception as e:
+            logger.log_error("Fehler bei der Pose-Analyse", error=e)
+            raise
+
+    async def _analyze_ocr(self, session: aiohttp.ClientSession, frame: np.ndarray) -> Dict[str, Any]:
+        """Analysiert Text in einem Frame."""
+        try:
+            # Frame in Base64 kodieren
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            
+            # API-Anfrage
+            async with session.post(
+                f"{self.ocr_service_url}/analyze",
+                json={"image_data": frame_base64}
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    raise ValueError(f"OCR-Analyse fehlgeschlagen: {response.status}")
+                    
+        except Exception as e:
+            logger.log_error("Fehler bei der OCR-Analyse", error=e)
+            raise
+
+    async def _analyze_nsfw(self, session: aiohttp.ClientSession, frame: np.ndarray) -> Dict[str, Any]:
+        """Analysiert NSFW-Inhalte in einem Frame."""
+        try:
+            # Frame in Base64 kodieren
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            
+            # API-Anfrage
+            async with session.post(
+                f"{self.nsfw_service_url}/analyze",
+                json={"image_data": frame_base64}
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    raise ValueError(f"NSFW-Analyse fehlgeschlagen: {response.status}")
+                    
+        except Exception as e:
+            logger.log_error("Fehler bei der NSFW-Analyse", error=e)
             raise
 
 if __name__ == "__main__":

@@ -5,6 +5,45 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-03-19
+
+### Hinzugefügt
+- Vast.ai Integration für GPU-Instanzen
+- Dynamische Instanzerstellung und -verwaltung
+- Automatische Skalierung basierend auf Last
+- SSH-Management für Remote-Zugriff
+- Kostenoptimierte Ausführung
+- Parallele Modellausführung
+- Erweiterte GPU-Typen für verschiedene Anforderungen
+
+### Geändert
+- Optimierte Modell-Ressourcennutzung
+- Verbesserte Batch-Verarbeitung
+- Angepasste Skalierungsfaktoren
+- Erweiterte Kostenberechnung
+- Verbesserte Fehlerbehandlung
+
+### Entfernt
+- Statische GPU-Konfiguration
+- Feste Instanz-Zuweisung
+
+## [1.0.0] - 2024-03-18
+
+### Hinzugefügt
+- Basis-Restraint-Erkennung
+- GPU-Optimierungen
+- Batch-Verarbeitung
+- Caching-System
+- API-Endpunkte
+- Grundlegende Dokumentation
+
+### Geändert
+- Initiale Implementierung
+- Basis-Konfiguration
+
+### Entfernt
+- Keine
+
 ## [0.6.0] - 2024-03-20
 
 ### Added

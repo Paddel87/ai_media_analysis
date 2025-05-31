@@ -21,6 +21,7 @@ import librosa
 import aiofiles
 import aiohttp
 from pathlib import Path
+import gc
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
@@ -65,268 +66,295 @@ class TranscriptionResult(BaseModel):
     word_timestamps: Optional[List[Dict]] = None
 
 class WhisperService:
-    def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.models = {}
-        self.model_sizes = ["tiny", "base", "small", "medium", "large"]
-        self.supported_formats = [".mp3", ".wav", ".m4a", ".ogg", ".flac", ".mp4", ".avi", ".mkv"]
-        
-        # Redis-Verbindung
-        self.redis_client = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=REDIS_DB,
-            decode_responses=True
-        )
-        
-    @lru_cache(maxsize=5)
-    def load_model(self, model_size: str) -> whisper.Whisper:
+    def __init__(self,
+                 model_name: str = "base",
+                 cache_dir: str = "data/whisper_cache",
+                 redis_host: str = "redis",
+                 redis_port: int = 6379,
+                 redis_db: int = 0,
+                 batch_size: int = 4,
+                 gpu_memory_threshold: float = 0.8,
+                 cache_ttl: int = 3600):
         """
-        Lädt das Whisper-Modell der angegebenen Größe mit Caching
-        """
-        if model_size not in self.model_sizes:
-            raise ValueError(f"Ungültige Modellgröße. Verfügbar: {self.model_sizes}")
-            
-        if model_size not in self.models:
-            logger.info(f"Lade Whisper Modell: {model_size}")
-            self.models[model_size] = whisper.load_model(
-                model_size,
-                device=self.device
-            )
-            
-        return self.models[model_size]
+        Initialisiert den Whisper-Service mit Performance-Optimierungen.
         
-    async def preprocess_audio(self, audio_path: str) -> str:
-        """
-        Vorverarbeitung der Audiodatei
+        Args:
+            model_name: Name des zu ladenden Modells
+            cache_dir: Verzeichnis für Modell-Cache
+            redis_host: Redis-Host
+            redis_port: Redis-Port
+            redis_db: Redis-Datenbank
+            batch_size: Optimale Batch-Größe für GPU
+            gpu_memory_threshold: GPU-Speicher-Schwellenwert
+            cache_ttl: Cache-TTL in Sekunden
         """
         try:
-            # Prüfe Dateiformat
-            file_ext = os.path.splitext(audio_path)[1].lower()
-            if file_ext not in self.supported_formats:
-                raise ValueError(f"Nicht unterstütztes Dateiformat: {file_ext}")
+            # Konfiguration
+            self.model_name = model_name
+            self.cache_dir = Path(cache_dir)
+            self.batch_size = batch_size
+            self.gpu_memory_threshold = gpu_memory_threshold
+            self.cache_ttl = cache_ttl
             
-            # Konvertiere zu WAV wenn nötig
-            if file_ext != ".wav":
-                output_path = audio_path + ".wav"
-                stream = ffmpeg.input(audio_path)
-                stream = ffmpeg.output(stream, output_path, acodec="pcm_s16le", ac=1, ar=16000)
-                ffmpeg.run(stream, overwrite_output=True, capture_stdout=True, capture_stderr=True)
-                return output_path
+            # Verzeichnis erstellen
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
             
-            return audio_path
+            # Redis für Caching
+            self.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                db=redis_db,
+                decode_responses=True
+            )
+            
+            # CUDA-Optimierungen
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
+                torch.backends.cudnn.deterministic = False
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+            
+            # Modell laden
+            self._load_model()
+            
+            logger.info("Whisper-Service initialisiert", extra={
+                "model_name": model_name,
+                "batch_size": batch_size,
+                "device": str(self.device)
+            })
             
         except Exception as e:
-            logger.error(f"Fehler bei der Audio-Vorverarbeitung: {str(e)}")
+            logger.error("Fehler bei der Initialisierung des Whisper-Services", exc_info=True)
             raise
 
-    async def transcribe_audio(
-        self,
-        audio_path: str,
-        language: Optional[str] = None,
-        model_size: str = "base",
-        task: str = "transcribe",
-        no_censorship: bool = True
-    ) -> Dict:
+    def _load_model(self):
+        """Lädt das Whisper-Modell."""
+        try:
+            # Modell laden
+            self.model = whisper.load_model(
+                self.model_name,
+                device=self.device,
+                download_root=self.cache_dir
+            )
+            
+            logger.info("Whisper-Modell geladen")
+            
+        except Exception as e:
+            logger.error("Fehler beim Laden des Whisper-Modells", exc_info=True)
+            raise
+
+    def _adjust_batch_size(self):
+        """Passt die Batch-Größe basierend auf GPU-Speicher an."""
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated()
+            memory_reserved = torch.cuda.memory_reserved()
+            total_memory = torch.cuda.get_device_properties(0).total_memory
+            
+            memory_usage = (memory_allocated + memory_reserved) / total_memory
+            
+            if memory_usage > self.gpu_memory_threshold:
+                self.batch_size = max(1, self.batch_size // 2)
+                logger.warning("Batch-Größe reduziert", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+            elif memory_usage < self.gpu_memory_threshold * 0.5:
+                self.batch_size = min(32, self.batch_size * 2)
+                logger.info("Batch-Größe erhöht", extra={
+                    "new_batch_size": self.batch_size,
+                    "memory_usage": memory_usage
+                })
+
+    def _cleanup_gpu_memory(self):
+        """Bereinigt GPU-Speicher."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            gc.collect()
+
+    async def transcribe_audio(self,
+                             audio_path: str,
+                             language: Optional[str] = None,
+                             task: str = "transcribe") -> Dict[str, Any]:
         """
-        Transkribiert eine Audiodatei
+        Transkribiert eine Audiodatei.
+        
+        Args:
+            audio_path: Pfad zur Audiodatei
+            language: Sprache (optional)
+            task: Aufgabe (transcribe oder translate)
+            
+        Returns:
+            Transkriptionsergebnisse
         """
         try:
             # Cache-Key generieren
-            cache_key = f"transcription:{hash(audio_path)}:{model_size}:{language}:{task}"
+            cache_key = f"transcribe:{hash(audio_path)}:{language}:{task}"
             
-            # Prüfe Cache
+            # Cache prüfen
             cached_result = self.redis_client.get(cache_key)
             if cached_result:
                 return pickle.loads(cached_result)
             
-            # Modell laden
-            model = self.load_model(model_size)
-            
-            # Audio vorverarbeiten
-            processed_audio_path = await self.preprocess_audio(audio_path)
-            
-            # Transkription durchführen
-            result = model.transcribe(
-                processed_audio_path,
+            # Audio laden und transkribieren
+            result = self.model.transcribe(
+                audio_path,
                 language=language,
-                task=task,
-                fp16=torch.cuda.is_available(),
-                verbose=False
+                task=task
             )
             
-            # Zensur entfernen wenn gewünscht
-            if no_censorship:
-                result = self._remove_censorship(result)
+            # Cache speichern
+            self.redis_client.setex(
+                cache_key,
+                self.cache_ttl,
+                pickle.dumps(result)
+            )
             
-            # Wort-Timestamps hinzufügen
-            result["word_timestamps"] = self._extract_word_timestamps(result["segments"])
+            # Batch-Größe anpassen
+            self._adjust_batch_size()
             
-            # Dauer hinzufügen
-            result["duration"] = self._get_audio_duration(processed_audio_path)
-            
-            # In Cache speichern
-            self.redis_client.set(cache_key, pickle.dumps(result))
-            
-            # Temporäre Datei löschen
-            if processed_audio_path != audio_path:
-                os.unlink(processed_audio_path)
+            # GPU-Speicher bereinigen
+            self._cleanup_gpu_memory()
             
             return result
             
         except Exception as e:
-            logger.error(f"Fehler bei der Transkription: {str(e)}")
+            logger.error("Fehler bei der Audio-Transkription", exc_info=True)
             raise
 
-    def _remove_censorship(self, result: Dict) -> Dict:
+    async def transcribe_audio_batch(self,
+                                   audio_paths: List[str],
+                                   language: Optional[str] = None,
+                                   task: str = "transcribe") -> List[Dict[str, Any]]:
         """
-        Entfernt Zensur aus der Transkription
-        """
-        try:
-            # Liste von Zensur-Mustern
-            censorship_patterns = [
-                "[*]", "[bleep]", "[beep]", "[censored]",
-                "***", "****", "*****", "[REDACTED]"
-            ]
+        Transkribiert mehrere Audiodateien in einem Batch.
+        
+        Args:
+            audio_paths: Liste von Audio-Pfaden
+            language: Sprache (optional)
+            task: Aufgabe (transcribe oder translate)
             
-            # Text bereinigen
-            text = result["text"]
-            for pattern in censorship_patterns:
-                text = text.replace(pattern, "")
-            
-            # Segmente bereinigen
-            for segment in result["segments"]:
-                segment_text = segment["text"]
-                for pattern in censorship_patterns:
-                    segment_text = segment_text.replace(pattern, "")
-                segment["text"] = segment_text
-            
-            result["text"] = text
-            return result
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Entfernen der Zensur: {str(e)}")
-            return result
-
-    def _extract_word_timestamps(self, segments: List[Dict]) -> List[Dict]:
-        """
-        Extrahiert Wort-Timestamps aus den Segmenten
-        """
-        try:
-            word_timestamps = []
-            for segment in segments:
-                words = segment["text"].split()
-                if "words" in segment:
-                    for word in segment["words"]:
-                        word_timestamps.append({
-                            "word": word["word"],
-                            "start": word["start"],
-                            "end": word["end"],
-                            "confidence": word.get("confidence", 0.0)
-                        })
-            return word_timestamps
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Extrahieren der Wort-Timestamps: {str(e)}")
-            return []
-
-    def _get_audio_duration(self, audio_path: str) -> float:
-        """
-        Ermittelt die Dauer der Audiodatei
-        """
-        try:
-            return librosa.get_duration(path=audio_path)
-        except Exception as e:
-            logger.error(f"Fehler beim Ermitteln der Audiodauer: {str(e)}")
-            return 0.0
-
-    async def process_batch(self, batch: List[TranscriptionRequest]) -> List[Dict]:
-        """
-        Verarbeitet einen Batch von Audiodateien
+        Returns:
+            Liste von Transkriptionsergebnissen
         """
         try:
             results = []
-            for request in batch:
-                result = await self.transcribe_audio(
-                    request.audio_path,
-                    language=request.language,
-                    model_size=request.model_size,
-                    task=request.task,
-                    no_censorship=request.no_censorship
-                )
-                results.append(result)
+            
+            # Audiodateien in Batches aufteilen
+            for i in range(0, len(audio_paths), self.batch_size):
+                batch_paths = audio_paths[i:i + self.batch_size]
+                
+                # Batch verarbeiten
+                batch_results = await asyncio.gather(*[
+                    self.transcribe_audio(
+                        audio_path,
+                        language,
+                        task
+                    )
+                    for audio_path in batch_paths
+                ])
+                
+                results.extend(batch_results)
+                
+                # Batch-Größe anpassen
+                self._adjust_batch_size()
+                
+                # GPU-Speicher bereinigen
+                self._cleanup_gpu_memory()
+            
             return results
             
         except Exception as e:
-            logger.error(f"Fehler bei der Batch-Verarbeitung: {str(e)}")
+            logger.error("Fehler bei der Batch-Audio-Transkription", exc_info=True)
+            raise
+
+    async def detect_language(self, audio_path: str) -> str:
+        """
+        Erkennt die Sprache einer Audiodatei.
+        
+        Args:
+            audio_path: Pfad zur Audiodatei
+            
+        Returns:
+            Erkannte Sprache
+        """
+        try:
+            # Cache-Key generieren
+            cache_key = f"detect_language:{hash(audio_path)}"
+            
+            # Cache prüfen
+            cached_result = self.redis_client.get(cache_key)
+            if cached_result:
+                return pickle.loads(cached_result)
+            
+            # Sprache erkennen
+            result = self.model.transcribe(
+                audio_path,
+                task="transcribe",
+                language=None
+            )
+            
+            language = result["language"]
+            
+            # Cache speichern
+            self.redis_client.setex(
+                cache_key,
+                self.cache_ttl,
+                pickle.dumps(language)
+            )
+            
+            return language
+            
+        except Exception as e:
+            logger.error("Fehler bei der Spracherkennung", exc_info=True)
             raise
 
 # Service-Instanz erstellen
 whisper_service = WhisperService()
 
 @app.post("/transcribe")
-async def transcribe(
-    file: UploadFile = File(...),
-    request: TranscriptionRequest = None
-):
+async def transcribe_audio(request: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Transkribiert eine Audiodatei
+    Transkribiert eine Audiodatei.
     """
     try:
-        # Temporäre Datei erstellen
-        async with aiofiles.tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
-            content = await file.read()
-            await temp_file.write(content)
-            temp_path = temp_file.name
-            
-        # Transkription durchführen
         result = await whisper_service.transcribe_audio(
-            temp_path,
-            language=request.language if request else None,
-            model_size=request.model_size if request else "base",
-            task=request.task if request else "transcribe",
-            no_censorship=request.no_censorship if request else True
+            audio_path=request["audio_path"],
+            language=request.get("language"),
+            task=request.get("task", "transcribe")
         )
-        
-        # Temporäre Datei löschen
-        os.unlink(temp_path)
-        
-        # Ergebnis formatieren
-        response = TranscriptionResult(
-            text=result["text"],
-            segments=result["segments"],
-            language=result["language"],
-            job_id=request.job_id if request else str(uuid.uuid4()),
-            media_id=request.media_id if request else str(uuid.uuid4()),
-            source_type=request.source_type if request else "audio",
-            timestamp=datetime.utcnow().isoformat(),
-            duration=result["duration"],
-            word_timestamps=result.get("word_timestamps", [])
-        )
-        
-        return response
-        
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Fehler bei der Audio-Transkription", exc_info=True)
+        raise
 
 @app.post("/transcribe_batch")
-async def transcribe_batch(request: BatchTranscriptionRequest):
+async def transcribe_audio_batch(request: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Transkribiert einen Batch von Audiodateien
+    Transkribiert mehrere Audiodateien in einem Batch.
     """
     try:
-        # Batch in Chunks aufteilen
-        chunks = [request.files[i:i + request.batch_size] 
-                 for i in range(0, len(request.files), request.batch_size)]
-        
-        results = []
-        for chunk in chunks:
-            chunk_results = await whisper_service.process_batch(chunk)
-            results.extend(chunk_results)
-        
+        results = await whisper_service.transcribe_audio_batch(
+            audio_paths=request["audio_paths"],
+            language=request.get("language"),
+            task=request.get("task", "transcribe")
+        )
         return {"results": results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Fehler bei der Batch-Audio-Transkription", exc_info=True)
+        raise
+
+@app.post("/detect_language")
+async def detect_language(request: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Erkennt die Sprache einer Audiodatei.
+    """
+    try:
+        language = await whisper_service.detect_language(request["audio_path"])
+        return {"language": language}
+    except Exception as e:
+        logger.error("Fehler bei der Spracherkennung", exc_info=True)
+        raise
 
 @app.get("/health")
 async def health_check():
@@ -338,7 +366,7 @@ async def health_check():
         gpu_available = torch.cuda.is_available()
         
         # Modell-Ladung prüfen
-        model_loaded = "base" in whisper_service.models
+        model_loaded = "base" in whisper_service.model
         
         # Redis-Verbindung prüfen
         redis_healthy = whisper_service.redis_client.ping()
