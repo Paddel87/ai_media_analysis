@@ -5,39 +5,86 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2024-03-20
-### Hinzugefügt
-- Versionssystem implementiert
-- Strukturierte Dokumentation in STATUS.md, CHANGELOG.md und README.md
-- Verbesserte Projektübersicht
+## [0.5.0] - 2024-03-19
 
-### Geändert
-- Dokumentation aktualisiert
-- Versionsnummern in allen relevanten Dateien synchronisiert
+### Added
+- Comprehensive GPU support documentation
+- Detailed scaling capabilities for different GPU models
+- Cloud integration with Vast.ai and RunPod
+- Hybrid deployment options
+- Performance optimizations for different GPU types
 
-## [0.2.0] - 2024-03-19
-### Hinzugefügt
-- Manuelle Job-Steuerung implementiert
-- Job-Manager API mit FastAPI
-- Batch-Management-System
-- GPU-Provider Interface (Vast.ai, RunPod)
-- Umgebungsvariablen-Konfiguration
-- Setup-Skripte für .env-Datei
+### Changed
+- Updated README.md with detailed English documentation
+- Improved GPU acceleration documentation
+- Enhanced performance section with GPU-specific details
+- Restructured project documentation
 
-### Geändert
-- Standardmäßig deaktivierte automatische Job-Verarbeitung
-- Verbesserte Docker-Compose-Konfiguration
-- Aktualisierte Dokumentation
+### Fixed
+- GPU memory management in batch processing
+- Documentation inconsistencies
+- Service health check endpoints
 
-### Behoben
-- GPU-Instanz-Management optimiert
-- Fehlerbehandlung verbessert
+## [0.4.0] - 2024-03-18
 
-## [0.1.0] - 2024-03-18
-### Hinzugefügt
-- Initiale Projektstruktur
-- Basis-Docker-Konfiguration
-- README.md mit Projektbeschreibung
+### Added
+- Restraint Detection Service
+- Integration with Vision Pipeline
+- New Docker configurations
+- API documentation updates
+- Job management features
+
+### Changed
+- Renamed services for better clarity
+- Updated service dependencies
+- Improved error handling
+- Enhanced logging system
+
+### Fixed
+- Service communication issues
+- Resource allocation in Docker
+- Health check implementations
+
+## [0.3.0] - 2024-03-17
+
+### Added
+- Batch processing optimization
+- LRU caching implementation
+- Asynchronous processing
+- Enhanced error handling
+- Improved logging system
+
+### Changed
+- Updated NSFW detection
+- Modified Vision Pipeline
+- Enhanced Docker configurations
+
+### Fixed
+- Memory leaks in batch processing
+- Service communication issues
+- Resource management
+
+## [0.2.0] - 2024-03-16
+
+### Added
+- Basic service structure
+- Initial Docker setup
+- Core functionality
+
+### Changed
+- Project organization
+- Service architecture
+
+### Fixed
+- Initial setup issues
+- Configuration problems
+
+## [0.1.0] - 2024-03-15
+
+### Added
+- Initial project setup
+- Basic documentation
+- Core services structure
 
 ## [0.4.0] - 2025-05-31
 ### Hinzugefügt

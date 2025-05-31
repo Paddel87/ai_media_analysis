@@ -1,6 +1,106 @@
-# Projektstatus
+# Project Status
 
-**Aktuelle Version:** 0.4.0 (31. Mai 2025)
+## Current Version: 0.5.0
+
+### 🟢 Active Development
+
+#### Recently Completed
+- Comprehensive GPU support documentation
+- Detailed scaling capabilities
+- Cloud integration features
+- Performance optimizations
+- Documentation improvements
+
+#### In Progress
+- Multi-GPU optimization
+- Cloud provider integration
+- Performance benchmarking
+- Documentation updates
+
+### 🟡 Planned Features
+
+#### Short Term (Next 2 Weeks)
+- Enhanced GPU memory management
+- Additional cloud provider support
+- Performance monitoring dashboard
+- Extended API documentation
+
+#### Medium Term (Next Month)
+- Advanced scaling capabilities
+- Additional GPU model support
+- Improved cloud integration
+- Enhanced monitoring tools
+
+### 🔴 Known Issues
+
+#### Critical
+- None at the moment
+
+#### Non-Critical
+- GPU memory optimization needed for large batches
+- Cloud provider API rate limits
+- Documentation needs regular updates
+
+### 📊 System Health
+
+#### Services
+- Vision Pipeline: Operational
+- Job Manager: Operational
+- Restraint Detection: Operational
+- NSFW Detection: Operational
+- Pose Estimation: Operational
+- OCR Detection: Operational
+- Face Recognition: Operational
+
+#### Infrastructure
+- Docker: Operational
+- GPU Support: Operational
+- Cloud Integration: Operational
+- Monitoring: Operational
+
+### 🎯 Next Steps
+
+1. Implement advanced GPU memory management
+2. Add support for additional cloud providers
+3. Enhance performance monitoring
+4. Update documentation with new features
+5. Optimize batch processing for different GPU types
+
+### 📈 Performance Metrics
+
+#### Current Benchmarks
+- Batch Processing: 4 frames per batch
+- Frame Sampling Rate: 2
+- GPU Utilization: Optimized
+- Memory Usage: Monitored
+- Processing Speed: GPU-dependent
+
+#### Target Metrics
+- Batch Size: 8-16 frames
+- Frame Sampling: Adaptive
+- GPU Utilization: >90%
+- Memory Efficiency: >95%
+- Processing Speed: Real-time
+
+### 🔧 Development Environment
+
+#### Required Tools
+- Docker & Docker Compose
+- NVIDIA GPU with CUDA
+- Git
+- Python 3.10+
+
+#### Supported Platforms
+- Linux (Primary)
+- Windows (Secondary)
+- Cloud Providers (Vast.ai, RunPod)
+
+### 📝 Notes
+
+- Regular performance monitoring required
+- GPU memory management needs attention
+- Cloud integration requires API key management
+- Documentation updates needed with new features
 
 ## Implementierte Komponenten
 
