@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Version: 0.7.0
+## Current Version: 0.8.0
 
 ### 🟢 Active Development
 
@@ -17,12 +17,17 @@
   - Pose Estimation
   - OCR Detection
   - CLIP NSFW Detection
+  - Guardrails
+  - Restraint Detection
+  - Person Dossier
+  - Thumbnail Generator
 
 #### In Progress
 - Face ReID Implementation
 - Whisper Transkription
 - Vector DB Integration
 - LLM Integration
+- UI Development
 
 ### 🟡 Planned Features
 
@@ -31,24 +36,27 @@
 - Implementierung der Whisper Transkription
 - Standardisierung der Dockerfiles
 - Aktualisierung aller Requirements.txt
+- Integration der neuen Services in die Dokumentation
 
 #### Medium Term (Next Month)
-- Vector DB Integration
+- Vector DB Integration Optimierung
 - LLM Interface Entwicklung
 - LLM Summarizer Vervollständigung
 - Erweiterte Dokumentation
+- UI/UX Verbesserungen
 
 ### 🔴 Known Issues
 
 #### Critical
 - Whisper Transkription nur als Grundgerüst
-- Vector DB nicht implementiert
-- LLM Interface fehlt
+- Vector DB Integration nicht vollständig optimiert
+- LLM Interface in Entwicklung
 
 #### Non-Critical
 - Unvollständige Dokumentation in einigen Modulen
 - Nicht standardisierte Dockerfiles
 - Unvollständige Requirements.txt
+- UI/UX Verbesserungen notwendig
 
 ### 📊 System Health
 
@@ -58,10 +66,14 @@
 - Pose Estimation: Operational
 - OCR Detection: Operational
 - CLIP NSFW Detection: Operational
+- Guardrails: Operational
+- Restraint Detection: Operational
+- Person Dossier: Operational
+- Thumbnail Generator: Operational
 - Face ReID: Partially Operational
-- Whisper Transkription: Not Operational
-- Vector DB: Not Implemented
-- LLM Interface: Not Implemented
+- Whisper Transkription: Partially Operational
+- Vector DB: Partially Operational
+- LLM Interface: In Development
 - LLM Summarizer: Partially Implemented
 
 #### Infrastructure
@@ -74,9 +86,10 @@
 
 1. Vervollständigung der Face ReID Dokumentation
 2. Implementierung der Whisper Transkription
-3. Entwicklung des Vector DB Services
-4. Erstellung des LLM Interface
+3. Optimierung der Vector DB Integration
+4. Entwicklung des LLM Interface
 5. Standardisierung aller Dockerfiles und Requirements
+6. UI/UX Verbesserungen
 
 ### 📈 Performance Metrics
 
@@ -108,12 +121,17 @@
 - Pose Estimation
 - OCR Detection
 - CLIP NSFW Detection
+- Guardrails
+- Restraint Detection
+- Person Dossier
+- Thumbnail Generator
 
 #### Pending Updates
 - Face ReID
 - Whisper Transkription
 - Vector DB
 - LLM Integration
+- UI/UX Dokumentation
 
 ### 🔧 Development Environment
 
@@ -130,10 +148,11 @@
 ### 📝 Notes
 
 - Dringend: Vervollständigung der Whisper Transkription
-- Dringend: Implementierung des Vector DB
+- Dringend: Optimierung der Vector DB Integration
 - Dringend: Entwicklung des LLM Interface
 - Wichtig: Standardisierung der Dockerfiles
 - Wichtig: Aktualisierung aller Requirements.txt
+- Wichtig: UI/UX Verbesserungen
 
 ## Docker-Konfiguration
 
@@ -143,12 +162,13 @@
 - ✅ Volume-Mappings korrigiert
 - ✅ Health-Checks implementiert
 - ✅ Build-System optimiert
-- ⏳ AI-Module Integration in Arbeit
+- ✅ AI-Module Integration
+- ⏳ Service-Optimierung in Arbeit
 
 ### Nächste Schritte
 1. Standardisierung aller Dockerfiles
 2. Aktualisierung aller Requirements.txt
-3. Implementierung fehlender Services
+3. Optimierung der Service-Konfigurationen
 4. Vervollständigung der Dokumentation
 5. Optimierung der Build-Zeiten
 
@@ -181,30 +201,45 @@
   - Vollständige Implementierung
   - Dokumentation
   - Docker-Integration
+- Guardrails (✅ Fertig)
+  - Implementierung
+  - Docker-Integration
+- Restraint Detection (✅ Fertig)
+  - Implementierung
+  - Docker-Integration
+- Person Dossier (✅ Fertig)
+  - Implementierung
+  - Docker-Integration
+- Thumbnail Generator (✅ Fertig)
+  - Implementierung
+  - Docker-Integration
 - Face ReID (🔄 In Entwicklung)
   - Grundlegende Implementierung
   - Unvollständige Dokumentation
   - Minimales Dockerfile
 - Whisper Transkription (🔄 In Entwicklung)
-  - Nur Grundgerüst
+  - Grundgerüst
   - Unvollständige Dokumentation
-  - Minimales Dockerfile
+  - Docker-Integration
 
 ### UI (🔄 In Entwicklung)
 - Streamlit Interface
 - Batch-Übersicht
 - Job-Status-Anzeige
+- UI/UX Verbesserungen
 
-### Vector DB (❌ Nicht implementiert)
+### Vector DB (🔄 In Entwicklung)
 - Qdrant Integration
 - Embedding-Speicherung
 - Ähnlichkeitssuche
+- Optimierung notwendig
 
-### LLM-Integration (❌ Nicht implementiert)
+### LLM-Integration (🔄 In Entwicklung)
 - OpenAI Integration
 - Gemini Integration
 - Claude Integration
 - Summarization
+- Interface-Entwicklung
 
 ## Nächste Schritte
 
@@ -217,24 +252,26 @@
    - Batch-Erstellung Interface
    - Job-Status-Monitoring
    - Ergebnis-Visualisierung
+   - UI/UX Verbesserungen
 
 3. **Vector DB**
-   - Qdrant-Setup
-   - Embedding-Pipeline
-   - Suchfunktionalität
+   - Qdrant-Setup optimieren
+   - Embedding-Pipeline verbessern
+   - Suchfunktionalität erweitern
 
 4. **LLM-Integration**
-   - API-Integration
-   - Prompt-Engineering
-   - Ergebnis-Verarbeitung
+   - API-Integration vervollständigen
+   - Prompt-Engineering optimieren
+   - Ergebnis-Verarbeitung verbessern
 
 ## Bekannte Probleme
 
 - Whisper Transkription nur als Grundgerüst
-- Vector DB nicht implementiert
-- LLM Interface fehlt
+- Vector DB Integration nicht vollständig optimiert
+- LLM Interface in Entwicklung
 - Unvollständige Dokumentation
 - Nicht standardisierte Dockerfiles
+- UI/UX Verbesserungen notwendig
 
 ## Technische Schulden
 
@@ -244,3 +281,4 @@
 - Backup-Strategie fehlt
 - Standardisierung der Dockerfiles
 - Aktualisierung aller Requirements.txt
+- UI/UX Optimierung notwendig
