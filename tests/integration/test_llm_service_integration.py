@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import requests
-from llm_service.service_integration import (
+from services.llm_service.service_integration import (
     AnalyticsServiceIntegration,
     CacheServiceIntegration,
     MonitoringServiceIntegration,
@@ -19,7 +19,6 @@ from llm_service.service_integration import (
 #         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "services"
 #     )
 # )
-
 
 
 # Fixtures
