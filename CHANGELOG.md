@@ -289,3 +289,83 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Reduzierte GPU-Memory-Leaks bei langer Laufzeit
 - Verbesserte Stabilität bei hoher Last
 - Optimierte Batch-Verarbeitung basierend auf verfügbarem GPU-Speicher
+
+## [1.2.0] - 2024-03-22
+
+### Hinzugefügt
+- Neue FileStatusManager-Klasse für effizientes Status-Management
+- Paginierung für große Datensätze
+- Erweiterte Filter- und Sortierfunktionen
+- Status-Zusammenfassung mit Metriken
+- Optimierte UI-Komponenten für bessere Performance
+- Asynchrone Status-Updates
+- Lazy Loading für Dateilisten
+
+### Geändert
+- Überarbeitete UI-Struktur für bessere Übersichtlichkeit
+- Optimierte Datenstruktur für Dateistatus
+- Verbesserte State-Management-Implementierung
+- Effizientere Speichernutzung
+
+### Performance
+- Reduzierte UI-Last bei großen Datensätzen
+- Schnellere initiale Ladezeit
+- Optimierte Speichernutzung
+- Verbesserte Reaktionszeit bei Status-Updates
+
+## [1.2.1] - 2024-03-22
+
+### Hinzugefügt
+- Detaillierte Systemanforderungen für verschiedene Deployment-Szenarien
+  - Spezifikationen für Server mit lokaler GPU
+    - Minimale Anforderungen: 4 Cores, 16GB RAM, RTX 2060
+    - Empfohlene Anforderungen: 8 Cores, 32GB RAM, RTX 3080
+  - Anforderungen für Remote GPU-Implementierungen
+    - Minimale Anforderungen: 2 Cores, 8GB RAM, T4 GPU
+    - Empfohlene Anforderungen: 4 Cores, 16GB RAM, A100 GPU
+  - Performance-Erwartungen für beide Szenarien
+    - Lokale GPU: ~100ms pro Frame, 4-8 Frames parallel
+    - Remote GPU: ~150-200ms pro Frame, 2-4 Frames parallel
+  - Skalierungsoptionen dokumentiert
+    - Horizontale Skalierung mit Load Balancing
+    - Vertikale Skalierung durch Hardware-Upgrades
+  - Erweiterte Monitoring-Anforderungen
+    - GPU-Memory-Monitoring
+    - Netzwerk-Performance
+    - Remote GPU-Verfügbarkeit
+
+### Geändert
+- Angepasste Performance-Erwartungen für Remote GPU
+  - Reduzierte Batch-Größen (2-4 statt 4-8)
+  - Erhöhte Latenz toleranz (<100ms)
+  - Optimierte Memory-Nutzung (~3GB pro Service)
+- Optimierte Netzwerkanforderungen
+  - Minimale Bandbreite: 100Mbps
+  - Empfohlene Bandbreite: 1Gbps
+  - Latenz-Anforderungen: <100ms
+- Erweiterte Monitoring-Kriterien
+  - UI-Performance-Metriken
+  - Status-Update-Latenz
+  - Remote GPU-Verfügbarkeit
+
+### Dokumentation
+- Neue Sektion für Systemanforderungen in STATUS.md
+  - Detaillierte Hardware-Spezifikationen
+  - Performance-Benchmarks für verschiedene Konfigurationen
+  - Skalierungsrichtlinien
+- Aktualisierte Deployment-Guides
+  - Lokale GPU-Installation
+  - Remote GPU-Konfiguration
+  - Hybrid-Deployment-Optionen
+
+### Performance
+- Lokale GPU
+  - Verarbeitungszeit: ~100ms pro Frame
+  - Batch-Größe: 4-8 Frames
+  - GPU-Auslastung: 70-80%
+  - UI-Performance: >1000 Dateien
+- Remote GPU
+  - Verarbeitungszeit: ~150-200ms pro Frame
+  - Batch-Größe: 2-4 Frames
+  - GPU-Auslastung: 60-70%
+  - UI-Performance: >500 Dateien
