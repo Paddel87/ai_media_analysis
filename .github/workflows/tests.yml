@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    name: "Code Quality & Tests"
+    name: "Strict Quality & Tests"
     runs-on: ubuntu-latest
     
     steps:
@@ -27,51 +27,57 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-ci.txt
         
-    - name: Python environment check
+    - name: Python environment validation
       run: |
         python --version
         pip --version
-        echo "✅ Python environment ready"
+        pip check
+        echo "✅ Python environment validated"
         
-    - name: Code formatting check (Black)
+    - name: Code formatting check (Black) - STRICT
       run: |
-        python -m black --check --diff services tests || echo "⚠️ Formatting issues detected (non-blocking)"
+        python -m black --check --diff services tests
+        echo "✅ Code formatting compliant"
         
-    - name: Import sorting check (isort)
+    - name: Import sorting check (isort) - STRICT
       run: |
-        python -m isort --check-only --diff services tests || echo "⚠️ Import sorting issues detected (non-blocking)"
+        python -m isort --check-only --diff services tests
+        echo "✅ Import sorting compliant"
         
-    - name: Basic linting (Flake8)
+    - name: Linting (Flake8) - STRICT
       run: |
-        python -m flake8 services tests --count --select=E9,F63,F7,F82 --show-source --statistics || echo "⚠️ Linting issues detected (non-blocking)"
+        python -m flake8 services tests --count --statistics --show-source
+        echo "✅ Linting passed"
         
-    - name: Python syntax compilation check
+    - name: Python syntax validation
       run: |
-        echo "Checking Python syntax..."
-        find services -name "*.py" -exec python -m py_compile {} \; || echo "⚠️ Services syntax issues (non-blocking)"
-        find tests -name "*.py" -exec python -m py_compile {} \; || echo "⚠️ Tests syntax issues (non-blocking)"
-        echo "✅ Syntax check completed"
+        echo "Validating Python syntax..."
+        find services -name "*.py" -exec python -m py_compile {} \;
+        find tests -name "*.py" -exec python -m py_compile {} \;
+        echo "✅ Syntax validation completed"
         
-    - name: Test discovery and execution
+    - name: Test execution with coverage
       run: |
-        echo "🧪 Running pytest test suite..."
-        python -m pytest tests/ -v --tb=short || echo "⚠️ Some tests failed (non-blocking for now)"
-        echo "✅ Test execution completed"
+        echo "🧪 Running comprehensive test suite..."
+        python -m pytest tests/ -v --tb=short --cov=services --cov-report=term-missing --cov-fail-under=50
+        echo "✅ Tests passed with coverage requirements"
         
-    - name: Test coverage report
+    - name: Additional quality checks
       run: |
-        python -m pytest tests/ --cov=services --cov-report=term-missing || echo "⚠️ Coverage report failed (non-blocking)"
-        echo "✅ Coverage analysis completed"
+        echo "Running additional quality validations..."
+        python -c "import services" || echo "⚠️ Services import check failed"
+        python -m pytest --collect-only tests/ > /dev/null
+        echo "✅ Additional quality checks completed"
         
-    - name: Pipeline Summary
+    - name: Pipeline validation summary
       run: |
-        echo "🎉 Full CI pipeline completed successfully!"
-        echo "📊 Quality checks performed:"
-        echo "  - ✅ Python setup and environment"
-        echo "  - ⚡ Code formatting (Black)"
-        echo "  - ⚡ Import sorting (isort)" 
-        echo "  - ⚡ Basic linting (Flake8)"
-        echo "  - ⚡ Syntax compilation"
-        echo "  - 🧪 Test execution with pytest"
-        echo "  - 📊 Test coverage analysis"
-        echo "🚀 Pipeline Status: STABLE & COMPREHENSIVE" 
+        echo "🎉 Strict CI pipeline completed successfully!"
+        echo "📊 Quality gates passed:"
+        echo "  - ✅ Python environment validation"
+        echo "  - ✅ Code formatting (Black) - STRICT MODE"
+        echo "  - ✅ Import sorting (isort) - STRICT MODE" 
+        echo "  - ✅ Comprehensive linting (Flake8)"
+        echo "  - ✅ Syntax validation"
+        echo "  - 🧪 Test execution with coverage requirements"
+        echo "  - ✅ Additional quality validations"
+        echo "🚀 Pipeline Status: PRODUCTION-READY" 
