@@ -5,6 +5,23 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Beta 0.9.4] - 2025-06-01 - Korrekturen für Run 23
+
+### Fixed
+- **`ModuleNotFoundError: No module named 'llm_service'`**: 
+  - Leere `__init__.py` Dateien zu `services/` und `services/llm_service/` hinzugefügt, um korrekte Paketerkennung zu ermöglichen.
+  - Dieser Fehler verhinderte die Testausführung für `llm_service` und führte zu 0% Coverage.
+- **Pytest-Marker-Warnungen**: 
+  - `--strict-markers` Option aus `pytest.ini` entfernt, als Versuch, die `PytestUnknownMarkWarning` trotz bereits korrekter Marker-Definitionen und Warnungsfilter zu beheben.
+
+### Changed
+- **Pipeline-Erfolgsrate in STATUS.md aktualisiert:** Reflektiert den Fehlschlag von Run 23.
+- **Fehlerdetails in STATUS.md hinzugefügt:** Dokumentiert `ImportError` und Coverage-Problem.
+
+### Impact
+- Es wird erwartet, dass die Korrektur des `ImportError` das Hauptproblem des Fehlschlags von Run 23 (0% Coverage) behebt.
+- Die Entfernung von `--strict-markers` ist ein Versuch, die verbleibenden Warnungen zu reduzieren.
+
 ## [Beta 0.9.3] - 2025-06-01 - GitHub Actions Pipeline stabilisiert und produktionstauglich
 
 ### Changed - Pipeline-Stabilisierung durch iterative Entwicklung

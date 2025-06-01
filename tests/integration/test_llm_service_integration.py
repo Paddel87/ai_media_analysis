@@ -1,18 +1,18 @@
 import os
 
 # Fix: Absoluter Import statt relativer Import
-import sys
+# import sys # Entfernt, da PYTHONPATH in CI gesetzt wird
 from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "services"
-    )
-)
+# sys.path.append( # Entfernt, da PYTHONPATH in CI gesetzt wird
+#     os.path.join(
+#         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "services"
+#     )
+# )
 
 from llm_service.service_integration import (
     AnalyticsServiceIntegration,

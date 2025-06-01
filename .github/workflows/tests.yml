@@ -57,6 +57,8 @@ jobs:
         echo "✅ Syntax validation completed"
         
     - name: Test execution with coverage requirements
+      env:
+        PYTHONPATH: "."
       run: |
         echo "🧪 Running comprehensive test suite with coverage..."
         python -m pytest tests/ -v --tb=short --cov=services --cov-report=term-missing --cov-fail-under=20
