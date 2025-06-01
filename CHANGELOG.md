@@ -267,3 +267,25 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
   - Entfernung von `volumes.face_reid` und `volumes.whisper_transcriber`
   - Bereinigung der Service-Definitionen
   - Korrektur der Volume-Mappings
+
+## [1.1.0] - 2024-03-21
+
+### Verbessert
+- Implementiert verbessertes GPU-Memory-Management in der Vision Pipeline
+  - Automatische GPU-Speicherbereinigung basierend auf Zeit und Frame-Counter
+  - Dynamische Batch-Größenanpassung basierend auf GPU-Speichernutzung
+  - Detailliertes GPU-Memory-Monitoring und Logging
+  - Optimierte Tensor-Freigabe und Cache-Management
+  - Setzen von GPU-Memory-Limits für bessere Stabilität
+
+### Technische Details
+- Neue `_monitor_gpu_memory()` Methode für detaillierte GPU-Metriken
+- Verbesserte `_cleanup_gpu_memory()` Methode mit intelligenten Cleanup-Strategien
+- Optimierte Batch-Größenanpassung mit automatischer Reaktion auf Speicherprobleme
+- Implementierung von GPU-Memory-Limits (80% des verfügbaren Speichers)
+- Erweiterte Fehlerbehandlung und Logging für GPU-bezogene Probleme
+
+### Performance
+- Reduzierte GPU-Memory-Leaks bei langer Laufzeit
+- Verbesserte Stabilität bei hoher Last
+- Optimierte Batch-Verarbeitung basierend auf verfügbarem GPU-Speicher

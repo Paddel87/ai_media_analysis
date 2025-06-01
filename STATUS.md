@@ -19,6 +19,7 @@
 - ✅ Batch-Verarbeitung
 - ✅ Health Checks
 - ✅ API-Dokumentation
+- ✅ Verbessertes GPU-Memory-Management
 
 ### In Bearbeitung
 - 🔄 Performance-Optimierungen
@@ -37,7 +38,7 @@
 ### Services
 | Service | Status | Version | GPU |
 |---------|--------|---------|-----|
-| Vision Pipeline | ✅ | 1.0.0 | Ja |
+| Vision Pipeline | ✅ | 1.1.0 | Ja |
 | NSFW Detection | ✅ | 1.0.0 | Ja |
 | Restraint Detection | ✅ | 1.0.0 | Ja |
 | OCR Detection | ✅ | 1.0.0 | Ja |
@@ -53,20 +54,22 @@
 - Batch-Verarbeitung: 4-8 Frames parallel
 - GPU-Auslastung: ~70-80%
 - Memory-Nutzung: ~4GB pro Service
+- GPU-Memory-Management: Optimiert mit automatischer Bereinigung
 
 ### Stabilität
 - Uptime: 99.9%
 - Fehlerrate: <0.1%
 - Recovery-Zeit: <30s
+- GPU-Memory-Leaks: Behebt durch automatische Cleanup-Strategien
 
 ## Bekannte Probleme
-1. Gelegentliche GPU-Memory-Leaks bei langer Laufzeit
+1. ~~Gelegentliche GPU-Memory-Leaks bei langer Laufzeit~~ (Behoben)
 2. Verzögerungen bei Cloud-Storage-Operationen
 3. UI-Performance bei großen Datensätzen
 
 ## Nächste Schritte
 1. Performance-Optimierungen
-   - GPU-Memory-Management verbessern
+   - ~~GPU-Memory-Management verbessern~~ (Abgeschlossen)
    - Batch-Verarbeitung optimieren
    - Caching-Strategien erweitern
 
@@ -91,3 +94,4 @@
 - Performance-Metriken
 - Ressourcen-Nutzung
 - Fehler-Logging
+- GPU-Memory-Monitoring
