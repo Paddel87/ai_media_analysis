@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import aiohttp
 import psutil
 from gpu_providers import VastAIProvider, RunPodProvider
+from functools import lru_cache
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,15 +30,30 @@ class JobManager:
         self.min_jobs_per_batch = int(os.getenv('MIN_JOBS_PER_BATCH', 3))
         self.auto_process_jobs = os.getenv('AUTO_PROCESS_JOBS', 'false').lower() == 'true'
         self.active_instances: Dict[str, GPUInstance] = {}
+        self.batch_cache = {}
+        self.job_cache = {}
         
         # GPU-Provider initialisieren
         self.vast_provider = VastAIProvider()
         self.runpod_provider = RunPodProvider()
         
+    @lru_cache(maxsize=1000)
+    def get_cached_job(self, job_id: str) -> Optional[Dict]:
+        """Cache für Job-Metadaten"""
+        return self.job_cache.get(job_id)
+        
+    @lru_cache(maxsize=100)
+    def get_cached_batch(self, batch_id: str) -> Optional[Dict]:
+        """Cache für Batch-Metadaten"""
+        return self.batch_cache.get(batch_id)
+
     async def start(self):
-        """Startet den Job-Manager"""
+        """Startet den Job-Manager mit optimierter Batch-Verarbeitung"""
         logger.info("Job-Manager gestartet")
         logger.info(f"Automatische Job-Verarbeitung: {'aktiviert' if self.auto_process_jobs else 'deaktiviert'}")
+        
+        # Cache initialisieren
+        await self._initialize_caches()
         
         while True:
             try:
@@ -45,10 +61,69 @@ class JobManager:
                     await self.process_pending_jobs()
                 await self.cleanup_completed_batches()
                 await self.check_gpu_instances()
-                await asyncio.sleep(60)  # Prüfe alle 60 Sekunden
+                await asyncio.sleep(30)  # Reduzierte Prüfintervall
             except Exception as e:
                 logger.error(f"Fehler im Job-Manager: {str(e)}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(30)
+
+    async def _initialize_caches(self):
+        """Initialisiert die Caches mit vorhandenen Jobs und Batches"""
+        try:
+            # Jobs laden
+            jobs_path = "data/jobs"
+            if os.path.exists(jobs_path):
+                for job_id in os.listdir(jobs_path):
+                    job_path = os.path.join(jobs_path, job_id)
+                    if os.path.isdir(job_path):
+                        metadata_path = os.path.join(job_path, "metadata.json")
+                        if os.path.exists(metadata_path):
+                            with open(metadata_path, "r") as f:
+                                job = json.load(f)
+                                self.job_cache[job_id] = job
+                                
+            # Batches laden
+            batches_path = "data/batches"
+            if os.path.exists(batches_path):
+                for batch_id in os.listdir(batches_path):
+                    batch_path = os.path.join(batches_path, batch_id)
+                    if os.path.isdir(batch_path):
+                        metadata_path = os.path.join(batch_path, "metadata.json")
+                        if os.path.exists(metadata_path):
+                            with open(metadata_path, "r") as f:
+                                batch = json.load(f)
+                                self.batch_cache[batch_id] = batch
+                                
+        except Exception as e:
+            logger.error(f"Fehler beim Initialisieren der Caches: {str(e)}")
+
+    async def process_pending_jobs(self):
+        """Optimierte Verarbeitung wartender Jobs mit Batch-Processing"""
+        try:
+            pending_jobs = self.get_pending_jobs()
+            if not pending_jobs:
+                return
+
+            # Jobs nach Typ und Priorität gruppieren
+            job_groups = self._group_jobs_by_type_and_priority(pending_jobs)
+            
+            for group, jobs in job_groups.items():
+                if len(jobs) >= self.min_jobs_per_batch:
+                    await self.create_batches(jobs)
+                elif jobs and self._should_create_small_batch(jobs):
+                    await self.create_batches(jobs)
+
+        except Exception as e:
+            logger.error(f"Fehler bei der Job-Verarbeitung: {str(e)}")
+
+    def _group_jobs_by_type_and_priority(self, jobs: List[Dict]) -> Dict[str, List[Dict]]:
+        """Gruppiert Jobs nach Typ und Priorität für optimierte Batch-Verarbeitung"""
+        groups = {}
+        for job in jobs:
+            key = f"{job['type']}_{job.get('priority', 'normal')}"
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(job)
+        return groups
 
     async def start_batch_processing(self, batch_id: str):
         """Startet die Verarbeitung eines Batches manuell"""
@@ -147,39 +222,6 @@ class JobManager:
         except Exception as e:
             logger.error(f"Fehler beim Speichern des Batches: {str(e)}")
             raise
-
-    async def process_pending_jobs(self):
-        """Verarbeitet wartende Jobs"""
-        try:
-            # Wartende Jobs laden
-            pending_jobs = self.get_pending_jobs()
-            if not pending_jobs:
-                logger.info("Keine wartenden Jobs gefunden")
-                return
-
-            # Jobs nach Typ gruppieren
-            video_jobs = [j for j in pending_jobs if j['type'] == 'video']
-            image_jobs = [j for j in pending_jobs if j['type'] == 'image']
-
-            logger.info(f"Gefunden: {len(video_jobs)} Video-Jobs, {len(image_jobs)} Bild-Jobs")
-
-            # Batches erstellen, wenn genügend Jobs vorhanden sind
-            if len(video_jobs) >= self.min_jobs_per_batch:
-                logger.info(f"Erstelle Batch für {len(video_jobs)} Video-Jobs")
-                await self.create_batches(video_jobs)
-            elif video_jobs and self._should_create_small_batch(video_jobs):
-                logger.info(f"Erstelle kleinen Batch für {len(video_jobs)} Video-Jobs")
-                await self.create_batches(video_jobs)
-
-            if len(image_jobs) >= self.min_jobs_per_batch:
-                logger.info(f"Erstelle Batch für {len(image_jobs)} Bild-Jobs")
-                await self.create_batches(image_jobs)
-            elif image_jobs and self._should_create_small_batch(image_jobs):
-                logger.info(f"Erstelle kleinen Batch für {len(image_jobs)} Bild-Jobs")
-                await self.create_batches(image_jobs)
-
-        except Exception as e:
-            logger.error(f"Fehler bei der Job-Verarbeitung: {str(e)}")
 
     def _should_create_small_batch(self, jobs: List[Dict]) -> bool:
         """Entscheidet, ob ein kleiner Batch erstellt werden soll"""

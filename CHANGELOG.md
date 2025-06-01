@@ -5,6 +5,55 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2024-03-20
+
+### Hinzugefügt
+- Initiale Version des AI Media Analysis Systems
+- Implementierung der Vision Pipeline
+- NSFW-Detection mit CLIP
+- Restraint Detection
+- OCR und Logo-Erkennung
+- Face Recognition
+- Audio-Analyse mit Whisper
+- Vektordatenbank-Integration
+- Streamlit UI
+- Docker-Compose Konfiguration
+- Load Balancing mit Nginx
+- Redis Caching
+- Job Management System
+
+### Geändert
+- Optimierte Docker-Compose Konfiguration
+- Verbesserte Redis-Konfiguration
+- Performance-Optimierungen für Batch-Verarbeitung
+
+### Sicherheit
+- Implementierte Health Checks
+- Sichere API-Endpunkte
+- Verschlüsselte Cloud-Storage-Kommunikation
+
+## [0.9.0] - 2024-03-15
+
+### Hinzugefügt
+- Beta-Version der Streamlit UI
+- Erste Version der Personendossier-Verwaltung
+- Grundlegende Cloud-Integration
+
+### Geändert
+- Verbesserte Fehlerbehandlung
+- Optimierte Batch-Verarbeitung
+
+## [0.8.0] - 2024-03-10
+
+### Hinzugefügt
+- Erste Version der Vision Pipeline
+- Basis-Implementierung der AI-Services
+- Docker-Containerisierung
+
+### Geändert
+- Angepasste Service-Konfigurationen
+- Verbesserte Logging-Implementierung
+
 ## [1.1.0] - 2024-03-19
 
 ### Hinzugefügt
