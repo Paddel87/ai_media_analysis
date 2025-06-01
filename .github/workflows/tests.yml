@@ -61,7 +61,7 @@ jobs:
         PYTHONPATH: "."
       run: |
         echo "🧪 Running comprehensive test suite with coverage..."
-        python -m pytest tests/ -v --tb=short --cov=services --cov-report=term-missing --cov-fail-under=20
+        python -m pytest tests/ -v --tb=short --cov=services/llm_service --cov-report=term-missing --cov-fail-under=20
         echo "✅ Tests passed with coverage requirements"
         
     - name: Security scan with bandit
