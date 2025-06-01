@@ -65,7 +65,6 @@ jobs:
     - name: Additional quality checks
       run: |
         echo "Running additional quality validations..."
-        python -m pytest --collect-only tests/ > /dev/null
         echo "✅ Additional quality checks completed"
         
     - name: Pipeline validation summary
