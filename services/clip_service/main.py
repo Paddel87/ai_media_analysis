@@ -18,8 +18,9 @@ logger = logging.getLogger("clip_service")
 
 app = FastAPI(
     title="CLIP Service",
-    description="Service für CLIP-basierte Bildanalyse mit GPU-Optimierung"
+    description="Service für CLIP-basierte Bildanalyse mit GPU-Optimierung",
 )
+
 
 class CLIPService:
     def __init__(self):
@@ -29,7 +30,7 @@ class CLIPService:
         self.batch_size = 32  # Optimale Batch-Größe für GPU
         self.thread_pool = ThreadPoolExecutor(max_workers=4)
         self.initialize_model()
-        
+
     def initialize_model(self):
         """Initialisiert das CLIP-Modell"""
         try:
@@ -53,7 +54,9 @@ class CLIPService:
             text_features /= text_features.norm(dim=-1, keepdim=True)
         return text_features
 
-    async def process_batch(self, images: List[bytes], text_queries: List[str]) -> List[Dict[str, float]]:
+    async def process_batch(
+        self, images: List[bytes], text_queries: List[str]
+    ) -> List[Dict[str, float]]:
         """Verarbeitet einen Batch von Bildern"""
         try:
             # Bilder vorverarbeiten
@@ -62,19 +65,19 @@ class CLIPService:
                 image = Image.open(io.BytesIO(img_data))
                 image_input = self.preprocess(image)
                 image_inputs.append(image_input)
-            
+
             # Batch erstellen
             batch = torch.stack(image_inputs).to(self.device)
-            
+
             # Text-Embeddings (gecached)
             text_features = self.get_text_embeddings(tuple(text_queries))
-            
+
             # CLIP-Vorhersage für Batch
             with torch.no_grad():
                 image_features = self.model.encode_image(batch)
                 image_features /= image_features.norm(dim=-1, keepdim=True)
                 similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
-            
+
             # Ergebnisse formatieren
             results = []
             for sim_scores in similarity:
@@ -83,14 +86,16 @@ class CLIPService:
                     for query, score in zip(text_queries, sim_scores)
                 }
                 results.append(result)
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"Fehler bei der Batch-Verarbeitung: {str(e)}")
             raise
 
-    async def analyze_image(self, image_data: bytes, text_queries: List[str]) -> Dict[str, float]:
+    async def analyze_image(
+        self, image_data: bytes, text_queries: List[str]
+    ) -> Dict[str, float]:
         """Analysiert ein Bild mit CLIP (asynchron)"""
         try:
             results = await self.process_batch([image_data], text_queries)
@@ -99,19 +104,24 @@ class CLIPService:
             logger.error(f"Fehler bei der CLIP-Analyse: {str(e)}")
             raise
 
-    async def analyze_batch(self, images: List[bytes], text_queries: List[str]) -> List[Dict[str, float]]:
+    async def analyze_batch(
+        self, images: List[bytes], text_queries: List[str]
+    ) -> List[Dict[str, float]]:
         """Analysiert einen Batch von Bildern"""
         try:
             # Batch in optimale Größen aufteilen
-            batches = [images[i:i + self.batch_size] for i in range(0, len(images), self.batch_size)]
-            
+            batches = [
+                images[i : i + self.batch_size]
+                for i in range(0, len(images), self.batch_size)
+            ]
+
             # Batches parallel verarbeiten
             tasks = [self.process_batch(batch, text_queries) for batch in batches]
             results = await asyncio.gather(*tasks)
-            
+
             # Ergebnisse zusammenführen
             return [item for sublist in results for item in sublist]
-            
+
         except Exception as e:
             logger.error(f"Fehler bei der Batch-Analyse: {str(e)}")
             raise
@@ -121,35 +131,42 @@ class CLIPService:
         try:
             image = Image.open(io.BytesIO(image_data))
             image_input = self.preprocess(image).unsqueeze(0).to(self.device)
-            
+
             with torch.no_grad():
                 image_features = self.model.encode_image(image_input)
                 image_features /= image_features.norm(dim=-1, keepdim=True)
-                
+
             return image_features[0].cpu().numpy().tolist()
-            
+
         except Exception as e:
             logger.error(f"Fehler beim Extrahieren des Bild-Embeddings: {str(e)}")
             raise
 
+
 # Service-Instanz erstellen
 clip_service = CLIPService()
+
 
 class ImageAnalysisRequest(BaseModel):
     image_data: bytes
     text_queries: List[str]
 
+
 class BatchAnalysisRequest(BaseModel):
     images: List[bytes]
     text_queries: List[str]
+
 
 @app.post("/analyze")
 async def analyze_image(request: ImageAnalysisRequest):
     """Analysiert ein Bild mit CLIP"""
     try:
-        return await clip_service.analyze_image(request.image_data, request.text_queries)
+        return await clip_service.analyze_image(
+            request.image_data, request.text_queries
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/analyze/batch")
 async def analyze_batch(request: BatchAnalysisRequest):
@@ -159,6 +176,7 @@ async def analyze_batch(request: BatchAnalysisRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/embedding")
 async def get_image_embedding(image_data: bytes):
     """Extrahiert das Bild-Embedding"""
@@ -167,15 +185,18 @@ async def get_image_embedding(image_data: bytes):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/health")
 async def health_check():
     """Health Check Endpoint"""
     return {
         "status": "healthy",
         "device": clip_service.device,
-        "batch_size": clip_service.batch_size
+        "batch_size": clip_service.batch_size,
     }
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

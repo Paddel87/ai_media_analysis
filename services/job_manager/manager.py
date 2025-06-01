@@ -14,6 +14,7 @@ from functools import lru_cache
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class GPUInstance:
     id: str
@@ -23,25 +24,28 @@ class GPUInstance:
     status: str
     batch_id: Optional[str]
 
+
 class JobManager:
     def __init__(self):
-        self.redis_client = redis.Redis(host='redis', port=6379, db=0)
-        self.batch_threshold_hours = int(os.getenv('BATCH_THRESHOLD_HOURS', 4))
-        self.min_jobs_per_batch = int(os.getenv('MIN_JOBS_PER_BATCH', 3))
-        self.auto_process_jobs = os.getenv('AUTO_PROCESS_JOBS', 'false').lower() == 'true'
+        self.redis_client = redis.Redis(host="redis", port=6379, db=0)
+        self.batch_threshold_hours = int(os.getenv("BATCH_THRESHOLD_HOURS", 4))
+        self.min_jobs_per_batch = int(os.getenv("MIN_JOBS_PER_BATCH", 3))
+        self.auto_process_jobs = (
+            os.getenv("AUTO_PROCESS_JOBS", "false").lower() == "true"
+        )
         self.active_instances: Dict[str, GPUInstance] = {}
         self.batch_cache = {}
         self.job_cache = {}
-        
+
         # GPU-Provider initialisieren
         self.vast_provider = VastAIProvider()
         self.runpod_provider = RunPodProvider()
-        
+
     @lru_cache(maxsize=1000)
     def get_cached_job(self, job_id: str) -> Optional[Dict]:
         """Cache für Job-Metadaten"""
         return self.job_cache.get(job_id)
-        
+
     @lru_cache(maxsize=100)
     def get_cached_batch(self, batch_id: str) -> Optional[Dict]:
         """Cache für Batch-Metadaten"""
@@ -50,11 +54,13 @@ class JobManager:
     async def start(self):
         """Startet den Job-Manager mit optimierter Batch-Verarbeitung"""
         logger.info("Job-Manager gestartet")
-        logger.info(f"Automatische Job-Verarbeitung: {'aktiviert' if self.auto_process_jobs else 'deaktiviert'}")
-        
+        logger.info(
+            f"Automatische Job-Verarbeitung: {'aktiviert' if self.auto_process_jobs else 'deaktiviert'}"
+        )
+
         # Cache initialisieren
         await self._initialize_caches()
-        
+
         while True:
             try:
                 if self.auto_process_jobs:
@@ -80,7 +86,7 @@ class JobManager:
                             with open(metadata_path, "r") as f:
                                 job = json.load(f)
                                 self.job_cache[job_id] = job
-                                
+
             # Batches laden
             batches_path = "data/batches"
             if os.path.exists(batches_path):
@@ -92,7 +98,7 @@ class JobManager:
                             with open(metadata_path, "r") as f:
                                 batch = json.load(f)
                                 self.batch_cache[batch_id] = batch
-                                
+
         except Exception as e:
             logger.error(f"Fehler beim Initialisieren der Caches: {str(e)}")
 
@@ -105,7 +111,7 @@ class JobManager:
 
             # Jobs nach Typ und Priorität gruppieren
             job_groups = self._group_jobs_by_type_and_priority(pending_jobs)
-            
+
             for group, jobs in job_groups.items():
                 if len(jobs) >= self.min_jobs_per_batch:
                     await self.create_batches(jobs)
@@ -115,7 +121,9 @@ class JobManager:
         except Exception as e:
             logger.error(f"Fehler bei der Job-Verarbeitung: {str(e)}")
 
-    def _group_jobs_by_type_and_priority(self, jobs: List[Dict]) -> Dict[str, List[Dict]]:
+    def _group_jobs_by_type_and_priority(
+        self, jobs: List[Dict]
+    ) -> Dict[str, List[Dict]]:
         """Gruppiert Jobs nach Typ und Priorität für optimierte Batch-Verarbeitung"""
         groups = {}
         for job in jobs:
@@ -131,21 +139,21 @@ class JobManager:
             # Batch-Metadaten laden
             batch_path = f"data/jobs/{batch_id}"
             metadata_path = f"{batch_path}/metadata.json"
-            
+
             if not os.path.exists(metadata_path):
                 raise Exception(f"Batch {batch_id} nicht gefunden")
-                
+
             with open(metadata_path, "r") as f:
                 batch = json.load(f)
-                
+
             if batch["status"] != "pending":
                 raise Exception(f"Batch {batch_id} ist nicht im Status 'pending'")
-                
+
             # GPU-Instanz erstellen
             await self.create_gpu_instance(batch_id)
-            
+
             logger.info(f"Manuelle Verarbeitung von Batch {batch_id} gestartet")
-            
+
         except Exception as e:
             logger.error(f"Fehler beim Starten der Batch-Verarbeitung: {str(e)}")
             raise
@@ -159,27 +167,27 @@ class JobManager:
                 job_path = self.find_job_path(job_id)
                 if not job_path:
                     raise Exception(f"Job {job_id} nicht gefunden")
-                    
+
                 metadata_path = f"{job_path}/metadata.json"
                 with open(metadata_path, "r") as f:
                     job = json.load(f)
                     if job["status"] != "pending":
                         raise Exception(f"Job {job_id} ist nicht im Status 'pending'")
                     jobs.append(job)
-            
+
             if not jobs:
                 raise Exception("Keine gültigen Jobs gefunden")
-                
+
             # Batch erstellen
             batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             if batch_name:
                 batch_id = f"{batch_id}_{batch_name}"
-                
+
             await self.save_batch(jobs, batch_id)
-            
+
             logger.info(f"Batch {batch_id} mit {len(jobs)} Jobs erstellt")
             return batch_id
-            
+
         except Exception as e:
             logger.error(f"Fehler beim Erstellen des Batches: {str(e)}")
             raise
@@ -189,7 +197,7 @@ class JobManager:
         try:
             if not batch_id:
                 batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                
+
             batch_path = f"data/jobs/{batch_id}"
             os.makedirs(batch_path, exist_ok=True)
 
@@ -200,7 +208,7 @@ class JobManager:
                 "created_at": datetime.now().isoformat(),
                 "status": "pending",
                 "estimated_duration": sum(self.estimate_job_duration(j) for j in jobs),
-                "created_by": "operator" if not self.auto_process_jobs else "system"
+                "created_by": "operator" if not self.auto_process_jobs else "system",
             }
 
             # Batch speichern
@@ -227,20 +235,22 @@ class JobManager:
         """Entscheidet, ob ein kleiner Batch erstellt werden soll"""
         # Berechne die geschätzte Gesamtdauer
         total_duration = sum(self.estimate_job_duration(job) for job in jobs)
-        
+
         # Erstelle einen kleinen Batch, wenn:
         # 1. Die Gesamtdauer einen Mindestwert überschreitet
         # 2. Die Jobs seit einer bestimmten Zeit warten
         min_duration = 0.5  # Mindestens 30 Minuten
         max_wait_time = 2.0  # Maximal 2 Stunden warten
-        
+
         if total_duration >= min_duration:
             return True
-            
+
         # Prüfe Wartezeit des ältesten Jobs
-        oldest_job = min(jobs, key=lambda j: datetime.fromisoformat(j['created_at']))
-        wait_time = (datetime.now() - datetime.fromisoformat(oldest_job['created_at'])).total_seconds() / 3600
-        
+        oldest_job = min(jobs, key=lambda j: datetime.fromisoformat(j["created_at"]))
+        wait_time = (
+            datetime.now() - datetime.fromisoformat(oldest_job["created_at"])
+        ).total_seconds() / 3600
+
         return wait_time >= max_wait_time
 
     async def create_batches(self, jobs: List[Dict]):
@@ -255,10 +265,12 @@ class JobManager:
 
         for job in jobs:
             job_duration = self.estimate_job_duration(job)
-            
+
             # Prüfe, ob Job zum aktuellen Batch passt
-            if (current_duration + job_duration <= self.batch_threshold_hours and 
-                len(current_batch) < self.min_jobs_per_batch):
+            if (
+                current_duration + job_duration <= self.batch_threshold_hours
+                and len(current_batch) < self.min_jobs_per_batch
+            ):
                 current_batch.append(job)
                 current_duration += job_duration
             else:
@@ -273,7 +285,7 @@ class JobManager:
         if current_batch:
             await self.save_batch(current_batch)
             batch_count += 1
-            
+
         logger.info(f"{batch_count} Batches erstellt")
 
     async def check_gpu_instances(self):
@@ -282,82 +294,94 @@ class JobManager:
             for instance_id, instance in list(self.active_instances.items()):
                 # Gesundheitscheck durchführen
                 if instance.provider == "vast":
-                    is_healthy = await self.vast_provider.check_instance_health(instance)
+                    is_healthy = await self.vast_provider.check_instance_health(
+                        instance
+                    )
                 else:
-                    is_healthy = await self.runpod_provider.check_instance_health(instance)
-                
+                    is_healthy = await self.runpod_provider.check_instance_health(
+                        instance
+                    )
+
                 # Wenn Instanz nicht gesund ist, behandeln
                 if not is_healthy:
-                    await self._handle_unusable_instance(instance_id, instance, instance.status.value)
-                
+                    await self._handle_unusable_instance(
+                        instance_id, instance, instance.status.value
+                    )
+
         except Exception as e:
             logger.error(f"Fehler beim Überprüfen der GPU-Instanzen: {str(e)}")
 
-    async def _handle_unusable_instance(self, instance_id: str, instance: GPUInstance, status: str):
+    async def _handle_unusable_instance(
+        self, instance_id: str, instance: GPUInstance, status: str
+    ):
         """Behandelt nicht nutzbare GPU-Instanzen"""
         try:
             # Batch-Status aktualisieren
             if instance.batch_id:
                 self._update_batch_status(
-                    instance.batch_id,
-                    "error",
-                    f"GPU-Instanz nicht nutzbar: {status}"
+                    instance.batch_id, "error", f"GPU-Instanz nicht nutzbar: {status}"
                 )
-            
+
             # GPU-Instanz löschen
             await self.delete_gpu_instance(instance_id)
-            
+
             # Aus aktiven Instanzen entfernen
             del self.active_instances[instance_id]
-            
-            logger.warning(f"GPU-Instanz {instance_id} wurde gelöscht (Status: {status})")
-            
+
+            logger.warning(
+                f"GPU-Instanz {instance_id} wurde gelöscht (Status: {status})"
+            )
+
         except Exception as e:
-            logger.error(f"Fehler beim Behandeln der nicht nutzbaren GPU-Instanz: {str(e)}")
+            logger.error(
+                f"Fehler beim Behandeln der nicht nutzbaren GPU-Instanz: {str(e)}"
+            )
 
     async def create_gpu_instance(self, batch_id: str):
         """Erstellt eine GPU-Instanz für einen Batch"""
         try:
             # Provider auswählen (hier: Vast.ai als Standard)
             provider = self.vast_provider
-            
+
             # Instanz erstellen
             instance = await provider.create_instance(batch_id)
-            
+
             # Warte auf Verfügbarkeit der Instanz
             max_retries = 5
             retry_delay = 30  # Sekunden
-            
+
             for _ in range(max_retries):
                 status = await provider.get_instance_status(instance.id)
                 if status == "running":
                     break
                 elif status in ["error", "stopped", "unreachable"]:
                     await self._handle_unusable_instance(instance.id, instance, status)
-                    raise Exception(f"GPU-Instanz konnte nicht gestartet werden: {status}")
+                    raise Exception(
+                        f"GPU-Instanz konnte nicht gestartet werden: {status}"
+                    )
                 await asyncio.sleep(retry_delay)
             else:
                 await self._handle_unusable_instance(instance.id, instance, "timeout")
                 raise Exception("Timeout beim Warten auf GPU-Instanz")
-            
+
             # Instanz speichern
             self.active_instances[instance.id] = instance
-            
+
             # Batch aktualisieren
             batch_path = f"data/jobs/{batch_id}"
             metadata_path = f"{batch_path}/metadata.json"
-            
+
             with open(metadata_path, "r") as f:
                 batch = json.load(f)
-            
+
             batch["gpu_instance_id"] = instance.id
             batch["gpu_provider"] = instance.provider
-            
+
             with open(metadata_path, "w") as f:
                 json.dump(batch, f, default=str)
-            
+
             logger.info(f"GPU-Instanz {instance.id} für Batch {batch_id} erstellt")
-            
+
         except Exception as e:
             logger.error(f"Fehler beim Erstellen der GPU-Instanz: {str(e)}")
             # Batch-Status auf Fehler setzen
@@ -370,18 +394,18 @@ class JobManager:
             if not instance:
                 logger.warning(f"GPU-Instanz {instance_id} nicht gefunden")
                 return
-            
+
             # Instanz löschen
             if instance.provider == "vast":
                 await self.vast_provider.delete_instance(instance_id)
             else:
                 await self.runpod_provider.delete_instance(instance_id)
-            
+
             # Aus aktiven Instanzen entfernen
             del self.active_instances[instance_id]
-            
+
             logger.info(f"GPU-Instanz {instance_id} gelöscht")
-            
+
         except Exception as e:
             logger.error(f"Fehler beim Löschen der GPU-Instanz: {str(e)}")
 
@@ -405,10 +429,10 @@ class JobManager:
                     # GPU-Instanz löschen
                     if batch.get("gpu_instance_id"):
                         await self.delete_gpu_instance(batch["gpu_instance_id"])
-                        
+
                         # Batch-Verzeichnis bereinigen
                         self._cleanup_batch_directory(batch_id)
-                        
+
                         logger.info(f"Batch {batch_id} bereinigt")
 
         except Exception as e:
@@ -422,33 +446,35 @@ class JobManager:
                 # Temporäre Dateien löschen
                 for root, dirs, files in os.walk(batch_path):
                     for file in files:
-                        if file.endswith('.tmp'):
+                        if file.endswith(".tmp"):
                             os.remove(os.path.join(root, file))
-                
+
                 # Verzeichnis löschen, wenn leer
                 if not os.listdir(batch_path):
                     os.rmdir(batch_path)
-                    
+
         except Exception as e:
             logger.error(f"Fehler beim Bereinigen des Batch-Verzeichnisses: {str(e)}")
 
-    def _update_batch_status(self, batch_id: str, status: str, error_message: Optional[str] = None):
+    def _update_batch_status(
+        self, batch_id: str, status: str, error_message: Optional[str] = None
+    ):
         """Aktualisiert den Status eines Batches"""
         try:
             batch_path = f"data/jobs/{batch_id}"
             metadata_path = f"{batch_path}/metadata.json"
-            
+
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
                     batch = json.load(f)
-                
+
                 batch["status"] = status
                 if error_message:
                     batch["error"] = error_message
-                
+
                 with open(metadata_path, "w") as f:
                     json.dump(batch, f, default=str)
-                    
+
         except Exception as e:
             logger.error(f"Fehler beim Aktualisieren des Batch-Status: {str(e)}")
 
@@ -456,12 +482,12 @@ class JobManager:
         """Lädt wartende Jobs"""
         jobs = []
         base_path = "data/incoming"
-        
+
         for media_type in ["videos", "images"]:
             media_path = f"{base_path}/{media_type}"
             if not os.path.exists(media_path):
                 continue
-                
+
             for job_id in os.listdir(media_path):
                 metadata_path = f"{media_path}/{job_id}/metadata.json"
                 if os.path.exists(metadata_path):
@@ -469,14 +495,14 @@ class JobManager:
                         job_data = json.load(f)
                         if job_data["status"] == "pending":
                             jobs.append(job_data)
-        
+
         return jobs
 
     def estimate_job_duration(self, job: Dict) -> float:
         """Schätzt die Verarbeitungsdauer eines Jobs"""
         # Basis-Schätzung nach Job-Typ
         base_duration = 1.0 if job["type"] == "video" else 0.1
-        
+
         # Berücksichtige Dateigröße
         file_size = job.get("file_size", 0)  # in Bytes
         if file_size > 0:
@@ -486,7 +512,7 @@ class JobManager:
                 base_duration += file_size / (1024 * 1024 * 1024)  # GB
             else:
                 base_duration += file_size / (1024 * 1024) * 0.1  # MB
-                
+
         return base_duration
 
     def find_job_path(self, job_id: str) -> Optional[str]:
@@ -497,6 +523,7 @@ class JobManager:
                 return path
         return None
 
+
 if __name__ == "__main__":
     manager = JobManager()
-    asyncio.run(manager.start()) 
+    asyncio.run(manager.start())

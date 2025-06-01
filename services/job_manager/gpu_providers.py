@@ -13,6 +13,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
+
 class GPUStatus(Enum):
     CREATING = "creating"
     RUNNING = "running"
@@ -22,6 +23,7 @@ class GPUStatus(Enum):
     UNREACHABLE = "unreachable"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class GPUHealth:
     gpu_utilization: float
@@ -30,6 +32,7 @@ class GPUHealth:
     power_usage: float
     is_healthy: bool
     error_message: Optional[str] = None
+
 
 @dataclass
 class GPUInstance:
@@ -46,6 +49,7 @@ class GPUInstance:
     last_status_check: datetime
     consecutive_failures: int = 0
     last_health_check: Optional[GPUHealth] = None
+
 
 class GPUProvider(ABC):
     @abstractmethod
@@ -68,16 +72,17 @@ class GPUProvider(ABC):
         """Überprüft die Gesundheit einer GPU-Instanz"""
         pass
 
+
 class VastAIProvider(GPUProvider):
     def __init__(self):
-        self.api_key = os.getenv('VAST_API_KEY')
+        self.api_key = os.getenv("VAST_API_KEY")
         if not self.api_key:
             raise ValueError("VAST_API_KEY nicht gefunden")
-            
+
         self.api_url = "https://vast.ai/api/v0"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.max_consecutive_failures = 3
         self.health_check_timeout = 30  # Sekunden
@@ -101,12 +106,14 @@ class VastAIProvider(GPUProvider):
                         "client_id": best_offer["client_id"],
                         "price": best_offer["price"],
                         "image": "nvidia/cuda:11.8.0-base-ubuntu22.04",
-                        "onstart": self._get_startup_script()
-                    }
+                        "onstart": self._get_startup_script(),
+                    },
                 ) as response:
                     if response.status != 200:
-                        raise Exception(f"Fehler beim Erstellen der Instanz: {await response.text()}")
-                    
+                        raise Exception(
+                            f"Fehler beim Erstellen der Instanz: {await response.text()}"
+                        )
+
                     data = await response.json()
                     return self._create_instance_from_response(data, batch_id)
 
@@ -119,10 +126,12 @@ class VastAIProvider(GPUProvider):
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     f"{self.api_url}/instances/{instance_id}/destroy/",
-                    headers=self.headers
+                    headers=self.headers,
                 ) as response:
                     if response.status != 200:
-                        raise Exception(f"Fehler beim Löschen der Instanz: {await response.text()}")
+                        raise Exception(
+                            f"Fehler beim Löschen der Instanz: {await response.text()}"
+                        )
 
         except Exception as e:
             logger.error(f"Fehler beim Löschen der Vast.ai Instanz: {str(e)}")
@@ -132,12 +141,11 @@ class VastAIProvider(GPUProvider):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"{self.api_url}/instances/{instance_id}/",
-                    headers=self.headers
+                    f"{self.api_url}/instances/{instance_id}/", headers=self.headers
                 ) as response:
                     if response.status != 200:
                         return GPUStatus.UNREACHABLE
-                    
+
                     data = await response.json()
                     return self._map_vast_status(data["status"])
 
@@ -150,27 +158,29 @@ class VastAIProvider(GPUProvider):
         try:
             # Status abrufen
             status = await self.get_instance_status(instance.id)
-            
+
             # Status aktualisieren
             instance.status = status
             instance.last_status_check = datetime.now()
-            
+
             # Prüfe auf Probleme
             if status in [GPUStatus.ERROR, GPUStatus.UNREACHABLE, GPUStatus.STOPPED]:
                 instance.consecutive_failures += 1
                 if instance.consecutive_failures >= self.max_consecutive_failures:
-                    logger.warning(f"GPU-Instanz {instance.id} hat zu viele aufeinanderfolgende Fehler")
+                    logger.warning(
+                        f"GPU-Instanz {instance.id} hat zu viele aufeinanderfolgende Fehler"
+                    )
                     return False
             else:
                 instance.consecutive_failures = 0
-            
+
             # SSH-Verbindung testen und GPU-Status prüfen
             if status == GPUStatus.RUNNING:
                 try:
                     async with asyncio.timeout(self.health_check_timeout):
                         health = await self._check_gpu_health(instance)
                         instance.last_health_check = health
-                        
+
                         if not health.is_healthy:
                             logger.warning(
                                 f"GPU-Instanz {instance.id} ist nicht gesund: "
@@ -180,14 +190,16 @@ class VastAIProvider(GPUProvider):
                                 f"Power: {health.power_usage}W"
                             )
                             return False
-                            
+
                 except asyncio.TimeoutError:
-                    logger.warning(f"Timeout beim Gesundheitscheck für GPU-Instanz {instance.id}")
+                    logger.warning(
+                        f"Timeout beim Gesundheitscheck für GPU-Instanz {instance.id}"
+                    )
                     return False
                 except Exception as e:
                     logger.error(f"Fehler beim GPU-Gesundheitscheck: {str(e)}")
                     return False
-            
+
             return True
 
         except Exception as e:
@@ -203,11 +215,13 @@ class VastAIProvider(GPUProvider):
                 port=instance.ssh_port,
                 username=instance.ssh_user,
                 client_keys=[instance.ssh_key],
-                known_hosts=None
+                known_hosts=None,
             ) as conn:
                 # GPU-Status abrufen
-                result = await conn.run('nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,power.draw --format=csv,noheader,nounits')
-                
+                result = await conn.run(
+                    "nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,power.draw --format=csv,noheader,nounits"
+                )
+
                 if result.exit_status != 0:
                     return GPUHealth(
                         gpu_utilization=0,
@@ -215,11 +229,11 @@ class VastAIProvider(GPUProvider):
                         temperature=0,
                         power_usage=0,
                         is_healthy=False,
-                        error_message=f"nvidia-smi Fehler: {result.stderr}"
+                        error_message=f"nvidia-smi Fehler: {result.stderr}",
                     )
-                
+
                 # Werte parsen
-                values = result.stdout.strip().split(',')
+                values = result.stdout.strip().split(",")
                 if len(values) != 4:
                     return GPUHealth(
                         gpu_utilization=0,
@@ -227,9 +241,9 @@ class VastAIProvider(GPUProvider):
                         temperature=0,
                         power_usage=0,
                         is_healthy=False,
-                        error_message="Ungültiges nvidia-smi Format"
+                        error_message="Ungültiges nvidia-smi Format",
                     )
-                
+
                 try:
                     gpu_util = float(values[0])
                     mem_util = float(values[1])
@@ -242,25 +256,29 @@ class VastAIProvider(GPUProvider):
                         temperature=0,
                         power_usage=0,
                         is_healthy=False,
-                        error_message="Ungültige GPU-Werte"
+                        error_message="Ungültige GPU-Werte",
                     )
-                
+
                 # Gesundheitskriterien prüfen
                 is_healthy = (
-                    gpu_util >= 0 and gpu_util <= 100 and
-                    mem_util >= 0 and mem_util <= 100 and
-                    temp >= 0 and temp <= 85 and
-                    power >= 0 and power <= 300
+                    gpu_util >= 0
+                    and gpu_util <= 100
+                    and mem_util >= 0
+                    and mem_util <= 100
+                    and temp >= 0
+                    and temp <= 85
+                    and power >= 0
+                    and power <= 300
                 )
-                
+
                 return GPUHealth(
                     gpu_utilization=gpu_util,
                     memory_utilization=mem_util,
                     temperature=temp,
                     power_usage=power,
-                    is_healthy=is_healthy
+                    is_healthy=is_healthy,
                 )
-                
+
         except Exception as e:
             return GPUHealth(
                 gpu_utilization=0,
@@ -268,7 +286,7 @@ class VastAIProvider(GPUProvider):
                 temperature=0,
                 power_usage=0,
                 is_healthy=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     def _map_vast_status(self, vast_status: str) -> GPUStatus:
@@ -278,7 +296,7 @@ class VastAIProvider(GPUProvider):
             "running": GPUStatus.RUNNING,
             "stopped": GPUStatus.STOPPED,
             "error": GPUStatus.ERROR,
-            "destroyed": GPUStatus.DESTROYED
+            "destroyed": GPUStatus.DESTROYED,
         }
         return status_map.get(vast_status, GPUStatus.UNKNOWN)
 
@@ -289,14 +307,13 @@ class VastAIProvider(GPUProvider):
                 async with session.get(
                     f"{self.api_url}/bundles/",
                     headers=self.headers,
-                    params={
-                        "q": "reliability > 0.95 num_gpus=1",
-                        "order_by": "score-"
-                    }
+                    params={"q": "reliability > 0.95 num_gpus=1", "order_by": "score-"},
                 ) as response:
                     if response.status != 200:
-                        raise Exception(f"Fehler beim Suchen nach Angeboten: {await response.text()}")
-                    
+                        raise Exception(
+                            f"Fehler beim Suchen nach Angeboten: {await response.text()}"
+                        )
+
                     return await response.json()
 
         except Exception as e:
@@ -307,13 +324,10 @@ class VastAIProvider(GPUProvider):
         """Wählt das beste Angebot aus"""
         if not offers:
             raise Exception("Keine Angebote verfügbar")
-            
+
         # Sortiere nach Preis und Zuverlässigkeit
-        sorted_offers = sorted(
-            offers,
-            key=lambda x: (x["price"], -x["reliability"])
-        )
-        
+        sorted_offers = sorted(offers, key=lambda x: (x["price"], -x["reliability"]))
+
         return sorted_offers[0]
 
     def _get_startup_script(self) -> str:
@@ -340,19 +354,20 @@ class VastAIProvider(GPUProvider):
             ssh_user=data["ssh_user"],
             ssh_key=data["ssh_key"],
             last_status_check=datetime.now(),
-            consecutive_failures=0
+            consecutive_failures=0,
         )
+
 
 class RunPodProvider(GPUProvider):
     def __init__(self):
-        self.api_key = os.getenv('RUNPOD_API_KEY')
+        self.api_key = os.getenv("RUNPOD_API_KEY")
         if not self.api_key:
             raise ValueError("RUNPOD_API_KEY nicht gefunden")
-            
+
         self.api_url = "https://api.runpod.io/v2"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.max_consecutive_failures = 3
         self.health_check_timeout = 30  # Sekunden
@@ -387,4 +402,4 @@ class RunPodProvider(GPUProvider):
             raise NotImplementedError("RunPod-Provider noch nicht implementiert")
         except Exception as e:
             logger.error(f"Fehler beim Gesundheitscheck der RunPod Instanz: {str(e)}")
-            raise 
+            raise

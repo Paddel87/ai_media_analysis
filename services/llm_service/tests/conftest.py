@@ -7,20 +7,16 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent.parent)
 sys.path.insert(0, project_root)
 
+
 # Test-Konfiguration
 def pytest_configure(config):
     """
     Konfiguriert die Test-Umgebung
     """
     # Marker registrieren
-    config.addinivalue_line(
-        "markers",
-        "integration: markiert Integrationstests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "performance: markiert Performance-Tests"
-    )
+    config.addinivalue_line("markers", "integration: markiert Integrationstests")
+    config.addinivalue_line("markers", "performance: markiert Performance-Tests")
+
 
 # Fixtures
 @pytest.fixture(autouse=True)
@@ -37,9 +33,9 @@ def setup_test_env():
     os.environ["ANALYTICS_SERVICE_URL"] = "http://analytics-service:8000"
     os.environ["CACHE_SERVICE_URL"] = "http://cache-service:8000"
     os.environ["MONITORING_SERVICE_URL"] = "http://monitoring-service:8000"
-    
+
     yield
-    
+
     # Aufräumen
     for key in [
         "OPENAI_API_KEY",
@@ -49,9 +45,10 @@ def setup_test_env():
         "MEDIA_SERVICE_URL",
         "ANALYTICS_SERVICE_URL",
         "CACHE_SERVICE_URL",
-        "MONITORING_SERVICE_URL"
+        "MONITORING_SERVICE_URL",
     ]:
         os.environ.pop(key, None)
+
 
 @pytest.fixture
 def mock_requests():
@@ -60,15 +57,12 @@ def mock_requests():
     """
     import requests
     from unittest.mock import patch
-    
-    with patch("requests.get") as mock_get, \
-         patch("requests.post") as mock_post, \
-         patch("requests.delete") as mock_delete:
-        yield {
-            "get": mock_get,
-            "post": mock_post,
-            "delete": mock_delete
-        }
+
+    with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch(
+        "requests.delete"
+    ) as mock_delete:
+        yield {"get": mock_get, "post": mock_post, "delete": mock_delete}
+
 
 @pytest.fixture
 def mock_services():
@@ -76,11 +70,11 @@ def mock_services():
     Mock für externe Services
     """
     from unittest.mock import Mock
-    
+
     return {
         "vector_db": Mock(),
         "media": Mock(),
         "analytics": Mock(),
         "cache": Mock(),
-        "monitoring": Mock()
-    } 
+        "monitoring": Mock(),
+    }

@@ -1,5 +1,5 @@
 # Erweiterung: OCR für Wasserzeichen und Titel
-print('Running OCR module...')
+print("Running OCR module...")
 
 import cv2
 import numpy as np
@@ -9,6 +9,7 @@ import logging
 import time
 
 logger = logging.getLogger(__name__)
+
 
 class OCRDetector:
     def __init__(self, ocr_service_url: str = "http://ocr_detection:8000"):
@@ -28,27 +29,27 @@ class OCRDetector:
     def analyze_frame(self, frame: np.ndarray) -> Dict:
         """
         Analysiert ein einzelnes Frame auf Text.
-        
+
         Args:
             frame: NumPy Array des Bildes (BGR Format)
-            
+
         Returns:
             Dict mit den erkannten Texten
         """
         try:
             # Frame in JPEG konvertieren
-            _, img_encoded = cv2.imencode('.jpg', frame)
-            
+            _, img_encoded = cv2.imencode(".jpg", frame)
+
             # API-Anfrage senden
-            files = {'file': ('frame.jpg', img_encoded.tobytes(), 'image/jpeg')}
+            files = {"file": ("frame.jpg", img_encoded.tobytes(), "image/jpeg")}
             response = requests.post(self.analyze_endpoint, files=files)
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 logger.error(f"Fehler bei der OCR-Analyse: {response.text}")
                 return {"error": response.text}
-                
+
         except Exception as e:
             logger.error(f"Fehler bei der OCR-Analyse: {str(e)}")
             return {"error": str(e)}
@@ -56,32 +57,32 @@ class OCRDetector:
     def process_video_frame(self, frame: np.ndarray, frame_number: int) -> Dict:
         """
         Verarbeitet ein Video-Frame und fügt Metadaten hinzu.
-        
+
         Args:
             frame: NumPy Array des Bildes
             frame_number: Nummer des Frames
-            
+
         Returns:
             Dict mit Frame-Metadaten und OCR-Informationen
         """
         start_time = time.time()
         ocr_data = self.analyze_frame(frame)
         processing_time = time.time() - start_time
-        
+
         return {
             "frame_number": frame_number,
             "ocr_data": ocr_data,
             "processing_time": processing_time,
-            "timestamp": frame_number / 30.0  # Annahme: 30 FPS
+            "timestamp": frame_number / 30.0,  # Annahme: 30 FPS
         }
 
     def get_ocr_sequence(self, frames: List[np.ndarray]) -> List[Dict]:
         """
         Verarbeitet eine Sequenz von Frames.
-        
+
         Args:
             frames: Liste von NumPy Arrays
-            
+
         Returns:
             Liste von Dictionaries mit OCR-Informationen pro Frame
         """
@@ -91,14 +92,16 @@ class OCRDetector:
             results.append(result)
         return results
 
-    def filter_by_confidence(self, results: List[Dict], min_confidence: float = 0.5) -> List[Dict]:
+    def filter_by_confidence(
+        self, results: List[Dict], min_confidence: float = 0.5
+    ) -> List[Dict]:
         """
         Filtert OCR-Ergebnisse nach Konfidenzwert.
-        
+
         Args:
             results: Liste von OCR-Ergebnissen
             min_confidence: Minimaler Konfidenzwert
-            
+
         Returns:
             Gefilterte Liste von Ergebnissen
         """
@@ -106,7 +109,8 @@ class OCRDetector:
         for result in results:
             if "ocr_data" in result and "results" in result["ocr_data"]:
                 filtered_ocr = [
-                    ocr for ocr in result["ocr_data"]["results"]
+                    ocr
+                    for ocr in result["ocr_data"]["results"]
                     if ocr["confidence"] >= min_confidence
                 ]
                 if filtered_ocr:
