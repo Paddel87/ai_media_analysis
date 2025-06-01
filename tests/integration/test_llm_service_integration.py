@@ -7,6 +7,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 import requests
+from llm_service.service_integration import (
+    AnalyticsServiceIntegration,
+    CacheServiceIntegration,
+    MonitoringServiceIntegration,
+    ServiceIntegration,
+)
 
 # sys.path.append( # Entfernt, da PYTHONPATH in CI gesetzt wird
 #     os.path.join(
@@ -14,12 +20,6 @@ import requests
 #     )
 # )
 
-from llm_service.service_integration import (
-    AnalyticsServiceIntegration,
-    CacheServiceIntegration,
-    MonitoringServiceIntegration,
-    ServiceIntegration,
-)
 
 
 # Fixtures
