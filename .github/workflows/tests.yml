@@ -265,6 +265,13 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       
+    - name: Install Docker Compose
+      run: |
+        # GitHub Actions Ubuntu runners haben docker-compose v1, wir brauchen v2
+        sudo curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
+        
     - name: Start services
       run: |
         docker-compose up -d --build

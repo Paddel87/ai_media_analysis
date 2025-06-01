@@ -7,6 +7,7 @@ import requests
 # Fix: Absoluter Import statt relativer Import
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from llm_service.service_integration import (
