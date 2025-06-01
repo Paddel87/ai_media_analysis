@@ -5,6 +5,25 @@ __pycache__/
 # Ignore environment files
 .env
 
+# Ignore virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Ignore test and coverage files
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # Ignore local data and temp files
 data/
 tmp/

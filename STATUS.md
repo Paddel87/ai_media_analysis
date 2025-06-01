@@ -2,7 +2,7 @@
 
 ## 🚀 AKTUELLER ENTWICKLUNGSSTAND: FAST RELEASE CANDIDATE 🚀
 
-**Letzte Aktualisierung:** 2024-03-22  
+**Letzte Aktualisierung:** 2025-06-01  
 **Version:** Alpha 0.x → Beta 0.9  
 **Produktionsreife:** ⚡ RELEASE CANDIDATE NAH
 
@@ -53,7 +53,7 @@
 - ⏳ Performance-Regression-Detection
 - ⏳ Automatisierte Benchmark-Berichte
 
-## 📊 AKTUELLE METRIKEN (2024-03-22)
+## 📊 AKTUELLE METRIKEN (2025-06-01)
 
 ### Test-Suite Status
 - **Gesamt Tests:** 42 (32 Unit + 10 Integration) ✅
@@ -69,7 +69,7 @@
 - **Pre-commit Hooks:** Aktiviert ✅
 - **Documentation:** Vollständig ✅
 
-## Aktueller Stand (2024-03-22)
+## Aktueller Stand (2025-06-01)
 
 ### Implementierte Features
 - ✅ Vision Pipeline mit NSFW-Detection

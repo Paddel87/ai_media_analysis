@@ -5,7 +5,7 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Beta 0.9] - 2024-03-22 - 🎉 KRITISCHER RC-BLOCKER GELÖST 🎉
+## [Beta 0.9] - 2025-06-01 - 🎉 KRITISCHER RC-BLOCKER GELÖST 🎉
 ### Added
 - 🧪 **Umfassende Test-Suite entwickelt** (42 Tests total)
   - 32 Unit Tests für kritische Service-Funktionalitäten
