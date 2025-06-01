@@ -1,28 +1,23 @@
-# Basis-Image mit CUDA-Unterstützung
-FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
+FROM python:3.10-slim
 
-# System-Abhängigkeiten installieren
+# Install build tools
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
+    build-essential \
+    g++ \
+    git \
+    && g++ --version \
     && rm -rf /var/lib/apt/lists/*
 
-# Arbeitsverzeichnis erstellen
 WORKDIR /app
 
-# Python-Abhängigkeiten kopieren und installieren
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Anwendungsdateien kopieren
+# Copy application code
 COPY . .
 
-# Umgebungsvariablen setzen
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-
-# Port freigeben
-EXPOSE 8000
-
-# Anwendung starten
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the application
+CMD ["python", "main.py"]
