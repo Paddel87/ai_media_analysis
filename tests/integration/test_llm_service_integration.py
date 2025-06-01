@@ -1,12 +1,12 @@
+import os
+
+# Fix: Absoluter Import statt relativer Import
+import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
-
-# Fix: Absoluter Import statt relativer Import
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
