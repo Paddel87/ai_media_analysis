@@ -1,6 +1,7 @@
-import redis
-from typing import Optional
 import logging
+from typing import Optional
+
+import redis
 
 logger = logging.getLogger(__name__)
 

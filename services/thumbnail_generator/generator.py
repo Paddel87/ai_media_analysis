@@ -1,8 +1,9 @@
-import cv2
-import os
-from typing import List
 import logging
+import os
 from datetime import datetime
+from typing import List
+
+import cv2
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

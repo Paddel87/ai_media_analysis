@@ -1,11 +1,11 @@
+import json
 import logging
 import logging.handlers
-import json
-from datetime import datetime
-from typing import Dict, Any, Optional
 import os
-from pathlib import Path
 import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 class StructuredLogFormatter(logging.Formatter):

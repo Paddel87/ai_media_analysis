@@ -1,13 +1,12 @@
 import cv2
+import mmcv
 import numpy as np
 import torch
+import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
-import mmcv
-from mmpose.apis import inference_topdown
-from mmpose.apis import init_model
+from mmpose.apis import inference_topdown, init_model
 from mmpose.structures import merge_data_samples
-import uvicorn
 
 app = FastAPI(title="Pose Estimation Service")
 

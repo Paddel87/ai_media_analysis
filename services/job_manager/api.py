@@ -1,11 +1,12 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
-from typing import List, Optional
-import logging
-from manager import JobManager
 import asyncio
 import json
+import logging
 import os
+from typing import List, Optional
+
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from manager import JobManager
+from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

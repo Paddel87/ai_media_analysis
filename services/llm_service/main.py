@@ -1,29 +1,30 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
-import logging
-from typing import List, Dict, Optional, Union, Any
-import os
-from datetime import datetime
-import json
-import uuid
-import redis
-import pickle
-from functools import lru_cache
 import asyncio
+import gc
+import json
+import logging
+import os
+import pickle
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import aiohttp
-from tenacity import retry, stop_after_attempt, wait_exponential
 import google.generativeai as genai
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import numpy as np
+import openai
+import redis
 import torch
+from anthropic import Anthropic
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from langchain.chains import LLMChain
 from langchain.llms import HuggingFacePipeline
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-import openai
-from anthropic import Anthropic
-import numpy as np
-import gc
-from pathlib import Path
+from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_exponential
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

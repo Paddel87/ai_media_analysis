@@ -1,32 +1,34 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import torch
-import whisper
-import numpy as np
-import logging
-from typing import List, Dict, Optional, Tuple, Union
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+import base64
 import io
-import soundfile as sf
+import json
+import logging
+import os
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from functools import lru_cache
-from transformers import (
-    Wav2Vec2ForSequenceClassification,
-    Wav2Vec2FeatureExtractor,
-    Wav2Vec2Model,
-)
-import torch.nn.functional as F
+from typing import Dict, List, Optional, Tuple, Union
+
+import faiss
 import librosa
 import noisereduce as nr
+import numpy as np
+import requests
+import soundfile as sf
+import torch
+import torch.nn.functional as F
+from fastapi import FastAPI, HTTPException
+from PIL import Image
+from pydantic import BaseModel
 from scipy import signal
 from sklearn.metrics.pairwise import cosine_similarity
-import faiss
-import json
-import os
-from datetime import datetime
-import requests
-from PIL import Image
-import base64
+from transformers import (
+    Wav2Vec2FeatureExtractor,
+    Wav2Vec2ForSequenceClassification,
+    Wav2Vec2Model,
+)
+
+import whisper
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

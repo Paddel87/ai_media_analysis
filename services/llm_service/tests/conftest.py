@@ -1,7 +1,8 @@
-import pytest
 import os
 import sys
 from pathlib import Path
+
+import pytest
 
 # Projekt-Root zum Python-Pfad hinzufügen
 project_root = str(Path(__file__).parent.parent.parent)
@@ -55,8 +56,9 @@ def mock_requests():
     """
     Mock für HTTP-Requests
     """
-    import requests
     from unittest.mock import patch
+
+    import requests
 
     with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch(
         "requests.delete"

@@ -1,22 +1,22 @@
-import os
-import logging
-import json
 import asyncio
 import gc
-import torch
-from typing import Dict, List, Optional, Tuple
+import json
+import logging
+import os
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
+import aiohttp
+import numpy as np
 import redis
+import torch
+from common.logging_config import ServiceLogger
 from rq import Queue, Worker
 from rq.job import Job
 from rq.worker import HerokuWorker
-import aiohttp
-import numpy as np
 
 from vision_pipeline import VisionPipeline
-from common.logging_config import ServiceLogger
 
 # Logger konfigurieren
 logger = ServiceLogger("vision_pipeline_worker")

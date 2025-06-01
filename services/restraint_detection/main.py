@@ -1,30 +1,31 @@
+import asyncio
+import gc
+import json
+import math
+import os
+import pickle
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, Tuple
+
+import aiohttp
 import cv2
+import librosa
 import numpy as np
+import redis
+import soundfile as sf
+import torch
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional, Tuple
-import torch
-from transformers import (
-    CLIPProcessor,
-    CLIPModel,
-    WhisperProcessor,
-    WhisperForConditionalGeneration,
-)
-import asyncio
-import aiohttp
-import sys
-import os
-import librosa
-import soundfile as sf
 from scipy.signal import find_peaks
-import redis
-import gc
-import pickle
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
-import math
-import json
-from datetime import datetime, timezone
+from transformers import (
+    CLIPModel,
+    CLIPProcessor,
+    WhisperForConditionalGeneration,
+    WhisperProcessor,
+)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger

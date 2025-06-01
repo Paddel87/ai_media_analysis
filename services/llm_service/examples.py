@@ -165,10 +165,11 @@ vector_metadata_update_example = {
 
 vector_index_example = {"index_type": "HNSW"}
 
-import requests
 import json
-from typing import Dict, List
 import logging
+from typing import Dict, List
+
+import requests
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

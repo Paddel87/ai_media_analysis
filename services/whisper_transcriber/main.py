@@ -1,27 +1,29 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
-from pydantic import BaseModel
-import whisper
-import torch
-import numpy as np
-import logging
-from typing import Optional, List, Dict, Any
-import os
-from datetime import datetime
+import asyncio
+import gc
 import json
+import logging
+import os
+import pickle
 import tempfile
 import uuid
-import ffmpeg
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import redis
-import pickle
+from datetime import datetime
 from functools import lru_cache
-import soundfile as sf
-import librosa
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import aiofiles
 import aiohttp
-from pathlib import Path
-import gc
+import ffmpeg
+import librosa
+import numpy as np
+import redis
+import soundfile as sf
+import torch
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from pydantic import BaseModel
+
+import whisper
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

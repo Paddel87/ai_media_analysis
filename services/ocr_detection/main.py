@@ -1,13 +1,14 @@
+import logging
+from typing import Dict, List, Optional
+
 import cv2
-import numpy as np
 import easyocr
+import numpy as np
+import torch
+import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
-import uvicorn
-from typing import List, Dict, Optional
-import logging
 from pydantic import BaseModel
-import torch
 
 # Logging-Konfiguration
 logging.basicConfig(level=logging.INFO)

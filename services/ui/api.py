@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional, Dict
-from datetime import datetime
 import json
 import os
 import shutil
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 app = FastAPI(title="AI Media Analysis API")

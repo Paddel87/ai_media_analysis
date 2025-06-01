@@ -3,10 +3,11 @@ Unit Tests für Vision Pipeline Service.
 Tests für NSFW Detection, OCR, Face Recognition und andere Vision-Funktionen.
 """
 
-import pytest
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any, List
+import pytest
 
 
 class MockVisionPipeline:

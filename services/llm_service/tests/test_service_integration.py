@@ -1,12 +1,14 @@
+from datetime import datetime
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
-from unittest.mock import Mock, patch
-from datetime import datetime
+
 from ..service_integration import (
-    ServiceIntegration,
     AnalyticsServiceIntegration,
     CacheServiceIntegration,
     MonitoringServiceIntegration,
+    ServiceIntegration,
 )
 
 

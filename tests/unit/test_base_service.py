@@ -3,10 +3,11 @@ Unit Tests für Basis-Service-Funktionalität.
 Tests für gemeinsame Service-Patterns und Utilities.
 """
 
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
 import asyncio
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 
 class MockBaseService:

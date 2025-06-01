@@ -2,11 +2,12 @@
 Zentrale Test-Konfiguration mit gemeinsamen Fixtures und Utilities.
 """
 
-import os
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock
-from typing import Dict, Any, Generator
+import os
+from typing import Any, Dict, Generator
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 import requests
 from fastapi.testclient import TestClient
 

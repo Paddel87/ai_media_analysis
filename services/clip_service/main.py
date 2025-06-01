@@ -1,16 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import torch
-from PIL import Image
-import numpy as np
-import logging
-from typing import List, Dict, Optional, Tuple
-import clip
-import io
-import base64
-from functools import lru_cache
 import asyncio
+import base64
+import io
+import logging
 from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+from typing import Dict, List, Optional, Tuple
+
+import clip
+import numpy as np
+import torch
+from fastapi import FastAPI, HTTPException
+from PIL import Image
+from pydantic import BaseModel
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

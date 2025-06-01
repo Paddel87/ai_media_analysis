@@ -1,17 +1,18 @@
+import asyncio
+import hashlib
+import io
+import os
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, Tuple
+
+import aiohttp
 import cv2
 import numpy as np
 import requests
-from typing import Dict, List, Optional, Tuple, Any
-import time
 from PIL import Image
-import io
-import asyncio
-import aiohttp
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
-import hashlib
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger

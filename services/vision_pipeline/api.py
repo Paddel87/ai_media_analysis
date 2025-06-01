@@ -1,23 +1,22 @@
-import os
 import logging
-from typing import List, Optional
+import os
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, status, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.openapi.utils import get_openapi
-from pydantic import BaseModel, Field, validator
-import redis
-from rq import Queue
 import aiohttp
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-from main import VisionPipeline
+import redis
 from common.logging_config import ServiceLogger
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+from main import VisionPipeline
+from pydantic import BaseModel, Field, validator
+from rq import Queue
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 # Logger initialisieren
 logger = ServiceLogger("vision_pipeline_api")

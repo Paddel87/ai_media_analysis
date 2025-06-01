@@ -1,9 +1,10 @@
-import requests
-import logging
-from typing import List, Dict, Optional
 import json
-from datetime import datetime
+import logging
 import uuid
+from datetime import datetime
+from typing import Dict, List, Optional
+
+import requests
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

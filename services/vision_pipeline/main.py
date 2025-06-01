@@ -1,21 +1,22 @@
+import asyncio
+import base64
+import gc
+import hashlib
+import json
+import os
+import pickle
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import aiohttp
 import cv2
 import numpy as np
-import torch
-import asyncio
-import aiohttp
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
-import hashlib
-import sys
-import os
-import base64
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
-import json
-import gc
 import redis
-import pickle
-from pathlib import Path
+import torch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger

@@ -1,25 +1,26 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
-import qdrant_client
-from qdrant_client.http import models
-import numpy as np
-import logging
-from typing import List, Dict, Optional, Union, Any, Tuple
-import os
-from datetime import datetime
-import json
-import uuid
-import redis
-import pickle
-from functools import lru_cache
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-import aiohttp
-from tenacity import retry, stop_after_attempt, wait_exponential
-import torch
-import faiss
 import gc
+import json
+import logging
+import os
+import pickle
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import aiohttp
+import faiss
+import numpy as np
+import qdrant_client
+import redis
+import torch
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from qdrant_client.http import models
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

@@ -1,18 +1,19 @@
-import os
-import logging
-import torch
-import clip
-from PIL import Image
-import numpy as np
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-import boto3
-from dotenv import load_dotenv
-import json
-import cv2
 import io
-from transformers import CLIPProcessor, CLIPModel
+import json
+import logging
+import os
+from typing import Dict, List, Optional
+
+import boto3
+import clip
+import cv2
+import numpy as np
+import torch
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from PIL import Image
+from pydantic import BaseModel
+from transformers import CLIPModel, CLIPProcessor
 
 # Logging-Konfiguration
 logging.basicConfig(level=logging.INFO)

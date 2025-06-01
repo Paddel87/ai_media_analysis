@@ -1,12 +1,13 @@
 # Erweiterung: OCR für Wasserzeichen und Titel
 print("Running OCR module...")
 
+import logging
+import time
+from typing import Dict, List, Optional
+
 import cv2
 import numpy as np
 import requests
-from typing import Dict, List, Optional
-import logging
-import time
 
 logger = logging.getLogger(__name__)
 

@@ -3,13 +3,14 @@ Integration Tests für Service-zu-Service-Kommunikation.
 Tests für die Zusammenarbeit zwischen verschiedenen AI-Services.
 """
 
-import pytest
 import asyncio
-import requests
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, Any, List
 import json
 import time
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+import requests
 
 
 @pytest.mark.integration

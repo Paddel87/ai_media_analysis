@@ -1,27 +1,28 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
+import asyncio
+import base64
+import io
+import json
+import logging
+import os
+import pickle
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, Tuple
+
+import cv2
+import insightface
+import numpy as np
+import redis
+import requests
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from PIL import Image
-import numpy as np
-import cv2
-import logging
-from typing import List, Dict, Optional, Tuple, Any
-import insightface
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from insightface.app import FaceAnalysis
-import os
-import json
-from datetime import datetime
-import uuid
-import requests
-import io
-import base64
-import redis
-import pickle
-from functools import lru_cache
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+from PIL import Image
+from pydantic import BaseModel
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

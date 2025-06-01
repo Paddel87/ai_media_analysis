@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Optional
 import json
+import logging
 import os
 from datetime import datetime
-import logging
-from data_schema.person_dossier import PersonDossier, FaceInstance
+from typing import Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+from data_schema.person_dossier import FaceInstance, PersonDossier
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

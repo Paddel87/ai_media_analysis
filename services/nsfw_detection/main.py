@@ -1,14 +1,15 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
-import torch
-import numpy as np
-import logging
-from typing import List, Dict, Optional
-import requests
-import io
 import base64
-from datetime import datetime
+import io
+import logging
 import uuid
+from datetime import datetime
+from typing import Dict, List, Optional
+
+import numpy as np
+import requests
+import torch
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
