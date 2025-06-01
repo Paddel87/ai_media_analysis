@@ -8,6 +8,7 @@ from functools import lru_cache
 import hashlib
 import sys
 import os
+import base64
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 import json

@@ -131,7 +131,7 @@ async def health_check():
     """
     try:
         # CLIP-Service Health Check
-        response = requests.get(f"{self.clip_service_url}/health")
+        response = requests.get(f"{nsfw_service.clip_service_url}/health")
         if response.status_code != 200:
             return {"status": "unhealthy", "clip_service": "unavailable"}
         return {"status": "healthy", "clip_service": "available"}

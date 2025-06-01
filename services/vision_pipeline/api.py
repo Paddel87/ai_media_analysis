@@ -374,13 +374,13 @@ async def get_job_status(job_id: str):
             )
 
         # Status bestimmen
-        status = "queued"
+        job_status = "queued"
         if job.is_finished:
-            status = "completed"
+            job_status = "completed"
         elif job.is_failed:
-            status = "failed"
+            job_status = "failed"
         elif job.is_started:
-            status = "processing"
+            job_status = "processing"
 
         # Job-Status beim Manager abrufen
         try:
@@ -397,7 +397,7 @@ async def get_job_status(job_id: str):
 
         return JobStatus(
             job_id=job_id,
-            status=status,
+            status=job_status,
             created_at=job.created_at.isoformat(),
             updated_at=job.ended_at.isoformat() if job.ended_at else None,
             result=job.result if job.is_finished else None,

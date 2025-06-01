@@ -74,6 +74,17 @@ class BatchAnalysisRequest(BaseModel):
     batch_size: int = 4
 
 
+class FaceComparisonRequest(BaseModel):
+    face1_embedding: List[float]
+    face2_embedding: List[float]
+
+
+class FaceMatchRequest(BaseModel):
+    target_embedding: List[float]
+    embeddings: List[List[float]]
+    threshold: float = 0.5
+
+
 class FaceReIDService:
     def __init__(self):
         self.clip_service_url = "http://clip-service:8000"
