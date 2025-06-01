@@ -1,6 +1,18 @@
 # AI Media Analysis System
 
-Ein fortschrittliches System zur automatisierten Analyse und Kategorisierung von Medieninhalten mit Fokus auf Effizienz und Zuverlässigkeit.
+> **🚧 ALPHA VERSION - NICHT PRODUKTIONSREIF 🚧**  
+> Dieses Projekt befindet sich derzeit in der Alpha-Phase. Während die Kernfunktionalitäten implementiert und funktionsfähig sind, fehlen noch kritische Komponenten für eine produktive Nutzung.
+
+## ⚠️ Release Candidate Blocker
+
+**Kritische Punkte, die vor einem Release Candidate behoben werden müssen:**
+- **Testabdeckung**: Umfassende Test-Suite fehlt (nur 1 von 23 Services getestet)
+- **CI/CD Pipeline**: Keine automatisierte Qualitätssicherung
+- **Code Quality**: Keine Linting/Coverage-Tools integriert
+- **Security Testing**: Keine Sicherheitstests implementiert
+- **Performance Testing**: Keine Load-Tests oder Benchmarks
+
+**Geschätzter Zeitrahmen für RC:** 2-4 Wochen
 
 ## Überblick
 
