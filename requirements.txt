@@ -10,9 +10,9 @@ openai==1.3.5
 chromadb==0.4.18
 
 # Computer Vision
-mmcv-full==1.7.1
 torch==2.1.0
 torchvision==0.16.0
+mmcv-full==1.7.2
 
 # Utilities
 python-multipart==0.0.6
@@ -25,16 +25,18 @@ pytest==7.4.3
 httpx==0.25.1
 
 # Authentifizierung & Sicherheit
-python-jose==3.3.0
+python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 
+# Cloud Storage
 aiofiles==23.2.1
-boto3>=1.26.0
-google-cloud-storage>=2.7.0
-azure-storage-blob>=12.14.0
+boto3>=1.34.0
+google-cloud-storage>=2.14.0
+azure-storage-blob>=12.19.0
 dropbox>=11.36.0
-mega.py>=1.0.8
+
+# Monitoring
 opentelemetry-api>=1.18.0
 opentelemetry-sdk>=1.18.0
 opentelemetry-instrumentation>=0.40b0 
