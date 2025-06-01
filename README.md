@@ -1,5 +1,7 @@
 # AI Media Analysis System
 
+[![AI Media Analysis Test Suite](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml/badge.svg)](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml)
+
 > **🚀 BETA VERSION - RELEASE CANDIDATE VORBEREITUNG 🚀**  
 > Das Projekt hat die Beta-Phase erreicht! Der kritische RC-Blocker (Testabdeckung) wurde gelöst. Mit 42 Tests, vollautomatisierter CI/CD-Pipeline und umfassender Qualitätssicherung ist das System bereit für Release Candidate Testing.
 
