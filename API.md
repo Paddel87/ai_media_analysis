@@ -1,20 +1,93 @@
 # API-Dokumentation
 
-## Übersicht
+## Überblick
 
-Die API ermöglicht die Analyse von Medieninhalten mit Fokus auf Sicherheit und Zustimmung. Alle Endpunkte sind asynchron und unterstützen Batch-Verarbeitung.
+Diese API ermöglicht die automatisierte Analyse und Verarbeitung von Medieninhalten. Sie ist als eine Sammlung von Microservices konzipiert, die über ein API-Gateway (z.B. Nginx) angesprochen werden können.
 
-## Authentifizierung
+Jeder Kernservice, der über eine HTTP-Schnittstelle verfügt und mit FastAPI erstellt wurde, bietet eine automatisch generierte, interaktive API-Dokumentation über Swagger UI und ReDoc.
 
-### API-Key
+## Interaktive API-Dokumentation (Swagger UI / ReDoc)
+
+Die detaillierteste und aktuellste Dokumentation für die Endpunkte der einzelnen Services finden Sie direkt in der von FastAPI generierten Swagger UI bzw. ReDoc.
+
+Standardmäßig sind diese für jeden Service unter folgenden Pfaden relativ zur Basis-URL des jeweiligen Services erreichbar:
+
+-   **Swagger UI**: `/docs`
+-   **ReDoc**: `/redoc`
+
+**Beispielhafter Zugriff über ein API-Gateway (Nginx):**
+
+Wenn die Services über ein API-Gateway (wie Nginx) unter spezifischen Pfaden zugänglich gemacht werden, würden Sie die Dokumentation wie folgt erreichen (Beispiele):
+
+-   Vision Pipeline Service: `http://<Ihr-Gateway-Host>/api/vision_pipeline/docs`
+-   Face Re-ID Service: `http://<Ihr-Gateway-Host>/api/face_reid/docs`
+-   Job Manager Service: `http://<Ihr-Gateway-Host>/api/job_manager/docs`
+
+Die genauen Pfade hängen von Ihrer Nginx-Konfiguration ab.
+
+## Allgemeine Konzepte
+
+### Authentifizierung
+
+Die Authentifizierung erfolgt in der Regel über API-Keys, die im `Authorization`-Header als Bearer-Token gesendet werden.
+
 ```http
-Authorization: Bearer <api_key>
+Authorization: Bearer <your_api_key>
 ```
 
-### Umgebungsvariablen
-```bash
-API_KEY=your_api_key
-```
+Details zu spezifischen Authentifizierungsanforderungen entnehmen Sie bitte der jeweiligen Service-Dokumentation (Swagger UI) oder den Konfigurationsdetails des Services.
+
+### Fehlerbehandlung
+
+Die API verwendet Standard-HTTP-Statuscodes zur Signalisierung von Erfolg oder Misserfolg von Anfragen.
+
+Typische Fehlercodes:
+
+| Code | Beschreibung                     |
+| :--- | :------------------------------- |
+| 200  | OK                               |
+| 201  | Created                          |
+| 202  | Accepted (z.B. für asynchrone Jobs) |
+| 400  | Bad Request (Ungültige Anfrage)   |
+| 401  | Unauthorized (Fehlende/Ungültige Auth) |
+| 403  | Forbidden (Keine Berechtigung)    |
+| 404  | Not Found (Ressource nicht gefunden)|
+| 429  | Too Many Requests (Rate Limiting) |
+| 500  | Internal Server Error            |
+| 503  | Service Unavailable              |
+
+Spezifische Fehlerdetails werden oft im Response Body als JSON zurückgegeben.
+
+### Rate Limiting
+
+Einige Endpunkte können Rate Limiting unterliegen, um eine faire Nutzung zu gewährleisten und Überlastung zu vermeiden. Die genauen Limits entnehmen Sie bitte den jeweiligen Service-Dokumentationen oder den API-Antworten (z.B. `X-RateLimit-Limit`, `X-RateLimit-Remaining` Header oder Fehlercode 429).
+
+### Asynchrone Operationen und Jobs
+
+Länger laufende Operationen, wie die Analyse großer Videodateien, werden oft als asynchrone Jobs implementiert. In solchen Fällen gibt ein API-Aufruf typischerweise eine Job-ID zurück. Der Status dieses Jobs kann dann über einen separaten Endpunkt abgefragt werden.
+
+Beispiel (konzeptionell):
+
+1.  `POST /analyze/videos` -> `HTTP 202 Accepted` mit `{"job_id": "some-uuid"}`
+2.  `GET /jobs/{job_id}` -> `HTTP 200 OK` mit `{"status": "processing", "progress": 50}`
+
+Die genauen Endpunkte und Modelle hierfür finden Sie in der Swagger UI der entsprechenden Services (z.B. Vision Pipeline, Job Manager).
+
+## Haupt-Servicebereiche (Beispiele)
+
+Eine detaillierte Beschreibung der Endpunkte für jeden Service finden Sie in deren jeweiliger Swagger UI (`/docs`).
+
+-   **Vision Pipeline API**: Zuständig für die Orchestrierung der Bild- und Videoanalyse.
+-   **Face Re-Identification API**: Stellt Funktionen zur Gesichtserkennung und zum Abgleich bereit.
+-   **Vector DB API**: Schnittstelle zur Vektordatenbank für Ähnlichkeitssuchen.
+-   **LLM Service API**: Ermöglicht Interaktionen mit Sprachmodellen.
+-   **Whisper Service API**: Für Audio-Transkription.
+-   **NSFW Detection API**: Zur Erkennung von potenziell sensiblen Inhalten.
+-   **Pose Estimation API**: Für die Analyse von Körperhaltungen.
+-   **OCR Detection API**: Zur Texterkennung in Bildern.
+-   **Job Manager API**: Verwaltung und Überwachung von Hintergrund-Jobs.
+
+Bitte konsultieren Sie die `/docs` Endpunkte der jeweiligen Services für eine vollständige und interaktive API-Referenz.
 
 ## Endpunkte
 

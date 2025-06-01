@@ -12,6 +12,6 @@ google-cloud-storage>=2.14.0
 azure-storage-blob>=12.19.0
 dropbox>=11.36.2
 mega.py>=1.0.8
-aiofiles>=23.2.1
+aiofiles==23.2.1
 asyncio>=3.4.3
 concurrent-futures>=3.0.5
