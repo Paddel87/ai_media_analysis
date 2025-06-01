@@ -266,7 +266,7 @@ def test_service_error_handling(mock_config):
 def test_analytics_performance(mock_post, analytics_service):
     """Performance-Test für Analytics Service"""
     import time
-    
+
     # Mock für erfolgreiche Requests
     mock_post.return_value = Mock(status_code=200)
 
@@ -285,7 +285,7 @@ def test_analytics_performance(mock_post, analytics_service):
 def test_cache_performance(mock_post, cache_service):
     """Performance-Test für Cache Service"""
     import time
-    
+
     # Mock für erfolgreiche Requests
     mock_post.return_value = Mock(status_code=200)
 
