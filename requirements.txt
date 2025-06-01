@@ -29,4 +29,12 @@ python-jose==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 
-aiofiles==23.2.1 
+aiofiles==23.2.1
+boto3>=1.26.0
+google-cloud-storage>=2.7.0
+azure-storage-blob>=12.14.0
+dropbox>=11.36.0
+mega.py>=1.0.8
+opentelemetry-api>=1.18.0
+opentelemetry-sdk>=1.18.0
+opentelemetry-instrumentation>=0.40b0 

@@ -369,3 +369,56 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
   - Batch-Größe: 2-4 Frames
   - GPU-Auslastung: 60-70%
   - UI-Performance: >500 Dateien
+
+## [1.2.2] - 2024-03-22
+
+### Dokumentation
+- Detaillierte Dokumentation der in Bearbeitung befindlichen Features
+  - Erweiterte Fehlerbehandlung
+    - Zentrales Error-Handling-System
+    - Automatische Fehlerklassifizierung
+    - Kontextbasierte Fehlerbehandlung
+  - Verbesserte Logging-Implementierung
+    - Strukturiertes Logging
+    - Log-Rotation und -Archivierung
+    - Performance-Metriken
+  - Erweiterte Cloud-Integration
+    - Optimierte Upload/Download-Strategien
+    - Automatische Retry-Mechanismen
+    - Progress-Tracking
+  - UI-Optimierungen
+    - Erweiterte Filter und Sortierung
+    - Verbesserte Dateivorschau
+    - Responsive Design
+
+## [1.2.3] - 2024-03-22
+
+### Hinzugefügt
+- Erweiterte Fehlerbehandlung
+  - Zentrales Error-Handling-System mit `ErrorHandler`-Klasse
+  - Kategorisierung von Fehlern nach Schweregrad und Typ
+  - Kontextbasierte Fehlerbehandlung
+  - Automatische Fehlerberichterstattung
+
+- Verbesserte Logging-Implementierung
+  - Strukturiertes Logging mit JSON-Format
+  - Log-Rotation und -Archivierung
+  - Performance-Metriken im Logging
+  - Zentralisierte Log-Aggregation
+
+- Erweiterte Cloud-Integration
+  - Multi-Cloud-Support (AWS, GCP, Azure, Dropbox, MEGA)
+  - Optimierte Upload/Download-Strategien
+  - Automatische Retry-Mechanismen
+  - Progress-Tracking für Cloud-Operationen
+  - Bandbreitenoptimierung
+
+### Geändert
+- Verbesserte Fehlerbehandlung in der UI
+- Optimierte Cloud-Storage-Operationen
+- Erweiterte Logging-Funktionalität
+
+### Performance
+- Reduzierte Latenz bei Cloud-Operationen
+- Optimierte Speichernutzung
+- Verbesserte Fehlerbehandlung

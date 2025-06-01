@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 import shutil
 import time
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import requests
 import json
 from datetime import datetime
@@ -13,9 +13,21 @@ from google.cloud import storage
 from azure.storage.blob import BlobServiceClient
 import dropbox
 from mega import Mega
+import asyncio
+import aiofiles
+from concurrent.futures import ThreadPoolExecutor
+import threading
+from queue import Queue
+import logging
+from dataclasses import dataclass
+from collections import defaultdict
+import pandas as pd
 
 # Konfiguration
 UPLOAD_DIR = "/app/data/incoming"
+CHUNK_SIZE = 5 * 1024 * 1024  # 5MB Chunks
+MAX_CONCURRENT_UPLOADS = 5
+MAX_CONCURRENT_DOWNLOADS = 3
 ALLOWED_EXTENSIONS = {
     'video': ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
     'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
@@ -44,6 +56,178 @@ CLOUD_PROVIDERS = {
         'config': ['email', 'password']
     }
 }
+
+@dataclass
+class FileStatus:
+    name: str
+    path: str
+    source: str
+    status: str
+    progress: float = 0.0
+    error: Optional[str] = None
+    job_id: Optional[str] = None
+    job_name: Optional[str] = None
+    context: Optional[str] = None
+    last_updated: datetime = datetime.now()
+
+class FileStatusManager:
+    def __init__(self, page_size: int = 10):
+        self.page_size = page_size
+        self.files: Dict[str, FileStatus] = {}
+        self.filters = {
+            'status': None,
+            'source': None,
+            'type': None
+        }
+        self.sort_by = 'last_updated'
+        self.sort_ascending = False
+        
+    def add_file(self, file_info: Dict[str, Any]) -> None:
+        """Fügt eine neue Datei hinzu oder aktualisiert eine bestehende."""
+        file_id = file_info.get('job_id', file_info['name'])
+        self.files[file_id] = FileStatus(
+            name=file_info['name'],
+            path=file_info['path'],
+            source=file_info['source'],
+            status=file_info.get('status', 'pending'),
+            progress=file_info.get('progress', 0.0),
+            error=file_info.get('error'),
+            job_id=file_info.get('job_id'),
+            job_name=file_info.get('job_name'),
+            context=file_info.get('context'),
+            last_updated=datetime.now()
+        )
+    
+    def update_status(self, file_id: str, status_update: Dict[str, Any]) -> None:
+        """Aktualisiert den Status einer Datei."""
+        if file_id in self.files:
+            for key, value in status_update.items():
+                setattr(self.files[file_id], key, value)
+            self.files[file_id].last_updated = datetime.now()
+    
+    def get_filtered_files(self, page: int = 1) -> List[FileStatus]:
+        """Gibt gefilterte und sortierte Dateien zurück."""
+        filtered = self.files.values()
+        
+        # Filtere nach Status
+        if self.filters['status']:
+            filtered = [f for f in filtered if f.status == self.filters['status']]
+        
+        # Filtere nach Quelle
+        if self.filters['source']:
+            filtered = [f for f in filtered if f.source == self.filters['source']]
+        
+        # Filtere nach Typ
+        if self.filters['type']:
+            filtered = [f for f in filtered if Path(f.name).suffix.lower() in ALLOWED_EXTENSIONS[self.filters['type']]]
+        
+        # Sortiere
+        filtered.sort(
+            key=lambda x: getattr(x, self.sort_by),
+            reverse=not self.sort_ascending
+        )
+        
+        # Paginiere
+        start_idx = (page - 1) * self.page_size
+        end_idx = start_idx + self.page_size
+        return filtered[start_idx:end_idx]
+    
+    def get_status_summary(self) -> Dict[str, int]:
+        """Gibt eine Zusammenfassung der Dateistatus zurück."""
+        summary = defaultdict(int)
+        for file in self.files.values():
+            summary[file.status] += 1
+        return dict(summary)
+
+class BatchUploadManager:
+    def __init__(self):
+        self.upload_queue = Queue()
+        self.processing_queue = Queue()
+        self.completed_uploads = {}
+        self.upload_threads = []
+        self.processing_threads = []
+        self.lock = threading.Lock()
+        self.executor = ThreadPoolExecutor(max_workers=MAX_CONCURRENT_UPLOADS)
+        
+    async def process_upload(self, file, target_dir: str) -> str:
+        """Verarbeitet einen Upload asynchron mit Chunking."""
+        try:
+            # Erstelle temporäre Datei
+            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.name).suffix) as tmp_file:
+                tmp_path = tmp_file.name
+                
+            # Lese Datei in Chunks
+            total_size = 0
+            async with aiofiles.open(tmp_path, 'wb') as f:
+                while chunk := await file.read(CHUNK_SIZE):
+                    await f.write(chunk)
+                    total_size += len(chunk)
+                    
+            # Verschiebe in Zielverzeichnis
+            os.makedirs(target_dir, exist_ok=True)
+            target_path = os.path.join(target_dir, file.name)
+            shutil.move(tmp_path, target_path)
+            
+            return target_path
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Upload von {file.name}: {str(e)}")
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            raise
+            
+    async def process_batch(self, files: List[Any], target_dir: str) -> Dict[str, str]:
+        """Verarbeitet mehrere Dateien parallel."""
+        tasks = []
+        for file in files:
+            task = asyncio.create_task(self.process_upload(file, target_dir))
+            tasks.append(task)
+            
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Verarbeite Ergebnisse
+        processed_files = {}
+        for file, result in zip(files, results):
+            if isinstance(result, Exception):
+                processed_files[file.name] = {"error": str(result)}
+            else:
+                processed_files[file.name] = {"path": result}
+                
+        return processed_files
+
+    def start_processing(self):
+        """Startet die Verarbeitungsthreads."""
+        for _ in range(MAX_CONCURRENT_UPLOADS):
+            thread = threading.Thread(target=self._process_upload_queue)
+            thread.daemon = True
+            thread.start()
+            self.upload_threads.append(thread)
+            
+        for _ in range(MAX_CONCURRENT_DOWNLOADS):
+            thread = threading.Thread(target=self._process_download_queue)
+            thread.daemon = True
+            thread.start()
+            self.processing_threads.append(thread)
+
+    def _process_upload_queue(self):
+        """Verarbeitet die Upload-Queue."""
+        while True:
+            try:
+                file, target_dir = self.upload_queue.get()
+                asyncio.run(self.process_upload(file, target_dir))
+                self.upload_queue.task_done()
+            except Exception as e:
+                logging.error(f"Fehler in Upload-Thread: {str(e)}")
+
+    def _process_download_queue(self):
+        """Verarbeitet die Download-Queue."""
+        while True:
+            try:
+                file_info = self.processing_queue.get()
+                # Implementiere hier die Verarbeitungslogik
+                self.processing_queue.task_done()
+            except Exception as e:
+                logging.error(f"Fehler in Download-Thread: {str(e)}")
 
 def init_session_state():
     """Initialisiert die Session-State-Variablen."""
@@ -210,6 +394,92 @@ def download_cloud_file(provider: str, config: Dict[str, str], file_name: str) -
         st.error(f"Fehler beim Herunterladen der Cloud-Datei: {str(e)}")
         return None
 
+def render_status_ui(status_manager: FileStatusManager):
+    """Rendert die Status-UI mit Paginierung und Filtern."""
+    st.header("Verarbeitungsstatus")
+    
+    # Status-Zusammenfassung
+    summary = status_manager.get_status_summary()
+    cols = st.columns(len(summary))
+    for col, (status, count) in zip(cols, summary.items()):
+        col.metric(status.title(), count)
+    
+    # Filter
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        status_filter = st.selectbox(
+            "Status",
+            [None] + list(set(f.status for f in status_manager.files.values())),
+            format_func=lambda x: "Alle" if x is None else x.title()
+        )
+    with col2:
+        source_filter = st.selectbox(
+            "Quelle",
+            [None] + list(set(f.source for f in status_manager.files.values())),
+            format_func=lambda x: "Alle" if x is None else x.title()
+        )
+    with col3:
+        type_filter = st.selectbox(
+            "Typ",
+            [None] + list(ALLOWED_EXTENSIONS.keys()),
+            format_func=lambda x: "Alle" if x is None else x.title()
+        )
+    
+    status_manager.filters = {
+        'status': status_filter,
+        'source': source_filter,
+        'type': type_filter
+    }
+    
+    # Sortierung
+    sort_col1, sort_col2 = st.columns(2)
+    with sort_col1:
+        sort_by = st.selectbox(
+            "Sortieren nach",
+            ['last_updated', 'name', 'status', 'progress'],
+            format_func=lambda x: {
+                'last_updated': 'Datum',
+                'name': 'Name',
+                'status': 'Status',
+                'progress': 'Fortschritt'
+            }[x]
+        )
+    with sort_col2:
+        sort_ascending = st.checkbox("Aufsteigend sortieren")
+    
+    status_manager.sort_by = sort_by
+    status_manager.sort_ascending = sort_ascending
+    
+    # Paginierung
+    total_pages = (len(status_manager.files) + status_manager.page_size - 1) // status_manager.page_size
+    current_page = st.number_input("Seite", 1, total_pages, 1)
+    
+    # Dateiliste
+    files = status_manager.get_filtered_files(current_page)
+    
+    # Zeige Dateien
+    for file in files:
+        with st.expander(f"{file.job_name or file.name} - {file.status}"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(f"**Datei:** {file.name}")
+                st.write(f"**Quelle:** {file.source}")
+                if file.job_id:
+                    st.write(f"**Job ID:** {file.job_id}")
+            with col2:
+                st.write(f"**Status:** {file.status}")
+                st.write(f"**Letzte Aktualisierung:** {file.last_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            if file.progress > 0:
+                st.progress(file.progress)
+            
+            if file.context:
+                st.write("**Kontext:**")
+                st.info(file.context)
+            
+            if file.error:
+                st.error(file.error)
+
 def main():
     st.set_page_config(
         page_title="AI Media Analysis",
@@ -217,22 +487,18 @@ def main():
         layout="wide"
     )
     
+    # Initialisiere Manager
+    if 'upload_manager' not in st.session_state:
+        st.session_state.upload_manager = BatchUploadManager()
+        st.session_state.upload_manager.start_processing()
+    
+    if 'status_manager' not in st.session_state:
+        st.session_state.status_manager = FileStatusManager()
+    
+    # Initialisiere Session State
     init_session_state()
     
-    st.title("🎥 AI Media Analysis Platform")
-    
-    # Sidebar für Status und Einstellungen
-    with st.sidebar:
-        st.header("Status & Einstellungen")
-        st.metric("Aktive Jobs", len(st.session_state.processing_status))
-        
-        if st.button("Status aktualisieren"):
-            st.session_state.processing_status = {
-                job_id: requests.get(f"http://job_manager_api:8000/jobs/{job_id}").json()
-                for job_id in st.session_state.processing_status.keys()
-            }
-    
-    # Hauptbereich für Upload und Status
+    # Layout
     col1, col2 = st.columns([2, 1])
     
     with col1:
@@ -288,43 +554,17 @@ def main():
                             with st.spinner(f"Lade {file['name']} herunter..."):
                                 file_path = download_cloud_file(provider, config, file['name'])
                                 if file_path:
-                                    # Job-Metadaten Formular
-                                    with st.form(key=f"cloud_job_form_{file['name']}"):
-                                        st.subheader("Job-Details")
-                                        
-                                        # Standard-Job-Name generieren
-                                        default_job_name = generate_default_job_name(file['name'])
-                                        
-                                        # Job-Name Eingabe
-                                        job_name = st.text_input(
-                                            "Job-Name",
-                                            value=default_job_name,
-                                            key=f"cloud_job_name_{file['name']}"
-                                        )
-                                        
-                                        # Kontext Eingabe
-                                        context = st.text_area(
-                                            "Kontext/Beschreibung",
-                                            placeholder="Fügen Sie hier zusätzliche Informationen oder Kontext hinzu...",
-                                            key=f"cloud_context_{file['name']}"
-                                        )
-                                        
-                                        # Submit Button
-                                        submit_button = st.form_submit_button("Job erstellen")
-                                        
-                                        if submit_button:
-                                            job = create_job(file_path, job_name, context, 'cloud')
-                                            if job:
-                                                st.session_state.uploaded_files.append({
-                                                    'name': file['name'],
-                                                    'path': file_path,
-                                                    'job_id': job['job_id'],
-                                                    'job_name': job_name,
-                                                    'context': context,
-                                                    'source': 'cloud'
-                                                })
-                                                st.session_state.processing_status[job['job_id']] = job
-                                                st.success(f"Job '{job_name}' erfolgreich erstellt!")
+                                    st.session_state.upload_manager.processing_queue.put({
+                                        'file_path': file_path,
+                                        'file_name': file['name'],
+                                        'source': 'cloud'
+                                    })
+                                    st.session_state.status_manager.add_file({
+                                        'name': file['name'],
+                                        'path': file_path,
+                                        'source': 'cloud',
+                                        'status': 'pending'
+                                    })
                 else:
                     st.error("Keine Dateien gefunden oder Verbindungsfehler.")
         
@@ -338,69 +578,42 @@ def main():
             )
             
             if uploaded_files:
-                for uploaded_file in uploaded_files:
-                    if uploaded_file.name not in [f['name'] for f in st.session_state.uploaded_files]:
-                        with st.spinner(f"Lade {uploaded_file.name} hoch..."):
-                            file_path = save_uploaded_file(uploaded_file)
-                            if file_path:
-                                # Job-Metadaten Formular
-                                with st.form(key=f"job_form_{uploaded_file.name}"):
-                                    st.subheader("Job-Details")
-                                    
-                                    # Standard-Job-Name generieren
-                                    default_job_name = generate_default_job_name(uploaded_file.name)
-                                    
-                                    # Job-Name Eingabe
-                                    job_name = st.text_input(
-                                        "Job-Name",
-                                        value=default_job_name,
-                                        key=f"job_name_{uploaded_file.name}"
-                                    )
-                                    
-                                    # Kontext Eingabe
-                                    context = st.text_area(
-                                        "Kontext/Beschreibung",
-                                        placeholder="Fügen Sie hier zusätzliche Informationen oder Kontext hinzu...",
-                                        key=f"context_{uploaded_file.name}"
-                                    )
-                                    
-                                    # Submit Button
-                                    submit_button = st.form_submit_button("Job erstellen")
-                                    
-                                    if submit_button:
-                                        job = create_job(file_path, job_name, context, 'local')
-                                        if job:
-                                            st.session_state.uploaded_files.append({
-                                                'name': uploaded_file.name,
-                                                'path': file_path,
-                                                'job_id': job['job_id'],
-                                                'job_name': job_name,
-                                                'context': context,
-                                                'source': 'local'
-                                            })
-                                            st.session_state.processing_status[job['job_id']] = job
-                                            st.success(f"Job '{job_name}' erfolgreich erstellt!")
+                # Gruppiere Dateien nach Typ
+                video_files = [f for f in uploaded_files if Path(f.name).suffix.lower() in ALLOWED_EXTENSIONS['video']]
+                image_files = [f for f in uploaded_files if Path(f.name).suffix.lower() in ALLOWED_EXTENSIONS['image']]
+                
+                # Zeige Upload-Fortschritt
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                # Verarbeite Videos
+                if video_files:
+                    status_text.text("Verarbeite Videos...")
+                    video_results = asyncio.run(st.session_state.upload_manager.process_batch(video_files, UPLOAD_DIR))
+                    progress_bar.progress(0.5)
+                
+                # Verarbeite Bilder
+                if image_files:
+                    status_text.text("Verarbeite Bilder...")
+                    image_results = asyncio.run(st.session_state.upload_manager.process_batch(image_files, UPLOAD_DIR))
+                    progress_bar.progress(1.0)
+                
+                # Zeige Ergebnisse
+                status_text.text("Upload abgeschlossen!")
+                st.success(f"{len(uploaded_files)} Dateien erfolgreich hochgeladen!")
+                
+                # Füge Dateien zur Verarbeitung hinzu
+                for file in uploaded_files:
+                    if file.name not in [f.name for f in st.session_state.status_manager.files.values()]:
+                        st.session_state.status_manager.add_file({
+                            'name': file.name,
+                            'path': os.path.join(UPLOAD_DIR, file.name),
+                            'source': 'local',
+                            'status': 'pending'
+                        })
     
     with col2:
-        st.header("Verarbeitungsstatus")
-        
-        for file_info in st.session_state.uploaded_files:
-            job_id = file_info['job_id']
-            if job_id in st.session_state.processing_status:
-                job_status = st.session_state.processing_status[job_id]
-                
-                with st.expander(f"{file_info['job_name']} - {job_status['status']}"):
-                    st.write(f"Datei: {file_info['name']}")
-                    st.write(f"Quelle: {file_info['source']}")
-                    st.write(f"Job ID: {job_id}")
-                    st.write(f"Status: {job_status['status']}")
-                    if 'context' in file_info and file_info['context']:
-                        st.write("Kontext:")
-                        st.info(file_info['context'])
-                    if 'progress' in job_status:
-                        st.progress(job_status['progress'])
-                    if 'error' in job_status:
-                        st.error(job_status['error'])
+        render_status_ui(st.session_state.status_manager)
 
 if __name__ == "__main__":
     main()
