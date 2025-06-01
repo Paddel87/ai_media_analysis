@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "services"))
 
 from llm_service.service_integration import (
     AnalyticsServiceIntegration,
