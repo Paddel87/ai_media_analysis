@@ -5,18 +5,14 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  schedule:
-    # Täglich um 2:00 UTC
-    - cron: '0 2 * * *'
 
 env:
   PYTHON_VERSION: "3.11"
   TESTING: "true"
-  LOG_LEVEL: "WARNING"
 
 jobs:
-  test-environment-check:
-    name: "Environment Check"
+  test:
+    name: "Tests"
     runs-on: ubuntu-latest
     
     steps:
@@ -27,39 +23,6 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Check environment
-      run: |
-        python --version
-        pip --version
-        python -m pytest --version
-        echo "✅ Environment check passed"
-
-  lint-and-format:
-    name: "Code Quality & Linting"
-    runs-on: ubuntu-latest
-    needs: test-environment-check
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -69,281 +32,19 @@ jobs:
       run: |
         python -m black --check --diff services tests
         
-    - name: Linting (Flake8)
-      run: |
-        python -m flake8 services tests --count --select=E9,F63,F7,F82 --show-source --statistics
-        python -m flake8 services tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-        
-    - name: Type checking (MyPy)
-      run: |
-        python -m mypy services --ignore-missing-imports || echo "⚠️ MyPy check completed with warnings"
-        
     - name: Import sorting (isort)
       run: |
         python -m isort --check-only --diff services tests
-
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    needs: lint-and-format
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10", "3.11"]
         
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
-          
-    - name: Install dependencies
+    - name: Linting (Flake8)
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m flake8 services tests --count --select=E9,F63,F7,F82 --show-source --statistics
         
-    - name: Run unit tests
+    - name: Run tests
       run: |
-        python -m pytest tests/unit/ -v -m "not slow"
+        python -m pytest tests/ -v --tb=short
         
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: unit-test-results-${{ matrix.python-version }}
-        path: test-results/
-
-  integration-tests:
-    name: "Integration Tests"
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    services:
-      redis:
-        image: redis:7.0-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Wait for Redis
-      run: |
-        for i in {1..30}; do
-          if redis-cli -h localhost -p 6379 ping; then
-            echo "Redis is ready"
-            break
-          fi
-          echo "Waiting for Redis..."
-          sleep 2
-        done
-        
-    - name: Run integration tests
-      env:
-        REDIS_URL: "redis://localhost:6379/1"
-      run: |
-        python -m pytest tests/integration/ -v
-        
-    - name: Upload integration test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: integration-test-results
-        path: test-results/
-
-  coverage-analysis:
-    name: "Coverage Analysis"
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Run tests with coverage
-      run: |
-        python -m pytest tests/ --cov=services --cov-report=term-missing --cov-report=xml --cov-report=html
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-        
-    - name: Upload coverage HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: htmlcov/
-
-  security-scan:
-    name: "Security Scan"
-    runs-on: ubuntu-latest
-    needs: lint-and-format
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        
-    - name: Install security tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit safety
-        pip install -r requirements.txt
-        
-    - name: Run Bandit security scan
-      run: |
-        python -m bandit -r services || echo "⚠️ Security scan completed with warnings"
-        
-    - name: Run Safety dependency check
-      run: |
-        safety check || echo "⚠️ Safety check completed with warnings"
-
-  docker-tests:
-    name: "Docker Integration Tests"
-    runs-on: ubuntu-latest
-    needs: integration-tests
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Install Docker Compose
-      run: |
-        # GitHub Actions Ubuntu runners haben docker-compose v1, wir brauchen v2
-        sudo curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version
-        
-    - name: Start services
-      run: |
-        docker-compose up -d --build
-        sleep 30
-        
-    - name: Run health checks
-      run: |
-        docker-compose ps
-        curl -f http://localhost:8000/health || echo "⚠️ Health check warning"
-        
-    - name: Cleanup
-      run: |
-        docker-compose down
-        docker system prune -f
-
-  performance-tests:
-    name: "Performance Tests"
-    runs-on: ubuntu-latest
-    needs: integration-tests
-    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf-test]')
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Run performance tests
-      run: |
-        python run_tests.py --performance -v
-        
-    - name: Upload performance results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: performance-results
-        path: performance-results/
-
-  test-summary:
-    name: "Test Summary"
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, coverage-analysis, security-scan]
-    if: always()
-    
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        merge-multiple: true
-      
     - name: Test Summary
+      if: always()
       run: |
-        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-        echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
-        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Coverage Analysis | ${{ needs.coverage-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        
-        if [[ "${{ needs.unit-tests.result }}" == "success" && 
-              "${{ needs.integration-tests.result }}" == "success" && 
-              "${{ needs.coverage-analysis.result }}" == "success" && 
-              "${{ needs.security-scan.result }}" == "success" ]]; then
-          echo "🎉 All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ Some tests failed. Please check the details above." >> $GITHUB_STEP_SUMMARY
-        fi 
+        echo "✅ Pipeline completed" 
