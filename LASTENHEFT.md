@@ -1,459 +1,317 @@
 # AI Media Analysis System - Lastenheft
 
-**Projekt:** AI Media Analysis System  
-**Version:** Alpha 0.3.0  
-**Datum:** 01.06.2025  
-**Status:** Entwicklungs-Roadmap und Feature-Spezifikation  
+**Projekt:** AI Media Analysis System
+**Version:** Alpha 0.4.3
+**Datum:** 06.02.2025
+**Status:** VPS-Ready Development mit Professional Standards
 
 ## 1. PROJEKTÜBERBLICK
 
 ### 1.1 Vision
-Vollständiges, modulares AI-System zur automatisierten Analyse und Verarbeitung von Medieninhalten (Bilder, Videos, Audio) mit Enterprise-Features für professionelle Anwendungen.
+VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud AI-Integration für professionelle Anwendungen. Führend in Standard-Server AI-Deployment ohne teure GPU-Hardware.
 
 ### 1.2 Scope
+- **VPS-First Architecture:** Standard-Server-optimiert (€20-100/Monat)
+- **Cloud AI-Integration:** Vast.ai für GPU-intensive Tasks (Pay-per-use)
 - **Content Analysis:** NSFW, Pose Estimation, Face Recognition, OCR, Audio-Transkription
-- **Workflow Management:** Batch-Processing, Job-Queue, Progress-Tracking
-- **Data Management:** Persistenz, Vektordatenbank, Asset Management
-- **User Interface:** Web-basierte UI, API-Gateway, Dashboard
-- **Enterprise Features:** User Management, Security, Monitoring, Auto-Scaling
-
-### 1.3 Aktueller Status
-- **Phase:** Alpha 0.3.0 - Frühe Entwicklungsphase
-- **CI/CD:** Funktionsfähig (GitHub Actions)
-- **Services:** 20+ definiert, ungetestet als Gesamtsystem
-- **Integration:** Nie vollständig getestet
-
-## 2. FUNKTIONALE ANFORDERUNGEN
-
-### 2.1 Core Content Analysis Services
-
-#### 2.1.1 Vision Pipeline Service
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Parallele Verarbeitung von Bildern und Videos
-- Frame-Sampling für Video-Analyse
-- Batch-Processing mit GPU-Optimierung
-- Asynchrone Verarbeitung mit Job-Queue
-
-**API Endpoints:**
-```
-POST /analyze/videos - Batch-Video-Analyse
-POST /analyze/images - Batch-Bild-Analyse
-GET /jobs/{job_id} - Job-Status
-GET /health - Service Health Check
-```
-
-**Eingabe:** Bild-/Video-Pfade, Batch-Größe, Frame-Sampling-Rate  
-**Ausgabe:** Job-ID, Analyse-Resultate als JSON  
-
-#### 2.1.2 NSFW Detection Service
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- CLIP-basierte NSFW-Content-Erkennung
-- Kategorisierung: nude, explicit, sexual, violence, gore, disturbing
-- Konfigurierbarer Threshold
-- Integration mit CLIP-Service
-
-**API Endpoints:**
-```
-POST /analyze - NSFW-Analyse
-GET /health - Service Health Check
-```
-
-**Eingabe:** Base64-kodierte Bilder, Threshold  
-**Ausgabe:** NSFW-Score, Kategorien, Konfidenz  
-
-#### 2.1.3 Pose Estimation Service
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- 2D Keypoint-Erkennung (MMPose/HRNet)
-- Körperhaltungs-Analyse
-- Multi-Person-Support
-- GPU-beschleunigt
-
-**API Endpoints:**
-```
-POST /analyze - Pose-Analyse
-GET /health - Service Health Check
-```
-
-**Eingabe:** Upload-Bilder  
-**Ausgabe:** Keypoints, Scores, Anzahl Personen  
-
-#### 2.1.4 Face Recognition Service  
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Gesichtserkennung und -wiedererkennung
-- Face-Embedding-Generierung
-- Person-Tracking über mehrere Medien
-- Integration mit Vector DB
-
-**API Endpoints:**
-```
-POST /detect - Gesichtserkennung
-POST /compare - Gesichtsvergleich
-POST /search - Gesichtssuche
-GET /health - Service Health Check
-```
-
-**Eingabe:** Bilder, Vergleichs-Embeddings  
-**Ausgabe:** Bounding Boxes, Embeddings, Similarity Scores  
-
-#### 2.1.5 OCR Detection Service
-**Priorität:** Mittel  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Multi-Language Text-Erkennung (DE/EN)
-- EasyOCR-basiert mit GPU-Support
-- Bounding Box Detection
-- Konfidenz-Scoring
-
-**API Endpoints:**
-```
-POST /analyze - OCR-Analyse
-GET /health - Service Health Check
-```
-
-**Eingabe:** Upload-Bilder  
-**Ausgabe:** Text, Konfidenz, Bounding Boxes, Sprache  
-
-#### 2.1.6 Audio Analysis Service (Whisper)
-**Priorität:** Mittel  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Sprache-zu-Text (Whisper Large-v3)
-- Emotions-Analyse (Wav2Vec2)
-- Voice-ID/Speaker-Recognition
-- Audio-Enhancement (Noise Reduction)
-- Face-Voice-ID Kombination
-
-**API Endpoints:**
-```
-POST /transcribe - Audio-Transkription
-POST /analyze_emotion - Emotions-Analyse
-POST /voice_id - Speaker-Identification
-POST /combine_face_voice - Multimodale ID
-GET /health - Service Health Check
-```
-
-**Eingabe:** Audio-Files, Sprach-Parameter  
-**Ausgabe:** Transkript, Emotionen, Speaker-Embeddings  
-
-#### 2.1.7 Restraint Detection Service
-**Priorität:** Niedrig  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Erkennung von Fesselungen und verwandten Materialien
-- CLIP-basierte Klassifizierung
-- Audio-Pattern-Erkennung
-- Multi-Modal-Analyse
-
-**API Endpoints:**
-```
-POST /analyze - Restraint-Analyse
-GET /health - Service Health Check
-```
-
-**Eingabe:** Bilder/Audio  
-**Ausgabe:** Restraint-Kategorien, Konfidenz  
-
-### 2.2 Data Management Services
-
-#### 2.2.1 Vector Database Service
-**Priorität:** Hoch  
-**Status:** Definiert, nicht implementiert  
-
-**Funktionen:**
-- Vektor-Speicherung für Embeddings (Face, Audio, etc.)
-- Similarity Search mit konfigurierbaren Algorithmen
-- Collection Management
-- Skalierbare Abfragen
-
-**API Endpoints:**
-```
-POST /collections - Collection erstellen
-POST /vectors - Vektoren speichern
-POST /search - Similarity Search
-DELETE /vectors/{id} - Vektor löschen
-GET /health - Service Health Check
-```
-
-#### 2.2.2 Person Dossier Service
-**Priorität:** Mittel  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Personendossier-Verwaltung
-- Face-Instance-Sammlung
-- Media-Appearance-Tracking
-- Emotions- und Restraint-Statistiken
-
-**API Endpoints:**
-```
-POST /dossiers - Dossier erstellen
-PUT /dossiers/{id} - Dossier aktualisieren
-GET /dossiers/{id} - Dossier abrufen
-DELETE /dossiers/{id} - Dossier löschen
-GET /health - Service Health Check
-```
-
-#### 2.2.3 Data Persistence Service
-**Priorität:** Hoch  
-**Status:** Konfiguriert, ungetestet  
-
-**Funktionen:**
-- Datei-System-Management
-- Backup-Strategien
-- Asset-Organisation
-- Metadata-Management
-
-### 2.3 Infrastructure Services
-
-#### 2.3.1 Job Manager Service
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Job-Queue mit Prioritäten
-- Batch-Job-Management
-- Progress-Tracking
-- Job-Dependencies
-- Retry-Mechanismen
-
-**API Endpoints:**
-```
-POST /jobs - Job erstellen
-GET /jobs/{id} - Job-Status
-POST /batches - Batch erstellen
-DELETE /jobs/{id} - Job löschen
-GET /health - Service Health Check
-```
-
-#### 2.3.2 API Gateway (Nginx)
-**Priorität:** Hoch  
-**Status:** Konfiguriert, ungetestet  
-
-**Funktionen:**
-- Load Balancing
-- Rate Limiting
-- Request Routing
-- SSL Termination
-- CORS Handling
-
-#### 2.3.3 Cache Service (Redis)
-**Priorität:** Hoch  
-**Status:** Konfiguriert, ungetestet  
-
-**Funktionen:**
-- Response Caching
-- Session Management
-- Job-Queue Backend
-- Temporary Data Storage
-
-### 2.4 Supporting Services
-
-#### 2.4.1 LLM Service
-**Priorität:** Niedrig  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Multi-Provider LLM Integration (Gemini, OpenAI, Anthropic)
-- Lokale Modell-Unterstützung
-- Text-Generation
-- Embeddings-Generation
-
-#### 2.4.2 CLIP Service
-**Priorität:** Hoch  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- CLIP-Modell-Service für alle Vision-Tasks
-- Batch-Processing
-- GPU-Optimierung
-- Cached Text-Embeddings
-
-#### 2.4.3 Guardrails Service
-**Priorität:** Niedrig  
-**Status:** Implementiert, ungetestet  
-
-**Funktionen:**
-- Content-Moderation
-- Safety-Checks
-- Policy-Enforcement
-
-## 3. NON-FUNKTIONALE ANFORDERUNGEN
-
-### 3.1 Performance
-- **Response Time:** <2s für einzelne Bildanalyse
-- **Throughput:** 100+ Bilder/Minute bei Batch-Processing
-- **GPU-Utilization:** >70% bei Vollast
-- **Memory-Efficiency:** <8GB RAM pro Service
-
-### 3.2 Skalierbarkeit
-- **Horizontal Scaling:** Auto-Scaling basierend auf Queue-Länge
-- **Load Balancing:** Gleichmäßige Verteilung über Service-Instanzen
-- **Resource Management:** Dynamische GPU/CPU-Zuteilung
-
-### 3.3 Verfügbarkeit
-- **Uptime:** 99.9% SLA
-- **Recovery Time:** <5 Minuten bei Service-Ausfall
-- **Health Monitoring:** Proaktive Überwachung aller Services
-
-### 3.4 Sicherheit
-- **Authentication:** JWT-basierte API-Authentifizierung
-- **Authorization:** Role-Based Access Control (RBAC)
-- **Data Privacy:** GDPR-Compliance
-- **Audit Logging:** Vollständige Request/Response-Protokollierung
-
-## 4. TECHNISCHE SPEZIFIKATIONEN
-
-### 4.1 Technology Stack
-- **Backend:** Python 3.9+, FastAPI
-- **AI/ML:** PyTorch, Transformers, OpenCV, MMPose, CLIP, Whisper
-- **Database:** Redis (Cache), PostgreSQL (geplant), Vector DB
-- **Containerization:** Docker, Docker-Compose, Kubernetes (geplant)
-- **Frontend:** Streamlit (Alpha), React (geplant)
-- **CI/CD:** GitHub Actions
-
-### 4.2 Hardware-Anforderungen
-#### Minimum (Development)
-- **CPU:** 4 Cores
-- **RAM:** 16GB
-- **GPU:** NVIDIA RTX 2060 (6GB VRAM)
-- **Storage:** 256GB SSD
-
-#### Empfohlen (Production)
+- **Professional Development:** Enterprise-Grade Development-Standards
+- **Cost-Efficiency:** Professional AI ohne teure Hardware-Investitionen
+
+### 1.3 Aktueller Status - Alpha 0.4.3
+- **Phase:** Alpha 0.4.3 - Development-Stabilität-Revolution abgeschlossen
+- **CI/CD:** Vollständig stabil (GitHub Actions Run 41 erfolgreich)
+- **Development-Infrastructure:** Professional-Grade Automation implementiert
+- **Service-Architecture:** 24 Services in einheitlicher services/ Struktur
+- **VPS-Readiness:** Alle Services für Standard-Server optimiert
+
+### 1.4 Development-Infrastructure-Erfolge ✅
+- **🛠️ Vollautomatisiertes Setup:** `make dev-setup` (<5 Minuten)
+- **⚡ 60+ Makefile-Commands:** Comprehensive Development-Automation
+- **🛡️ Pre-Commit-Hooks:** Automatische Code-Quality-Sicherung
+- **🌐 VPS-Optimierte Architecture:** GPU-Dependencies entfernt
+- **🔄 Cross-Platform:** Windows/Linux/macOS Support
+
+## 2. VPS-FIRST ARCHITECTURE STRATEGIE
+
+### 2.1 VPS-Native AI-Platform
+**Primäres Deployment-Ziel:** Standard VPS ohne GPU-Hardware
+
+**Vorteile:**
+- **Cost-Efficiency:** €20-100/Monat statt €500-2000/Monat für GPU-Server
+- **Wartungsfreiheit:** Keine GPU-Treiber/Hardware-Konfiguration
+- **Provider-Flexibilität:** Läuft auf jedem Standard-VPS (Hetzner, DO, AWS)
+- **Skalierbarkeit:** Von Einzelentwickler bis Enterprise-Deployment
+
+**Cloud AI-Integration:**
+- **GPU-Tasks:** Vast.ai Pay-per-use für AI-Processing
+- **Hybrid-Architecture:** VPS-Orchestrierung + Cloud GPU Computing
+- **Cost-Optimization:** Dynamische Resource-Allocation je nach Bedarf
+
+### 2.2 VPS-Requirements Spezifikation
+
+#### Minimale Production-VPS
+- **CPU:** 4 Cores Intel/AMD x64
+- **RAM:** 8GB (16GB empfohlen)
+- **Storage:** 50GB SSD
+- **Network:** 1Gbps für Cloud AI-Communication
+- **OS:** Ubuntu 20.04+ / Debian 11+
+- **Cost:** €20-40/Monat (Hetzner, DigitalOcean)
+
+#### Enterprise-VPS
 - **CPU:** 8+ Cores
-- **RAM:** 32GB+
-- **GPU:** NVIDIA RTX 3080+ (10GB+ VRAM)
-- **Storage:** 1TB+ NVMe SSD
+- **RAM:** 16-32GB
+- **Storage:** 100GB+ SSD
+- **Network:** 1Gbps+ mit niedrigen Latenzen
+- **Backup:** Automatisierte Snapshots
+- **Cost:** €60-150/Monat
 
-### 4.3 Deployment-Architektur
-- **Container-basiert:** Alle Services als Docker-Container
-- **Service Mesh:** Kubernetes mit Istio (geplant)
-- **Load Balancer:** Nginx (aktuell), AWS ALB (geplant)
-- **Monitoring:** Prometheus + Grafana (geplant)
+### 2.3 Cloud AI-Integration Strategy
 
-## 5. USER INTERFACE ANFORDERUNGEN
+#### GPU-Task-Outsourcing
+- **Vision Processing:** Pose Estimation, NSFW Detection, Face Recognition
+- **Audio Processing:** Whisper Transcription, Emotion Analysis
+- **OCR Processing:** Multi-language Text Recognition
+- **Cost-Model:** Pay-per-use €10-500/Monat je nach Nutzung
 
-### 5.1 Web Interface (geplant)
-- **Upload Interface:** Drag&Drop für Medien-Files
-- **Job Dashboard:** Real-time Progress-Tracking
-- **Results Viewer:** Interaktive Analyse-Resultate
-- **Admin Panel:** Service-Management, User-Verwaltung
+#### Fallback-Mechanismen
+- **Local Processing:** Basis-Funktionen auf VPS-CPU
+- **Queue-Management:** Intelligente Task-Distribution
+- **Cost-Limits:** Automatische Budget-Controls
 
-### 5.2 API Interface
-- **RESTful API:** Standardisierte HTTP-Endpoints
-- **OpenAPI/Swagger:** Automatische API-Dokumentation
-- **Webhooks:** Event-basierte Benachrichtigungen
-- **SDKs:** Python/JavaScript Client-Libraries (geplant)
+## 3. ENTWICKLUNGS-ROADMAP - VPS-FIRST STRATEGY
 
-## 6. INTEGRATION ANFORDERUNGEN
+### 3.1 Alpha 0.5.0 - Production VPS-Ready (2-3 Wochen)
+**Ziel:** VPS-Production-Deployment ohne manuelle Eingriffe
 
-### 6.1 Cloud Storage
-- **Multi-Provider:** AWS S3, Google Cloud, Azure Blob
-- **Asset Management:** Automatisches Upload/Download
-- **CDN Integration:** Schnelle Medien-Auslieferung
+**Priorität 1: VPS-Production-Readiness**
+- [ ] **CPU-Dockerfiles:** Dockerfile.cpu für alle AI-Services
+- [ ] **SSL-Automation:** Let's Encrypt Integration mit Nginx
+- [ ] **VPS-Deployment-Scripts:** Infrastructure-as-Code für Standard-Server
+- [ ] **Health-Monitoring:** Production-ready Service-Überwachung
+- [ ] **Performance-Benchmarks:** Baseline für verschiedene VPS-Größen
 
-### 6.2 External APIs
-- **LLM Providers:** OpenAI, Anthropic, Google Gemini
-- **Notification Services:** Email, Slack, Discord
-- **Monitoring Services:** DataDog, NewRelic
+**Erfolgsmetriken:**
+- `make vps-deploy` funktioniert auf Standard-VPS ohne manuelle Eingriffe
+- SSL-Setup automatisiert mit Production-ready Nginx-Konfiguration
+- Alle AI-Services haben funktionierende CPU-only Dockerfiles
+- Performance-Benchmarks für 8GB, 16GB, 32GB VPS etabliert
 
-## 7. ENTWICKLUNGS-ROADMAP
+### 3.2 Alpha 0.6.0 - Cloud AI-Integration (4-6 Wochen)
+**Ziel:** Seamless VPS ↔ Cloud AI Communication
 
-### 7.1 Alpha 0.4.0 (nächste 2-4 Wochen)
-**Ziel:** System-Start erfolgreich
-- Docker-Compose startet alle Services
-- Health Checks funktionieren
-- Nginx-Routing konfiguriert
-- Basis-Integration getestet
+**Features:**
+- [ ] **Vast.ai API-Integration:** GPU-Instanz-Management
+- [ ] **Job-Queue-Enhancement:** Cloud AI-Task-Distribution
+- [ ] **Cost-Optimization:** Smart Resource-Allocation
+- [ ] **Fallback-Mechanisms:** Local Processing bei Cloud-Failures
+- [ ] **Budget-Controls:** Automatische Cost-Limits
 
-### 7.2 Alpha 0.5.0 (4-8 Wochen)
-**Ziel:** End-to-End Workflow
-- Ein vollständiger Analyse-Workflow funktioniert
-- UI zeigt echte Resultate
-- Service-zu-Service Kommunikation validiert
-- Performance-Baseline etabliert
+**Erfolgsmetriken:**
+- VPS kann automatisch Vast.ai-Instanzen erstellen/zerstören
+- Cloud AI-Tasks werden nahtlos von VPS-Job-Queue verwaltet
+- Cost-Monitoring und Budget-Alerts funktionieren
+- Fallback auf lokale CPU-Processing bei Cloud-Problemen
 
-### 7.3 Beta 0.6.0 (3-6 Monate)
-**Ziel:** Feature-Vollständigkeit
-- Alle Core-Services integriert
-- Batch-Processing optimiert
-- Persistente Datenspeicherung
-- Basic UI vollständig
+### 3.3 Alpha 0.7.0 - Feature-Complete (6-12 Wochen)
+**Ziel:** End-to-End Workflows funktional
 
-### 7.4 Version 1.0 (12-18 Monate)
-**Ziel:** Produktionsreife
-- Enterprise-Features komplett
-- Auto-Scaling implementiert
-- Security/Compliance erfüllt
-- Vollständige Dokumentation
+**Features:**
+- [ ] **End-to-End Workflows:** Upload → Cloud Processing → Results
+- [ ] **UI-Integration:** Streamlit-Frontend vollständig integriert
+- [ ] **Service-Communication:** Alle Services kommunizieren erfolgreich
+- [ ] **Performance-Baseline:** Messbare Performance-Metriken
+- [ ] **Basic User-Management:** Multi-User-Support
 
-## 8. QUALITÄTSSICHERUNG
+**Beta-Transition-Kriterien:**
+- Vollständiger Analyse-Workflow: Bild/Video-Upload → AI-Analyse → Resultate
+- UI zeigt echte AI-Processing-Resultate
+- Performance-Benchmarks für verschiedene VPS-Konfigurationen
+- System läuft stabil >24 Stunden unter Last
 
-### 8.1 Testing-Strategie
-- **Unit Tests:** >80% Code-Coverage pro Service
-- **Integration Tests:** Service-zu-Service Workflows
-- **End-to-End Tests:** Vollständige User-Journeys
-- **Performance Tests:** Load Testing unter realen Bedingungen
-- **Security Tests:** Penetration Testing, Vulnerability Scans
+### 3.4 Beta 0.8.0-0.9.0 - Production-Readiness (3-6 Monate)
+**Ziel:** Enterprise-Features und Performance-Optimization
 
-### 8.2 Monitoring & Observability
-- **Application Performance Monitoring (APM)**
-- **Distributed Tracing**
-- **Structured Logging**
-- **Custom Metrics Dashboard**
-- **Alerting & Notifications**
+**Features:**
+- [ ] **Enterprise-Security:** RBAC, Authentication, Audit-Logging
+- [ ] **Performance-Optimization:** Response-Time <100ms für VPS-Services
+- [ ] **Monitoring & Alerting:** Comprehensive Production-Monitoring
+- [ ] **Multi-Tenant-Support:** Isolated User-Environments
+- [ ] **Backup & Recovery:** Automated Disaster-Recovery
 
-## 9. RISIKEN UND MITIGATION
+### 3.5 Version 1.0 - VPS-Native AI-Platform (12-18 Monate)
+**Ziel:** Market-Leading VPS-AI-Platform
 
-### 9.1 Technische Risiken
-- **Risk:** Service-Integration funktioniert nicht
-- **Mitigation:** Schrittweise Integration, umfassende Tests
+**Enterprise-Features:**
+- [ ] **Multi-VPS-Support:** Load-Distribution über mehrere VPS
+- [ ] **Auto-Scaling:** Dynamic VPS + Cloud AI-Scaling
+- [ ] **Enterprise-UI:** React-basierte Professional-Interface
+- [ ] **API-Marketplace:** Third-Party-Integration-Ecosystem
+- [ ] **Compliance:** GDPR, SOC2, Enterprise-Security-Standards
 
-- **Risk:** Performance unzureichend für Production
-- **Mitigation:** Frühe Performance-Tests, GPU-Optimierung
+## 4. FUNKTIONALE ANFORDERUNGEN - VPS-OPTIMIERT
 
-- **Risk:** GPU-Memory-Limitierungen
-- **Mitigation:** Dynamic Batching, Memory-Management
+### 4.1 Core VPS-Services (Alpha 0.5.0 Ziel)
 
-### 9.2 Projektrisiken
-- **Risk:** Scope-Creep durch zu viele Features
-- **Mitigation:** Klare Prioritäten, MVP-First-Ansatz
+#### 4.1.1 Infrastructure Services ✅
+**Redis Service**
+- **Status:** VPS-ready, funktional getestet
+- **Resource-Limits:** 1GB Memory, 1 Core
+- **Functions:** Caching, Job-Queue, Session-Management
 
-- **Risk:** Unrealistische Zeitschätzungen
-- **Mitigation:** "Langsam aber gründlich"-Philosophie
+**Vector Database Service**
+- **Status:** VPS-optimiert mit faiss-cpu
+- **Resource-Limits:** 2GB Memory, 2 Cores
+- **Functions:** CPU-only Embedding-Search, Collection-Management
 
-## 10. ABNAHMEKRITERIEN
+**Nginx Service**
+- **Status:** Bereit für SSL-Production-Setup
+- **Functions:** Load-Balancing, SSL-Termination, Request-Routing
+- **SSL:** Let's Encrypt Integration (Alpha 0.5.0 Ziel)
 
-### 10.1 Alpha 0.4.0 Kriterien
-- [ ] `docker-compose up` startet ohne Fehler
-- [ ] Alle 9 Services zeigen "healthy" Status
-- [ ] Nginx ist auf Port 80 erreichbar
-- [ ] Basis Health Checks funktionieren
+#### 4.1.2 AI-Services (Cloud AI-Integration)
 
-### 10.2 Beta 0.6.0 Kriterien
-- [ ] End-to-End Workflow: Upload → Analyse → Resultate
-- [ ] Performance: >50 Bilder/Minute bei Batch-Processing
-- [ ] Alle Core-Services funktionieren integriert
-- [ ] Basic UI zeigt alle Analyse-Resultate
+**Vision Pipeline Service**
+- **VPS-Function:** Job-Management, Preprocessing, Result-Aggregation
+- **Cloud AI:** GPU-intensive Processing via Vast.ai
+- **API:** Batch-Processing, Progress-Tracking, Cost-Monitoring
 
-### 10.3 Version 1.0 Kriterien
-- [ ] User Management mit RBAC funktional
-- [ ] Security Audit bestanden
-- [ ] Performance SLAs erfüllt
-- [ ] Auto-Scaling funktioniert
-- [ ] Vollständige API-Dokumentation
-- [ ] Production Deployment erfolgreich 
+**Audio Analysis Service**
+- **VPS-Function:** Audio-Upload, Format-Conversion, Job-Queue
+- **Cloud AI:** Whisper Transcription, Emotion Analysis
+- **Features:** Multi-language Support, Speaker-ID
+
+**Content Moderation Services**
+- **VPS-Function:** Content-Classification, Rule-Engine
+- **Cloud AI:** NSFW-Detection, Restraint-Detection
+- **Integration:** Real-time Processing mit Cost-Limits
+
+### 4.2 Development-Infrastructure (Alpha 0.4.3 ✅)
+
+#### 4.2.1 Professional Development-Standards
+- **Pre-Commit-Hooks:** Automatische Code-Quality-Sicherung
+- **Cross-Platform-Scripts:** Windows PowerShell + Linux/macOS Bash
+- **IDE-Integration:** VS Code/PyCharm automatische Formatierung
+- **Development-Guidelines:** Comprehensive Standards dokumentiert
+
+#### 4.2.2 CI/CD-Pipeline-Stabilität
+- **GitHub Actions:** Vollständig stabil und zuverlässig
+- **Quality-Gates:** Black, isort, flake8, mypy Automation
+- **Test-Automation:** Unit Tests, Integration Tests, Service Health Checks
+- **Deployment-Readiness:** VPS-Deployment-Pipeline vorbereitet
+
+## 5. NON-FUNKTIONALE ANFORDERUNGEN - VPS-OPTIMIERT
+
+### 5.1 Performance-Ziele
+- **VPS-Services:** <100ms Response-Time für lokale Services
+- **Cloud AI-Latency:** <2s für Standard-Processing-Tasks
+- **System-Uptime:** >99.5% für VPS-Infrastructure
+- **Cost-Efficiency:** <€200/Monat für Small Business Setup
+
+### 5.2 Skalierbarkeit-Ziele
+- **Concurrent Users:** 50+ gleichzeitige Nutzer auf Standard-VPS
+- **Batch Processing:** 1000+ Dateien/Stunde mit Cloud AI-Integration
+- **Auto-Scaling:** Dynamische Cloud-Instanz-Allokation
+- **Multi-VPS:** Load-Distribution für Enterprise (Version 1.0+)
+
+### 5.3 Development-Experience-Ziele ✅
+- **Setup-Time:** <5 Minuten für komplette Development-Environment
+- **Developer-Onboarding:** <10 Minuten bis productive
+- **Test-Execution:** <60 Sekunden für Unit Tests
+- **Cross-Platform:** Einheitlicher Workflow auf Windows/Linux/macOS
+
+## 6. TECHNISCHE SPEZIFIKATIONEN - VPS-FIRST
+
+### 6.1 VPS-Technology-Stack
+- **Backend:** Python 3.11+, FastAPI, Async/Await
+- **AI/ML:** PyTorch CPU, OpenCV CPU, faiss-cpu
+- **Database:** Redis (Cache), PostgreSQL (geplant für Persistence)
+- **Containerization:** Docker, Docker-Compose
+- **Frontend:** Streamlit (Alpha), React (geplant für Version 1.0)
+- **Cloud AI:** Vast.ai API, Dynamic GPU-Instance-Management
+
+### 6.2 Development-Infrastructure
+- **Code-Quality:** Pre-Commit-Hooks, Black, isort, flake8, mypy
+- **CI/CD:** GitHub Actions, Automated Testing, Deployment-Pipeline
+- **Environment-Management:** Comprehensive .env Configuration
+- **Cross-Platform:** Makefile + PowerShell + Bash Scripts
+
+### 6.3 VPS-Deployment-Architecture
+- **Container-orchestration:** Docker-Compose (Alpha), Kubernetes (Version 1.0+)
+- **Load-Balancer:** Nginx mit SSL-Termination
+- **Monitoring:** Health-Checks, Log-Aggregation, Performance-Metrics
+- **Backup:** Automated VPS-Snapshots, Configuration-Management
+
+## 7. ABNAHMEKRITERIEN - PHASENWEISE
+
+### 7.1 Alpha 0.5.0 Kriterien
+- [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS ohne Fehler
+- [ ] SSL-Setup automatisiert mit Let's Encrypt
+- [ ] Alle Services starten mit CPU-only Dockerfiles
+- [ ] Health-Monitoring zeigt alle Services als "healthy"
+- [ ] Performance-Benchmarks dokumentiert für 8GB/16GB/32GB VPS
+
+### 7.2 Alpha 0.6.0 Kriterien
+- [ ] VPS kann Vast.ai-Instanz automatisch erstellen und nutzen
+- [ ] Cloud AI-Task wird erfolgreich von VPS-Queue verwaltet
+- [ ] Cost-Monitoring zeigt korrekte Vast.ai-Kosten
+- [ ] Fallback auf lokale CPU-Processing funktioniert
+- [ ] Budget-Limit stoppt Cloud-Processing automatisch
+
+### 7.3 Alpha 0.7.0 (Beta-Transition) Kriterien
+- [ ] End-to-End: Bild-Upload → Cloud AI-Analyse → Resultate in UI
+- [ ] System läuft stabil >48 Stunden unter simulierter Last
+- [ ] Performance: <2s für Standard-Bild-Analyse via Cloud AI
+- [ ] Multi-User: >10 gleichzeitige Nutzer ohne Performance-Degradation
+- [ ] Cost-Efficiency: <€100/Monat für Small Business-Nutzung
+
+### 7.4 Version 1.0 Kriterien
+- [ ] Enterprise-Security-Audit bestanden
+- [ ] >99.5% Uptime über 3 Monate Production-Deployment
+- [ ] Performance-SLAs erfüllt: <100ms VPS-Services, <2s Cloud AI
+- [ ] Multi-Tenant-Support für >100 isolierte User-Environments
+- [ ] Compliance-Zertifizierung (GDPR, SOC2) erhalten
+
+## 8. STRATEGISCHE POSITIONIERUNG
+
+### 8.1 Market-Differentiation
+- **VPS-Native AI-Platform:** Erste AI-Platform optimiert für Standard-Server
+- **Cost-Efficiency:** Professional AI ohne teure GPU-Hardware-Investitionen
+- **Developer-First:** Beste Development-Experience in der AI-Branche
+- **Enterprise-Scalable:** Von Einzelentwickler bis Enterprise-Deployment
+
+### 8.2 Competitive-Advantages
+- **Setup-Time:** <5 Minuten vs. Stunden/Tage bei Konkurrenz
+- **Hardware-Requirements:** Standard-VPS vs. teure GPU-Server
+- **Development-Experience:** Professional-Grade Automation out-of-the-box
+- **Cost-Predictability:** VPS-Fix-Cost + Cloud AI-Pay-per-use
+
+### 8.3 Target-Market
+- **Primary:** Small-Medium Businesses mit AI-Needs aber ohne GPU-Budget
+- **Secondary:** Enterprise mit Cost-Optimization-Requirements
+- **Tertiary:** Developers/Agencies die AI-Services für Clients entwickeln
+
+## 9. SUCCESS-METRICS & KPIs
+
+### 9.1 Development-Success-Metrics ✅
+- **Setup-Time:** <5 Minuten (ERREICHT)
+- **Developer-Onboarding:** <10 Minuten bis productive (ERREICHT)
+- **CI/CD-Reliability:** >95% erfolgreiche Runs (ERREICHT)
+- **Code-Quality:** Automated Quality-Gates (ERREICHT)
+
+### 9.2 VPS-Performance-Metrics (Alpha 0.5.0 Ziel)
+- **Service-Start-Time:** <30 Sekunden für alle VPS-Services
+- **Memory-Usage:** <8GB für komplette VPS-Environment
+- **Response-Time:** <100ms für lokale Service-API-Calls
+- **Uptime:** >99.5% für VPS-Infrastructure
+
+### 9.3 Cloud AI-Integration-Metrics (Alpha 0.6.0 Ziel)
+- **Instance-Creation-Time:** <2 Minuten für Vast.ai-GPU-Instance
+- **Processing-Latency:** <3s für Standard-Bild-Analyse
+- **Cost-Efficiency:** <€0.50 pro Bild-Analyse
+- **Reliability:** >98% erfolgreiche Cloud AI-Tasks
+
+### 9.4 Enterprise-Readiness-Metrics (Version 1.0 Ziel)
+- **Multi-Tenant-Capacity:** >100 isolierte User-Environments
+- **Security-Compliance:** GDPR, SOC2 Zertifizierung
+- **Performance-SLA:** >99.9% API-Availability
+- **Customer-Success:** >90% Customer-Satisfaction (NPS >50)
