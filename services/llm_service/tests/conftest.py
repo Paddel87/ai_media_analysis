@@ -60,9 +60,11 @@ def mock_requests():
 
     import requests
 
-    with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch(
-        "requests.delete"
-    ) as mock_delete:
+    with (
+        patch("requests.get") as mock_get,
+        patch("requests.post") as mock_post,
+        patch("requests.delete") as mock_delete,
+    ):
         yield {"get": mock_get, "post": mock_post, "delete": mock_delete}
 
 
