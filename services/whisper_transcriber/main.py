@@ -1,3 +1,11 @@
+# AI Media Analysis - Whisper Transcriber Service
+# Beschreibung: 
+# - Transkription von Audio-Dateien mit OpenAI Whisper
+# - GPU-Beschleunigung für Echtzeit-Performance
+# - Unterstützung verschiedener Audio-Formate
+# - Cloud AI-Ready mit Vast.ai Integration
+# - CPU-Fallback für VPS-Kompatibilität
+
 import asyncio
 import gc
 import json
@@ -5,12 +13,13 @@ import logging
 import os
 import pickle
 import tempfile
+import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import aiofiles
 import aiohttp
@@ -20,10 +29,9 @@ import numpy as np
 import redis
 import soundfile as sf
 import torch
+import whisper
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
-
-import whisper
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

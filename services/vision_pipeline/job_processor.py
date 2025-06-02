@@ -1,11 +1,18 @@
+"""
+AI Media Analysis - Vision Pipeline Job Processor
+Verarbeitung von Jobs aus der Redis-Queue
+"""
+
 import asyncio
 import gc
 import json
 import logging
 import os
+import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
 import numpy as np
@@ -15,10 +22,10 @@ from common.logging_config import ServiceLogger
 from rq import Queue, Worker
 from rq.job import Job
 from rq.worker import HerokuWorker
-
 from vision_pipeline import VisionPipeline
 
 # Logger konfigurieren
+logging.basicConfig(level=logging.INFO)
 logger = ServiceLogger("vision_pipeline_worker")
 
 # Redis-Verbindung konfigurieren

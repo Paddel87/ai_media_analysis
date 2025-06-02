@@ -1,9 +1,15 @@
+# AI Media Analysis - Whisper Service
+# Audio-Transkription und -Analyse Service
+# Kompatibel mit Cloud AI und VPS-Deployment
+
 import asyncio
 import base64
 import io
 import json
 import logging
 import os
+import tempfile
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import lru_cache
@@ -13,22 +19,23 @@ import faiss
 import librosa
 import noisereduce as nr
 import numpy as np
+import redis
 import requests
 import soundfile as sf
 import torch
 import torch.nn.functional as F
+import whisper
 from fastapi import FastAPI, HTTPException
 from PIL import Image
 from pydantic import BaseModel
 from scipy import signal
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import (
+    AutoConfig,
     Wav2Vec2FeatureExtractor,
     Wav2Vec2ForSequenceClassification,
     Wav2Vec2Model,
 )
-
-import whisper
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
