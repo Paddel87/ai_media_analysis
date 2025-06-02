@@ -6,6 +6,7 @@
 .PHONY: format lint clean setup dev-setup ci-setup
 .PHONY: run-services stop-services restart-services health-check
 .PHONY: vps-setup vps-deploy vps-test logs-all monitor
+.PHONY: format check-format lint pre-commit-install pre-commit-run
 
 # Default target
 help: ## Zeigt diese Hilfe an
@@ -210,21 +211,44 @@ test-ci: test-lint test-unit test-integration test-coverage ## Vollständige CI-
 # CODE-QUALITÄT
 # =============================================================================
 
-lint: ## Führt Code-Linting aus
-	@echo "🧹 Running code linting..."
-	python run_tests.py --lint
-
-format: ## Formatiert Code mit black und isort
-	@echo "🎨 Formatting code..."
+format: ## Formatiert den Code automatisch mit black und isort
+	@echo "🎨 Formatiere Code mit black..."
 	python -m black services tests
+	@echo "🔧 Sortiere Imports mit isort..."
 	python -m isort services tests
-	@echo "✅ Code formatting completed"
+	@echo "✅ Code-Formatierung abgeschlossen"
+
+check-format: ## Prüft Code-Formatierung ohne Änderungen
+	@echo "🔍 Prüfe black-Formatierung..."
+	python -m black --check --diff services tests
+	@echo "🔍 Prüfe isort-Formatierung..."
+	python -m isort --check-only --diff services tests
+	@echo "✅ Formatierungs-Check abgeschlossen"
+
+lint: ## Führt alle Linting-Checks durch
+	@echo "🔍 Führe flake8-Check durch..."
+	python -m flake8 services tests
+	@echo "🔍 Führe mypy-Check durch..."
+	python -m mypy services --ignore-missing-imports
+	@echo "✅ Linting abgeschlossen"
+
+pre-commit-install: ## Installiert Pre-Commit-Hooks
+	@echo "🪝 Installiere Pre-Commit-Hooks..."
+	pip install pre-commit
+	pre-commit install
+	@echo "✅ Pre-Commit-Hooks installiert"
+
+pre-commit-run: ## Führt Pre-Commit-Hooks manuell aus
+	@echo "🪝 Führe Pre-Commit-Hooks aus..."
+	pre-commit run --all-files
+	@echo "✅ Pre-Commit-Hooks ausgeführt"
+
+fix-all: format lint ## Führt automatische Formatierung und Linting durch
+	@echo "🔧 Automatische Code-Korrektur abgeschlossen"
 
 test-security: ## Führt Security-Scan aus
 	@echo "🔒 Running security scan..."
 	python run_tests.py --security
-
-pre-commit: format lint test-unit ## Pre-commit Hook
 
 # =============================================================================
 # SERVICE-SPEZIFISCHE TESTS
