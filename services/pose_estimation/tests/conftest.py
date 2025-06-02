@@ -1,120 +1,83 @@
 import pytest
-import pytest_asyncio
-import redis.asyncio as redis
-import os
-import sys
-from unittest.mock import Mock, patch
-import numpy as np
-import torch
-from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
-import importlib
-import config
-import main
+from typing import Dict, Optional, AsyncGenerator
 import time
-from typing import Optional
-import cv2
+from unittest.mock import AsyncMock
+from fastapi import FastAPI
+from httpx import AsyncClient
 
-# Test-Umgebung konfigurieren
-os.environ["TESTING"] = "1"
-os.environ["MODEL_TYPE"] = "cpu"
-os.environ["MAX_WORKERS"] = "2"
-os.environ["MEMORY_LIMIT"] = "1024"
-os.environ["BATCH_SIZE_LIMIT"] = "100"
-os.environ["PROCESSING_TIMEOUT"] = "300"
-importlib.reload(config)
-from main import force_reload_settings
-force_reload_settings()
-importlib.reload(main)
-from main import app
 
-# Test Client Fixture
-def client():
-    return TestClient(app)
-
-# In-Memory-Redis für Tests
 class InMemoryRedis:
     def __init__(self):
-        self.store = {}
-        self.expiry = {}
+        self.store: Dict[str, str] = {}
+        self.expiry: Dict[str, float] = {}
 
     async def get(self, key: str) -> Optional[str]:
         if key in self.store:
-            if key in self.expiry and self.expiry[key] < time.time():
+            if key in self.expiry and time.time() > self.expiry[key]:
                 del self.store[key]
                 del self.expiry[key]
                 return None
             return self.store[key]
         return None
 
-    async def setex(self, key: str, ttl: int, value: str):
+    async def setex(self, key: str, ttl: int, value: str) -> None:
         self.store[key] = value
         self.expiry[key] = time.time() + ttl
 
-    async def flushdb(self):
+    async def flushdb(self) -> None:
         self.store.clear()
         self.expiry.clear()
 
-    async def close(self):
-        self.store.clear()
-        self.expiry.clear()
 
-# Redis Fixture
 @pytest.fixture
-async def redis_client():
-    client = InMemoryRedis()
-    yield client
-    await client.close()
+def mock_redis() -> InMemoryRedis:
+    return InMemoryRedis()
 
-# Mock für das Pose Estimation Modell
-@pytest.fixture
-def mock_model():
-    with patch("main.init_model") as mock:
-        model = Mock()
-        # Mock für die Modell-Ausgabe
-        mock_keypoints = [[[100, 200], [150, 250], [200, 300]]]
-        mock_scores = [[0.9, 0.8, 0.7]]
-        model.return_value = Mock(
-            pred_instances=Mock(get=Mock(return_value=mock_keypoints))
-        )
-        yield mock
 
-# Test-Bild Fixture
 @pytest.fixture
-def test_image():
-    return np.zeros((100, 100, 3), dtype=np.uint8).tobytes()
+def mock_model() -> AsyncMock:
+    model = AsyncMock()
+    model.predict.return_value = {
+        "keypoints": [[0.5, 0.5, 0.9] for _ in range(17)],
+        "scores": [0.9] * 17,
+    }
+    return model
 
-# Batch Test-Bilder Fixture
-@pytest.fixture
-def test_batch_images():
-    return [np.zeros((100, 100, 3), dtype=np.uint8).tobytes() for _ in range(3)]
 
-# Temporäres Verzeichnis Fixture
 @pytest.fixture
-def temp_dir(tmp_path):
-    return str(tmp_path)
+def test_batch_images() -> list[bytes]:
+    return [b"test_image_data" for _ in range(3)]
 
-# Mock für Redis-Verbindungsfehler
-@pytest.fixture
-def mock_redis_error():
-    with patch("redis.asyncio.Redis") as mock:
-        mock.return_value.ping.side_effect = redis.ConnectionError
-        yield mock
 
-# Mock für Modell-Initialisierungsfehler
 @pytest.fixture
-def mock_model_init_error():
-    with patch("main.init_model") as mock:
-        mock.side_effect = Exception("Modell-Initialisierungsfehler")
-        yield mock
+def mock_redis_error() -> AsyncMock:
+    redis_mock = AsyncMock()
+    redis_mock.get.side_effect = Exception("Redis connection error")
+    return redis_mock
 
-# System Metrics Mock
+
 @pytest.fixture
-def mock_system_metrics():
-    with patch("main.get_system_metrics") as mock:
-        mock.return_value = {
-            "cpu_usage": 50.0,
-            "memory_usage": 512.0,
-            "processing_queue": 2,
-        }
-        yield mock
+def mock_model_init_error() -> AsyncMock:
+    model = AsyncMock()
+    model.__init__.side_effect = Exception("Model initialization error")
+    return model
+
+
+@pytest.fixture
+def mock_system_metrics() -> Dict[str, float]:
+    return {
+        "cpu_usage": 50.0,
+        "memory_usage": 60.0,
+        "processing_queue": 5,
+    }
+
+
+@pytest.fixture
+def app() -> FastAPI:
+    return FastAPI()
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client

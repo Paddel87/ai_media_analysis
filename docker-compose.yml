@@ -150,19 +150,26 @@ services:
 
   # Cloud AI-Ready Services (für Vast.ai Integration vorbereitet)
   pose_estimation:
-    build: 
+    build:
       context: ./services/pose_estimation
-      dockerfile: Dockerfile.cpu  # CPU-Version für lokale Dev
+      dockerfile: Dockerfile.cpu
     container_name: ai_pose_estimation
+    ports:
+      - "8003:8000"  # Exposed port für lokale Entwicklung
     volumes:
       - ./data/results:/app/results
       - ./logs/pose:/app/logs
+      - ./config/pose:/app/config:ro
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - CLOUD_MODE=false  # Lokaler Entwicklungsmodus
+      - CLOUD_MODE=false
+      - MODEL_TYPE=cpu
+      - MAX_WORKERS=2
+      - MEMORY_LIMIT=2G
+      - PORT=8000
     depends_on:
       redis:
         condition: service_healthy
@@ -172,11 +179,10 @@ services:
       resources:
         limits:
           cpus: '2'
-          memory: 2G  # CPU-only Memory
+          memory: 2G
         reservations:
           cpus: '1'
           memory: 1G
-          # GPU-Requirements entfernt für VPS
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -191,7 +197,7 @@ services:
         max-file: "3"
 
   ocr_detection:
-    build: 
+    build:
       context: ./services/ocr_detection
       dockerfile: Dockerfile.cpu
     container_name: ai_ocr_detection
@@ -231,7 +237,7 @@ services:
         max-file: "3"
 
   clip_nsfw:
-    build: 
+    build:
       context: ./services/clip_nsfw
       dockerfile: Dockerfile.cpu
     container_name: ai_clip_nsfw
@@ -271,7 +277,7 @@ services:
         max-file: "3"
 
   face_reid:
-    build: 
+    build:
       context: ./services/face_reid
       dockerfile: Dockerfile.cpu
     container_name: ai_face_reid
@@ -311,7 +317,7 @@ services:
         max-file: "3"
 
   whisper_transcriber:
-    build: 
+    build:
       context: ./services/whisper_transcriber
       dockerfile: Dockerfile.cpu
     container_name: ai_whisper_transcriber
@@ -410,4 +416,3 @@ volumes:
     driver: local
   data:
     driver: local
-    

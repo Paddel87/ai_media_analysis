@@ -5,10 +5,34 @@ import redis.asyncio as redis
 from typing import Dict, Any, Optional
 import json
 import os
-from config import get_settings
+from pydantic import BaseSettings
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
+
+
+class Settings(BaseSettings):
+    memory_threshold: float = 0.8
+    gc_threshold: float = 0.9
+    base_concurrency_limit: int = 4
+    max_concurrency_limit: int = 8
+    min_concurrency_limit: int = 2
+    cache_ttl: int = 3600
+    cache_max_size: int = 1000
+    alert_threshold: float = 0.8
+    degradation_levels: Dict[str, Dict[str, int]] = {
+        "normal": {"batch_size": 32, "timeout": 30},
+        "reduced": {"batch_size": 16, "timeout": 45},
+        "minimal": {"batch_size": 8, "timeout": 60},
+    }
+    min_workers: int = 2
+    max_workers: int = 8
+    worker_adjustment_interval: int = 60
+
+    class Config:
+        env_prefix = "POSE_ESTIMATION_"
+
+
+settings = Settings()
 
 
 class MemoryManager:
@@ -86,9 +110,7 @@ class CacheManager:
 
     async def cache_result(self, key: str, value: Any):
         try:
-            await self.redis_client.setex(
-                key, self.cache_ttl, json.dumps(value)
-            )
+            await self.redis_client.setex(key, self.cache_ttl, json.dumps(value))
             await self.cleanup_old_entries()
         except Exception as e:
             logger.error(f"Fehler beim Caching: {e}")
@@ -190,13 +212,9 @@ class WorkerManager:
         queue_size = metrics["processing_queue"]
 
         if queue_size > self.current_workers * 2:
-            self.current_workers = min(
-                self.max_workers, self.current_workers + 1
-            )
+            self.current_workers = min(self.max_workers, self.current_workers + 1)
         elif queue_size < self.current_workers / 2:
-            self.current_workers = max(
-                self.min_workers, self.current_workers - 1
-            )
+            self.current_workers = max(self.min_workers, self.current_workers - 1)
 
         return self.current_workers
 
