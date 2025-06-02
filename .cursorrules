@@ -3,6 +3,22 @@
 # Architektur: 24+ Services, FastAPI, Docker, Redis, Vector DB
 # Status: Alpha 0.4.3 - Development-Ready mit Code-Quality-Automatisierung
 
+## Strategische Grundregeln
+
+### VPS-First Development (Höchste Priorität!)
+- **CPU-only Development**: Keine GPU-Requirements in Development
+- **Memory-Efficient**: Optimiert für 8GB-16GB RAM
+- **Resource Limits**: Docker-Container mit definierten Limits
+- **Graceful Degradation**: Fallback bei Service-Ausfällen
+- **Cost-Efficient**: Minimale Cloud AI-Kosten
+- **Auto-Scaling**: Vorbereitung für horizontales Scaling
+
+### Cloud AI-Integration
+- **Async Processing**: Externe AI-Calls asynchron
+- **Retry Logic**: Exponential backoff
+- **Cost Optimization**: Request Batching
+- **Fallback Mechanisms**: Service-Ausfall-Handling
+
 ## Projektkontext
 Du arbeitest an einem **AI Media Analysis System** - einem Cloud-Native Microservices-System zur automatisierten Analyse von Medieninhalten. Das System ist für **VPS/dedizierte Server ohne eigene GPU** optimiert und nutzt **Cloud GPU-Services** für AI-Processing.
 
@@ -201,151 +217,25 @@ Achte besonders auf:
 4. **Code-Quality** - Pre-commit hooks sind aktiv!
 5. **Testing** - 70% Coverage Minimum einhalten
 
-## Fortlaufende Dokumentation
+## Verknüpfte Regelwerke
 
-### Dokumentations-Standards
-- **Docstring-Format**: Google Style mit Type Hints
-- **Markdown**: Für alle README und Dokumentationsdateien
-- **Versionierung**: SemVer (MAJOR.MINOR.PATCH)
-- **Changelog**: Automatische Updates bei Änderungen
+### Dokumentations-Regelwerk
+Siehe: `.cursorrules.docs`
+- Dokumentations-Philosophie
+- Standards und Templates
+- Workflows und Qualitätskontrolle
+- Best Practices
 
-### Service-Dokumentation
-```python
-def process_data(data: str) -> dict:
-    """Verarbeitet die Eingabedaten und gibt das Ergebnis zurück.
+### VPS-Optimierungs-Regelwerk
+Siehe: `.cursorrules.vps`
+- Resource Management
+- Performance-Optimierung
+- Cost-Efficiency
+- Auto-Scaling
 
-    Args:
-        data (str): Die zu verarbeitenden Daten im JSON-Format
-
-    Returns:
-        dict: Verarbeitetes Ergebnis mit Status und Metadaten
-
-    Raises:
-        ValueError: Bei ungültigem Datenformat
-        ProcessingError: Bei Verarbeitungsfehlern
-    """
-    pass
-```
-
-### Automatische Dokumentations-Updates
-1. **Code-Änderungen**:
-   - Docstrings bei Funktionsänderungen aktualisieren
-   - Type Hints bei Parameter-Änderungen anpassen
-   - README.md bei API-Änderungen aktualisieren
-
-2. **Service-Änderungen**:
-   - `CHANGELOG.md` bei Feature/Service-Änderungen
-   - `STATUS.md` bei Architektur-Änderungen
-   - `API.md` bei Endpoint-Änderungen
-
-3. **Architektur-Änderungen**:
-   - `ARCHITECTURE.md` bei System-Änderungen
-   - `DEPLOYMENT.md` bei Deployment-Änderungen
-   - `DEVELOPMENT.md` bei Dev-Workflow-Änderungen
-
-### Dokumentations-Templates
-
-#### Service README Template
-```markdown
-# {Service Name}
-
-## Beschreibung
-Kurze Beschreibung des Service-Zwecks und der Hauptfunktionalität.
-
-## API Endpoints
-- `GET /health`: Health Check
-- `POST /process`: Hauptverarbeitungsendpoint
-- ...
-
-## Konfiguration
-- `REDIS_URL`: Redis Connection String
-- `API_KEY`: Service API Key
-- ...
-
-## Entwicklung
-```bash
-# Setup
-make dev-setup
-
-# Tests
-make test
-
-# Start
-make quick-start
-```
-
-## Monitoring
-- Health Check: `/health`
-- Metrics: `/metrics`
-- Logs: `docker logs {service_name}`
-```
-
-#### Changelog Entry Template
-```markdown
-## [Unreleased]
-### Added
-- Neue Feature Beschreibung
-
-### Changed
-- Änderungen an bestehenden Features
-
-### Fixed
-- Bugfix Beschreibungen
-
-### Removed
-- Entfernte Features/Funktionalitäten
-```
-
-### Dokumentations-Workflow
-1. **Code-Änderungen**:
-   ```bash
-   # 1. Code ändern
-   # 2. Docstrings aktualisieren
-   # 3. Tests schreiben/aktualisieren
-   # 4. README aktualisieren
-   make format
-   make test
-   ```
-
-2. **Service-Änderungen**:
-   ```bash
-   # 1. Service-Code ändern
-   # 2. API-Dokumentation aktualisieren
-   # 3. Changelog aktualisieren
-   # 4. Status-Dokumentation aktualisieren
-   make update-docs
-   ```
-
-3. **Architektur-Änderungen**:
-   ```bash
-   # 1. Architektur-Änderungen implementieren
-   # 2. ARCHITECTURE.md aktualisieren
-   # 3. DEPLOYMENT.md aktualisieren
-   # 4. Version bumpen
-   make version-bump
-   ```
-
-### Dokumentations-Qualitätskontrolle
-- **Pre-commit Hook**: Prüft Docstring-Format
-- **CI/CD**: Validiert Markdown-Syntax
-- **Review**: Dokumentation im Code-Review prüfen
-- **Versioning**: Automatische Changelog-Generierung
-
-### Wichtige Dokumentations-Dateien
-- `README.md`: Projekt-Übersicht
-- `CHANGELOG.md`: Änderungshistorie
-- `STATUS.md`: Projekt-Status
-- `API.md`: API-Dokumentation
-- `ARCHITECTURE.md`: System-Architektur
-- `DEVELOPMENT.md`: Entwicklungs-Workflow
-- `DEPLOYMENT.md`: Deployment-Guide
-- `CONTRIBUTING.md`: Beitrags-Richtlinien
-
-### Dokumentations-Best-Practices
-1. **Aktualität**: Dokumentation immer aktuell halten
-2. **Klarheit**: Klare, präzise Formulierungen
-3. **Beispiele**: Code-Beispiele für komplexe Features
-4. **Struktur**: Konsistente Formatierung
-5. **Links**: Querverweise zwischen Dokumenten
-6. **Versioning**: Dokumentation mit Code versionieren
-7. **Review**: Dokumentation im Code-Review prüfen
+### Cloud AI-Integration
+Siehe: `.cursorrules.cloud`
+- Async Processing
+- Retry Logic
+- Cost Optimization
+- Fallback Mechanisms

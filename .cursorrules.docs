@@ -1,0 +1,139 @@
+# AI Media Analysis System - Dokumentations-Regelwerk
+# Status: Alpha 0.4.3 - Development-Ready
+
+## Dokumentations-Philosophie
+- **Living Documentation**: Dokumentation als integraler Teil des Codes
+- **Single Source of Truth**: Keine redundanten Informationen
+- **Automation First**: Automatische Updates wo möglich
+- **Review-Required**: Dokumentation im Code-Review prüfen
+
+## Dokumentations-Standards
+- **Docstring-Format**: Google Style mit Type Hints
+- **Markdown**: Für alle README und Dokumentationsdateien
+- **Versionierung**: SemVer (MAJOR.MINOR.PATCH)
+- **Changelog**: Automatische Updates bei Änderungen
+
+## Service-Dokumentation
+```python
+def process_data(data: str) -> dict:
+    """Verarbeitet die Eingabedaten und gibt das Ergebnis zurück.
+
+    Args:
+        data (str): Die zu verarbeitenden Daten im JSON-Format
+
+    Returns:
+        dict: Verarbeitetes Ergebnis mit Status und Metadaten
+
+    Raises:
+        ValueError: Bei ungültigem Datenformat
+        ProcessingError: Bei Verarbeitungsfehlern
+    """
+    pass
+```
+
+## Dokumentations-Workflow
+1. **Code-Änderungen**:
+   ```bash
+   # 1. Code ändern
+   # 2. Docstrings aktualisieren
+   # 3. Tests schreiben/aktualisieren
+   # 4. README aktualisieren
+   make format
+   make test
+   ```
+
+2. **Service-Änderungen**:
+   ```bash
+   # 1. Service-Code ändern
+   # 2. API-Dokumentation aktualisieren
+   # 3. Changelog aktualisieren
+   # 4. Status-Dokumentation aktualisieren
+   make update-docs
+   ```
+
+3. **Architektur-Änderungen**:
+   ```bash
+   # 1. Architektur-Änderungen implementieren
+   # 2. ARCHITECTURE.md aktualisieren
+   # 3. DEPLOYMENT.md aktualisieren
+   # 4. Version bumpen
+   make version-bump
+   ```
+
+## Dokumentations-Templates
+
+### Service README Template
+```markdown
+# {Service Name}
+
+## Beschreibung
+Kurze Beschreibung des Service-Zwecks und der Hauptfunktionalität.
+
+## API Endpoints
+- `GET /health`: Health Check
+- `POST /process`: Hauptverarbeitungsendpoint
+- ...
+
+## Konfiguration
+- `REDIS_URL`: Redis Connection String
+- `API_KEY`: Service API Key
+- ...
+
+## Entwicklung
+```bash
+# Setup
+make dev-setup
+
+# Tests
+make test
+
+# Start
+make quick-start
+```
+
+## Monitoring
+- Health Check: `/health`
+- Metrics: `/metrics`
+- Logs: `docker logs {service_name}`
+```
+
+### Changelog Entry Template
+```markdown
+## [Unreleased]
+### Added
+- Neue Feature Beschreibung
+
+### Changed
+- Änderungen an bestehenden Features
+
+### Fixed
+- Bugfix Beschreibungen
+
+### Removed
+- Entfernte Features/Funktionalitäten
+```
+
+## Dokumentations-Qualitätskontrolle
+- **Pre-commit Hook**: Prüft Docstring-Format
+- **CI/CD**: Validiert Markdown-Syntax
+- **Review**: Dokumentation im Code-Review prüfen
+- **Versioning**: Automatische Changelog-Generierung
+
+## Wichtige Dokumentations-Dateien
+- `README.md`: Projekt-Übersicht
+- `CHANGELOG.md`: Änderungshistorie
+- `STATUS.md`: Projekt-Status
+- `API.md`: API-Dokumentation
+- `ARCHITECTURE.md`: System-Architektur
+- `DEVELOPMENT.md`: Entwicklungs-Workflow
+- `DEPLOYMENT.md`: Deployment-Guide
+- `CONTRIBUTING.md`: Beitrags-Richtlinien
+
+## Dokumentations-Best-Practices
+1. **Aktualität**: Dokumentation immer aktuell halten
+2. **Klarheit**: Klare, präzise Formulierungen
+3. **Beispiele**: Code-Beispiele für komplexe Features
+4. **Struktur**: Konsistente Formatierung
+5. **Links**: Querverweise zwischen Dokumenten
+6. **Versioning**: Dokumentation mit Code versionieren
+7. **Review**: Dokumentation im Code-Review prüfen

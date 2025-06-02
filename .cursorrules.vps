@@ -1,0 +1,84 @@
+# AI Media Analysis System - VPS-Optimierungs-Regelwerk
+# Status: Alpha 0.4.3 - Development-Ready
+
+## Resource Management
+
+### CPU-Optimierung
+- **CPU-only Development**: Keine GPU-Requirements in Development
+- **Multi-threading**: Optimierte Thread-Pool-Größen
+- **Process Management**: Effiziente Process-Pools
+- **Load Balancing**: CPU-Last-Verteilung
+
+### Memory-Optimierung
+- **Memory Limits**: 8GB-16GB RAM Optimierung
+- **Garbage Collection**: Proaktive GC-Strategien
+- **Resource Pooling**: Effiziente Resource-Sharing
+- **Memory Monitoring**: Real-time Usage Tracking
+
+### Storage-Optimierung
+- **Disk Usage**: Effiziente Storage-Strategien
+- **Caching**: Multi-level Caching
+- **Data Cleanup**: Automatische Cleanup-Routinen
+- **Storage Monitoring**: Usage Tracking
+
+## Performance-Optimierung
+
+### Service-Optimierung
+- **Container Limits**: Docker Resource Constraints
+- **Process Isolation**: Effiziente Service-Isolation
+- **Health Checks**: Proaktive Health Monitoring
+- **Graceful Shutdown**: Clean Service Termination
+
+### Network-Optimierung
+- **Connection Pooling**: Effiziente Connection-Handling
+- **Request Batching**: Optimierte Request-Gruppierung
+- **Load Balancing**: Service-Level Load Distribution
+- **Network Monitoring**: Traffic Analysis
+
+### Database-Optimierung
+- **Query Optimization**: Effiziente DB-Queries
+- **Connection Management**: Optimierte DB-Connections
+- **Indexing**: Strategische Index-Strategien
+- **DB Monitoring**: Performance Tracking
+
+## Cost-Efficiency
+
+### Resource Allocation
+- **Dynamic Scaling**: Bedarfsgerechte Ressourcen
+- **Resource Limits**: Strikte Usage-Limits
+- **Cost Monitoring**: Real-time Cost Tracking
+- **Budget Controls**: Cost-Budget-Management
+
+### Cloud Integration
+- **Cost Optimization**: Minimale Cloud-Kosten
+- **Resource Sharing**: Effizientes Resource-Sharing
+- **Auto-Scaling**: Kostenoptimiertes Scaling
+- **Cost Analysis**: Usage-Cost-Analysis
+
+## Auto-Scaling
+
+### Scaling-Strategien
+- **Horizontal Scaling**: Service-Replikation
+- **Vertical Scaling**: Resource-Upgrades
+- **Load-Based Scaling**: Last-basiertes Scaling
+- **Cost-Based Scaling**: Kostenoptimiertes Scaling
+
+### Monitoring & Control
+- **Performance Metrics**: Real-time Monitoring
+- **Scaling Triggers**: Automatische Scaling-Trigger
+- **Resource Alerts**: Proaktive Alerts
+- **Scaling History**: Scaling-Analytics
+
+## Best Practices
+
+### Development
+1. **CPU-First**: CPU-optimierte Entwicklung
+2. **Memory-Aware**: Memory-Effizienz
+3. **Resource-Limits**: Strikte Limits
+4. **Monitoring**: Proaktives Monitoring
+
+### Production
+1. **Auto-Scaling**: Automatisches Scaling
+2. **Cost-Control**: Kostenoptimierung
+3. **Performance**: Performance-Monitoring
+4. **Reliability**: Hochverfügbarkeit
