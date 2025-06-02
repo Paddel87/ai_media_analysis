@@ -13,6 +13,103 @@
 - **Versionierung**: SemVer (MAJOR.MINOR.PATCH)
 - **Changelog**: Automatische Updates bei Änderungen
 
+## Projekt-Dokumentation
+
+### Core-Dokumente
+- `README.md`: Projekt-Übersicht und Quick-Start
+- `CHANGELOG.md`: Änderungshistorie und Release-Notes
+- `STATUS.md`: Aktueller Projekt-Status
+- `LASTENHEFT.md`: Projektanforderungen und Ziele
+- `ROADMAP.md`: Zukünftige Entwicklung und Features
+- `CONTRIBUTING.md`: Beitrags-Richtlinien
+- `LICENSE.md`: Lizenzinformationen
+
+### Architektur-Dokumente
+- `ARCHITECTURE.md`: System-Architektur und Design
+- `API.md`: API-Dokumentation und Endpoints
+- `DEVELOPMENT.md`: Entwicklungs-Workflow
+- `DEPLOYMENT.md`: Deployment-Guide
+- `SECURITY.md`: Sicherheitsrichtlinien
+- `PERFORMANCE.md`: Performance-Metriken und Benchmarks
+
+### Service-Dokumente
+- `services/{service_name}/README.md`: Service-spezifische Dokumentation
+- `services/{service_name}/API.md`: Service-API-Dokumentation
+- `services/{service_name}/CHANGELOG.md`: Service-Changelog
+
+### Development-Dokumente
+- `docs/development/`: Development-Guides
+- `docs/testing/`: Testing-Strategien
+- `docs/deployment/`: Deployment-Prozesse
+- `docs/monitoring/`: Monitoring und Logging
+
+## GitHub Release-Prozess
+
+### Release-Vorbereitung
+1. **Version Bump**:
+   ```bash
+   # Version in pyproject.toml aktualisieren
+   make version-bump
+   ```
+
+2. **Changelog Update**:
+   ```bash
+   # Changelog generieren
+   make update-changelog
+   ```
+
+3. **Dokumentation Update**:
+   ```bash
+   # Alle Dokumente aktualisieren
+   make update-docs
+   ```
+
+### Release-Checklist
+- [ ] Version in `pyproject.toml` aktualisiert
+- [ ] `CHANGELOG.md` aktualisiert
+- [ ] Alle Tests erfolgreich
+- [ ] Dokumentation aktuell
+- [ ] Release-Notes vorbereitet
+- [ ] GitHub Release erstellt
+
+### GitHub Release Template
+```markdown
+## Version {version}
+
+### Neue Features
+- Feature 1
+- Feature 2
+
+### Verbesserungen
+- Verbesserung 1
+- Verbesserung 2
+
+### Bugfixes
+- Fix 1
+- Fix 2
+
+### Breaking Changes
+- Breaking Change 1
+- Breaking Change 2
+
+### Dokumentation
+- [API-Dokumentation](link)
+- [Changelog](link)
+- [Deployment-Guide](link)
+
+### Installation
+```bash
+# Installation
+pip install ai-media-analysis=={version}
+```
+
+### Migration
+```python
+# Migration von v{old_version} zu v{version}
+# Migrationsschritte hier
+```
+```
+
 ## Service-Dokumentation
 ```python
 def process_data(data: str) -> dict:
@@ -118,16 +215,6 @@ make quick-start
 - **CI/CD**: Validiert Markdown-Syntax
 - **Review**: Dokumentation im Code-Review prüfen
 - **Versioning**: Automatische Changelog-Generierung
-
-## Wichtige Dokumentations-Dateien
-- `README.md`: Projekt-Übersicht
-- `CHANGELOG.md`: Änderungshistorie
-- `STATUS.md`: Projekt-Status
-- `API.md`: API-Dokumentation
-- `ARCHITECTURE.md`: System-Architektur
-- `DEVELOPMENT.md`: Entwicklungs-Workflow
-- `DEPLOYMENT.md`: Deployment-Guide
-- `CONTRIBUTING.md`: Beitrags-Richtlinien
 
 ## Dokumentations-Best-Practices
 1. **Aktualität**: Dokumentation immer aktuell halten
