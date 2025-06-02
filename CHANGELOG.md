@@ -5,6 +5,65 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Alpha 0.4.0] - 2025-06-02 - VPS-Deployment-Tests und Cloud AI-Architektur
+
+### Durchbruch: VPS-Deployment-Ready ✅
+- **Historischer Meilenstein:** Erste erfolgreiche VPS-optimierte System-Tests
+- **Deployment-Ziel definiert:** VPS/Dedizierte Server ohne eigene GPU als Primärziel
+- **Cloud AI-Strategie:** Vast.ai Integration für GPU-intensive Tasks
+- **Systematische Service-Analyse:** Konkrete VPS-Optimierungen implementiert
+
+### VPS-Architektur-Erfolge
+- **✅ Redis:** VPS-ready, läuft stabil ohne GPU-Dependencies
+- **✅ Vector-DB:** CPU-only optimiert mit faiss-cpu und PyTorch CPU-Version
+- **⚠️ AI-Services:** Build erfolgreich, für Cloud-Deployment vorgesehen
+- **🎯 Deployment-Ziel:** Standard VPS €20-100/Monat, keine GPU-Hardware erforderlich
+
+### Strategische VPS-Entscheidung
+**Primäres Ziel:** VPS/Dedizierte Server ohne eigene GPU  
+**Rationale:** 
+- Cost-Efficiency: Standard VPS deutlich günstiger als GPU-Server
+- Wartungsfreundlich: Keine speziellen GPU-Treiber/Konfiguration
+- Provider-Flexibilität: Läuft auf jedem Standard-VPS
+- Cloud AI-Integration: Pay-per-use für GPU-intensive Tasks
+
+**Langfristige GPU-Server:** Niedrige Priorität, optional in Version 2.0+
+
+### VPS-Deployment-Optimierungen
+- **CPU-Only Dependencies:** faiss-cpu, PyTorch CPU, OpenCV CPU
+- **Build-Tools-Pattern:** Systematische Dockerfile-Reparaturen
+- **Standard-Server-Kompatibilität:** Keine Hardware-spezifische Requirements
+- **Docker-Compose-VPS:** Optimiert für Standard-Server-Hardware
+
+### Cloud AI-Integration-Architektur
+- **VPS-Services:** Redis, Vector-DB, Nginx, UI, Job-Queue, Monitoring
+- **Cloud AI-Services:** Pose Estimation, OCR, NSFW, Face Recognition, Whisper
+- **Vast.ai Integration:** Dynamische GPU-Instanz-Allokation
+- **Seamless Communication:** VPS ↔ Cloud API mit Fallback-Mechanismen
+
+### VPS-Requirements definiert
+- **Minimal:** 4 Cores, 8GB RAM, 50GB SSD, 1Gbps
+- **Empfohlen:** 8 Cores, 16GB RAM, 100GB SSD, 1Gbps+
+- **Provider-Empfehlungen:** Hetzner €20-40, DigitalOcean $20-40, AWS/GCP Enterprise
+- **Budget-Kalkulation:** VPS €20-100 + Cloud AI €10-500 je nach Nutzung
+
+### Technische VPS-Erfolge
+- **Dockerfile-Reparaturen:** Build-tools für Standard-Server
+- **Service-Isolation:** Jeder Service VPS-kompatibel
+- **Dependencies-Management:** CPU-only Versionen implementiert
+- **Docker-Compose:** Funktioniert auf Standard-VPS-Hardware
+
+### VPS-Deployment-Roadmap
+- **Alpha 0.5.0:** Production-Ready VPS-Setup mit SSL-Termination
+- **Alpha 0.6.0:** Vollständige VPS + Cloud AI-Integration
+- **Beta 0.7.0:** Feature-Vollständigkeit auf VPS-Basis
+- **Version 1.0:** Multi-Tenant VPS-Platform
+
+### Architektur-Evolution
+- **Phase 1:** Single VPS + Cloud AI (Alpha/Beta)
+- **Phase 2:** Optimierte VPS + Auto-Scaling Cloud (Version 1.0)
+- **Phase 3:** Multi-VPS + Optional GPU-Server (Version 2.0+)
+
 ## [Alpha 0.3.0] - 2025-06-01 - CI/CD Pipeline stabilisiert
 
 ### Entwicklungsstand
