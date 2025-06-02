@@ -5,6 +5,78 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Alpha 0.4.2] - 2025-01-13 - 🧹 SERVICE-STRUKTURIERUNG & ARCHITEKTUR-OPTIMIERUNG
+
+### Service-Architecture - Strukturelle Bereinigung
+- **🧹 Root-Level-Duplikate entfernt:** 11 redundante Root-Level-Verzeichnisse beseitigt
+  - Entfernt: `control/`, `embedding_server/`, `llm_interface/`, `object_review/`
+  - Entfernt: `ocr_logo_title/`, `preprocess/`, `qdrant/`, `streamlit_ui/`
+  - Entfernt: `vector_db/`, `whisper/`, `vision_pipeline/`
+  - **Rationale:** docker-compose.yml referenziert ausschließlich services/ Verzeichnisse
+  - **Backup:** Automatische Backup-Erstellung vor Strukturbereinigung
+
+- **🏗️ Einheitliche services/ Architektur:** 24 Services in standardisierter Struktur
+  - **Infrastructure Services:** nginx, vector_db, redis (VPS-Services)
+  - **AI Processing Services:** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
+  - **Management Services:** job_manager, control, embedding_server, llm_service
+  - **UI Services:** ui, streamlit_ui für Development und Production
+  - **Common Components:** shared Libraries in services/common/
+
+### Structural Improvements - Modulare Service-Architektur
+- **📦 PowerShell-Strukturierung-Script:** `scripts/clean-structure.ps1`
+  - Windows-kompatible Strukturbereinigung mit Backup-Funktionalität
+  - Automatische Erkennung redundanter Root-Level-Verzeichnisse
+  - Interactive Confirmation und Recovery-Anweisungen
+
+- **🐧 Bash-Strukturierung-Script:** `scripts/restructure-services.sh`
+  - Linux/macOS-kompatible Service-Strukturierung
+  - Kategorisierte services/ Struktur (infrastructure/, ai_processing/, management/, ui_interfaces/)
+  - Comprehensive Backup-Management und Rollback-Unterstützung
+
+### Architecture Benefits - Verbesserte Modularität
+- **🎯 Service-Isolation:** Jeder Service hat eindeutige Verantwortlichkeit
+- **🔄 Docker-Compose-Konsistenz:** Alle Services über services/ Pfade referenziert
+- **📊 Saubere Abhängigkeiten:** Klarere Service-Dependencies ohne Root-Level-Verwirrung
+- **⚡ Deployment-Effizienz:** Schnellere Builds durch eliminierte Duplikate
+- **🧪 Testing-Simplicity:** Eindeutige Service-Pfade für automatisierte Tests
+
+### Modularity Enhancements - Zukunftssichere Erweiterbarkeit
+- **🧱 Service-Template-Pattern:** Standardisierte Struktur für neue Services
+  - Dockerfile.cpu/Dockerfile.gpu für VPS/Cloud-Dual-Architecture
+  - Health-Check-Endpoints und Resource-Limits standardisiert
+  - services/common/ für shared Components und Utilities
+  - Makefile-Integration für automatisierte Service-Commands
+
+- **🌐 VPS + Cloud AI Ready:** Architektur für hybride Skalierung optimiert
+  - VPS-Services (Infrastructure): nginx, redis, vector_db
+  - Cloud AI-Services (Processing): pose_estimation, ocr_detection, etc.
+  - Management-Layer: job_manager für VPS ↔ Cloud Communication
+
+### Technical Debt Reduction - Architektur-Schulden beseitigt
+- **❌ Eliminierte Code-Duplikation:** 11 redundante Service-Kopien entfernt
+- **✅ Konsistente Build-Pfade:** docker-compose.yml referenziert nur services/
+- **📁 Saubere Directory-Struktur:** Eindeutige Service-Hierarchie
+- **🔍 Verbesserte Code-Navigation:** Entwickler finden Services sofort in services/
+
+### Development Experience - Strukturierte Entwicklung
+- **🛠️ Neue Services hinzufügen:** Klare services/ Struktur für Service-Entwicklung
+- **🧪 Service-spezifische Tests:** Eindeutige Test-Pfade ohne Root-Level-Verwirrung
+- **📊 Monitoring-Clarity:** Service-Health-Checks mit klaren Service-Namen
+- **🚀 Quick-Start-Verbesserte:** Schnellere Orientierung für neue Entwickler
+
+### Future-Proofing - Skalierbare Service-Architektur
+- **📈 Horizontal-Skalierung:** Services können unabhängig erweitert werden
+- **🏗️ Kategorisierte Erweiterung:** Neue Services in passende Kategorien einordbar
+- **🔧 Maintenance-Efficiency:** Eindeutige Service-Ownership und Verantwortlichkeiten
+- **🌐 Multi-Deployment:** Services können VPS/Cloud flexibel deployed werden
+
+### Impact - Architektur-Revolution für Service-Management
+- **🎯 Modularität:** Von chaotischer zu professioneller Service-Architektur
+- **⚡ Development-Speed:** Schnellere Service-Entwicklung durch klare Struktur
+- **🛡️ Maintainability:** Erheblich vereinfachte Service-Wartung
+- **🚀 Scalability:** Foundation für Enterprise-Scale Service-Management
+- **👥 Team-Efficiency:** Neue Entwickler verstehen Architektur sofort
+
 ## [Alpha 0.4.1] - 2025-01-13 - 🚀 DEVELOPMENT-STABILITÄT-REVOLUTION 🚀
 
 ### Added - Vollautomatisierte Development-Umgebung

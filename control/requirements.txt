@@ -1,7 +1,0 @@
-requests
-python-dotenv
-schedule
-redis
-prefect
-loguru
-orjson

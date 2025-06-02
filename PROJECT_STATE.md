@@ -1,6 +1,23 @@
 # AI Media Analysis - VPS-Deployment Projekt-Merkzettel
 
-## AKTUELLER IST-ZUSTAND (Alpha 0.4.0 - ERREICHT)
+## AKTUELLER IST-ZUSTAND (Alpha 0.4.2 - ERREICHT)
+
+### Service-Architektur-Optimierung ✅
+- **✅ Einheitliche services/ Struktur:** 24 Services in standardisierter Architektur organisiert
+- **✅ Root-Level-Duplikate beseitigt:** 11 redundante Verzeichnisse erfolgreich entfernt
+  - Entfernt: control/, embedding_server/, llm_interface/, object_review/
+  - Entfernt: ocr_logo_title/, preprocess/, qdrant/, streamlit_ui/
+  - Entfernt: vector_db/, whisper/, vision_pipeline/
+- **✅ Modulare Service-Organisation:** Infrastructure, AI Processing, Management, UI Services kategorisiert
+- **✅ Docker-Compose-Konsistenz:** Alle Services verwenden ausschließlich services/ Pfade
+- **✅ Backup-Management:** Automatisierte Backup-Scripts vor Strukturänderungen
+
+### Service-Kategorien etabliert ✅
+- **Infrastructure Services (VPS):** nginx, vector_db, redis für Standard-Server
+- **AI Processing Services (Cloud AI-ready):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
+- **Management Services:** job_manager, control, embedding_server, llm_service für System-Orchestrierung
+- **UI Services:** ui, streamlit_ui für Development und Production Interfaces
+- **Common Components:** services/common/ für shared Libraries und Utilities
 
 ### Was definitiv funktioniert ✅
 - **✅ VPS-System-Tests:** Docker-Compose erfolgreich auf Standard-Hardware getestet
@@ -10,7 +27,7 @@
 - **✅ Dependencies-Management:** CPU-only Versionen (faiss-cpu, PyTorch CPU) implementiert
 - **✅ CI/CD Pipeline:** 57/61 Tests erfolgreich, automatisierte Quality Gates
 - **✅ Build-Prozesse:** Alle Services bauen erfolgreich nach VPS-Optimierung
-- **✅ Service-Architektur:** Grundlegend solide, VPS-kompatibel
+- **✅ Service-Architektur:** Grundlegend solide, VPS-kompatibel, jetzt strukturell optimiert
 - **✅ Development-Tools:** Makefile, run_tests.py, pytest-Suite vollständig implementiert
 
 ### VPS-Deployment-Erfolge 🎯
@@ -19,18 +36,33 @@
 - **Cost-Efficiency:** €20-100/Monat VPS statt teurer GPU-Hardware
 - **Cloud AI-Integration:** Vast.ai-Strategie für GPU-intensive Tasks
 - **Development-Workflow:** Stabiler lokaler Development-Workflow etabliert
+- **Service-Modularität:** Professional-Grade Service-Architektur für Enterprise-Skalierung
 
-### Validierte Service-Status
-1. **✅ redis** - VPS-ready, läuft stabil ohne GPU, Resource-optimiert
-2. **✅ vector-db** - CPU-optimiert, faiss-cpu + PyTorch CPU, Health-Checks
-3. **✅ nginx** - VPS-Production-Setup mit SSL-Support und Logging
-4. **⚡ pose_estimation** - VPS-ready mit CPU-Dockerfile, Cloud-Mode-Flag
-5. **⚡ ocr_detection** - VPS-ready mit CPU-Dockerfile, optimierte Resources
-6. **⚡ clip_nsfw** - VPS-ready mit CPU-Dockerfile, Lightweight-Modelle
-7. **⚡ whisper_transcriber** - VPS-ready mit CPU-Dockerfile, kleinere Modelle
-8. **⚡ face_reid** - VPS-ready mit CPU-Dockerfile, Cloud-Integration
-9. **✅ data-persistence** - VPS-Integration mit Logging und Health-Checks
-10. **✅ streamlit-ui** - Development-UI für lokale Tests
+### Validierte Service-Status (Alpha 0.4.2)
+1. **✅ nginx** - VPS-ready, läuft stabil ohne GPU, Resource-optimiert, services/nginx/
+2. **✅ vector-db** - CPU-optimiert, faiss-cpu + PyTorch CPU, Health-Checks, services/vector_db/
+3. **✅ redis** - VPS-ready, läuft stabil ohne GPU, Resource-optimiert, im Docker-Compose integriert
+4. **⚡ pose_estimation** - VPS-ready, CPU-Dockerfile, Cloud-Mode-Flag, services/pose_estimation/
+5. **⚡ ocr_detection** - VPS-ready, CPU-Dockerfile, optimierte Resources, services/ocr_detection/
+6. **⚡ clip_nsfw** - VPS-ready, CPU-Dockerfile, Lightweight-Modelle, services/clip_nsfw/
+7. **⚡ whisper_transcriber** - VPS-ready, CPU-Dockerfile, kleinere Modelle, services/whisper_transcriber/
+8. **⚡ face_reid** - VPS-ready, CPU-Dockerfile, Cloud-Integration, services/face_reid/
+9. **✅ data-persistence** - VPS-Integration, Logging, Health-Checks
+10. **✅ ui** - Production Web Interface, services/ui/
+11. **✅ streamlit-ui** - Development-UI, services/streamlit_ui/ (kein Root-Level-Duplikat mehr)
+12. **✅ job_manager** - Task Orchestration, services/job_manager/
+13. **✅ control** - System Control, services/control/ (kein Root-Level-Duplikat mehr)
+14. **✅ embedding_server** - Vector Embeddings, services/embedding_server/ (kein Root-Level-Duplikat mehr)
+15. **✅ llm_service** - Language Model Interface, services/llm_service/
+16. **✅ common** - Shared Components, services/common/ mit logging_config.py, redis_config.py
+
+### Strukturelle Verbesserungen Alpha 0.4.2 🏗️
+- **Eliminierte Code-Duplikation:** 11 redundante Service-Kopien entfernt
+- **Konsistente Build-Pfade:** docker-compose.yml referenziert nur services/
+- **Saubere Directory-Struktur:** Eindeutige Service-Hierarchie
+- **Verbesserte Code-Navigation:** Entwickler finden Services sofort in services/
+- **Service-Template-Pattern:** Standardisierte Struktur für neue Services
+- **Modulare Erweiterbarkeit:** Neue Services können einfach hinzugefügt werden
 
 ### Strategische VPS-Architektur-Entscheidung
 - **Primäres Ziel:** VPS/Dedizierte Server ohne eigene GPU

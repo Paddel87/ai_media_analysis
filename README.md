@@ -2,8 +2,9 @@
 
 [![AI Media Analysis Test Suite](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml/badge.svg)](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml)
 
-**Status:** Alpha 0.4.0 - VPS-Development-Ready mit stabiler Entwicklungsumgebung  
+**Status:** Alpha 0.4.2 - VPS-Development-Ready mit optimierter Service-Architektur  
 **Architektur:** VPS-Orchestrierung + Cloud GPU Computing  
+**Service-Struktur:** 24 Services in einheitlicher services/ Architektur  
 **Deployment-Ziel:** VPS/Dedizierte Server ohne eigene GPU  
 **CI/CD:** Stabil (GitHub Actions funktionsfähig)  
 **Development-Environment:** Vollautomatisiert und VPS-optimiert  
@@ -12,7 +13,24 @@
 
 Das AI Media Analysis System ist ein **Cloud-Native Microservices-System** zur automatisierten Analyse von Medieninhalten. Das System ist für **Deployment auf VPS/dedizierten Servern ohne eigene GPU** optimiert und nutzt **Cloud GPU-Services** für AI-Processing.
 
-### Alpha 0.4.0 - Development-Stabilität erreicht ✅
+### Alpha 0.4.2 - Service-Architektur-Optimierung ✅
+
+**Service-Strukturierung:**
+- ✅ **Einheitliche services/ Architektur:** 24 Services in standardisierter Struktur
+- ✅ **Root-Level-Duplikate beseitigt:** 11 redundante Verzeichnisse entfernt
+- ✅ **Modulare Service-Organisation:** Infrastructure, AI Processing, Management, UI Services
+- ✅ **PowerShell & Bash Scripts:** Automatisierte Strukturbereinigung für Windows/Linux
+- ✅ **Improved Modularität:** Template-Pattern für zukünftige Service-Erweiterungen
+- ✅ **Docker-Compose-Konsistenz:** Alle Services über services/ Pfade referenziert
+
+**Service-Kategorien:**
+- **Infrastructure Services:** nginx, vector_db, redis (VPS-Services)
+- **AI Processing Services:** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
+- **Management Services:** job_manager, control, embedding_server, llm_service
+- **UI Services:** ui, streamlit_ui für Development und Production
+- **Common Components:** Shared Libraries in services/common/
+
+### Alpha 0.4.1 - Development-Stabilität erreicht ✅
 
 **Neue Development-Features:**
 - ✅ **Vollautomatisiertes Setup:** `make dev-setup` für komplette Development-Umgebung
@@ -35,6 +53,35 @@ Das AI Media Analysis System ist ein **Cloud-Native Microservices-System** zur a
 - 🎯 **Cloud AI-Processing:** Vast.ai Integration für GPU-intensive Tasks
 - 🎯 **Cost-Efficient:** Keine teure GPU-Hardware für Development erforderlich
 - 🎯 **Auto-Setup:** <5 Minuten von Git-Clone zu laufendem System
+
+### VPS-Optimierte Development-Architektur
+
+#### Service-Struktur (Alpha 0.4.2)
+```
+services/
+├── Infrastructure Services (VPS)
+│   ├── nginx/              # Load Balancer & SSL Termination
+│   ├── vector_db/          # CPU-optimized Vector Database
+│   └── redis/              # Message Queue & Cache
+├── AI Processing Services (Cloud AI-ready)
+│   ├── pose_estimation/    # Human Pose Detection
+│   ├── ocr_detection/      # Text Recognition
+│   ├── clip_nsfw/          # Content Moderation
+│   ├── face_reid/          # Face Recognition
+│   └── whisper_transcriber/ # Audio Transcription
+├── Management Services
+│   ├── job_manager/        # Task Orchestration
+│   ├── control/            # System Control
+│   ├── embedding_server/   # Vector Embeddings
+│   └── llm_service/        # Language Model Interface
+├── UI Services
+│   ├── ui/                 # Production Web Interface
+│   └── streamlit_ui/       # Development Interface
+└── common/                 # Shared Components
+    ├── logging_config.py   # Standardized Logging
+    ├── redis_config.py     # Redis Integration
+    └── error_handler.py    # Error Management
+```
 
 ### VPS-Optimierte Development-Architektur
 
