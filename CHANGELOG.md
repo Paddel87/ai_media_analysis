@@ -170,7 +170,7 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ### Next Steps Enabled - Alpha 0.5.0 Vorbereitung
 - **CPU-Dockerfiles:** Grundlage für alle AI-Services gelegt
-- **SSL-Integration:** Nginx Production-Setup vorbereitet  
+- **SSL-Integration:** Nginx Production-Setup vorbereitet
 - **Cloud AI-Integration:** Environment-Variablen für Vast.ai konfiguriert
 - **Performance-Monitoring:** Baseline für VPS-Performance-Benchmarks
 - **Automated-Deployment:** Grundlage für VPS-Deployment-Automation
@@ -190,8 +190,8 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - **🎯 Deployment-Ziel:** Standard VPS €20-100/Monat, keine GPU-Hardware erforderlich
 
 ### Strategische VPS-Entscheidung
-**Primäres Ziel:** VPS/Dedizierte Server ohne eigene GPU  
-**Rationale:** 
+**Primäres Ziel:** VPS/Dedizierte Server ohne eigene GPU
+**Rationale:**
 - Cost-Efficiency: Standard VPS deutlich günstiger als GPU-Server
 - Wartungsfreundlich: Keine speziellen GPU-Treiber/Konfiguration
 - Provider-Flexibilität: Läuft auf jedem Standard-VPS
@@ -267,7 +267,7 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 1. Docker-Compose erfolgreich starten (alle Services)
 2. Service Health Checks validieren
 3. Basis Service-zu-Service Kommunikation testen
-4. Ein einfacher End-to-End Workflow funktioniert
+4. Ein einfacher End-to-End Workflow funktionert
 
 **Realistische Roadmap:**
 - **Alpha 0.4.0 - 0.5.x:** System-Integration (2-3 Monate)
@@ -326,10 +326,10 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 ## [Beta 0.9.4] - 2025-06-01 - Korrekturen für Run 23
 
 ### Fixed
-- **`ModuleNotFoundError: No module named 'llm_service'`**: 
+- **`ModuleNotFoundError: No module named 'llm_service'`**:
   - Leere `__init__.py` Dateien zu `services/` und `services/llm_service/` hinzugefügt, um korrekte Paketerkennung zu ermöglichen.
   - Dieser Fehler verhinderte die Testausführung für `llm_service` und führte zu 0% Coverage.
-- **Pytest-Marker-Warnungen**: 
+- **Pytest-Marker-Warnungen**:
   - `--strict-markers` Option aus `pytest.ini` entfernt, als Versuch, die `PytestUnknownMarkWarning` trotz bereits korrekter Marker-Definitionen und Warnungsfilter zu beheben.
 
 ### Changed
@@ -956,3 +956,49 @@ und dieses Projekt folgt der [Semantic Versioning](https://semver.org/spec/v2.0.
 - Reduzierte Latenz bei Cloud-Operationen
 - Optimierte Speichernutzung
 - Verbesserte Fehlerbehandlung
+
+## [Alpha 0.4.3] - 2025-01-13 - 🛡️ FORMATIERUNGSPROBLEME-PRÄVENTION
+
+### Code-Quality & Automatisierung - Proaktive Formatierungsfehlervermeidung
+- **🛡️ Pre-Commit-Hooks:** Automatische Code-Formatierung vor jedem Commit
+  - `.pre-commit-config.yaml`: Black, isort, flake8, mypy, trailing-whitespace
+  - **Verhindert**: isort/black-Fehler wie in GitHub Actions Run 37/38
+  - **Automatisiert**: Formatierung bereits bei der Entwicklung
+
+- **⚙️ Einheitliche Tool-Konfiguration:** `pyproject.toml` als zentrale Konfiguration
+  - **Black**: Zeilenlänge 88, Python 3.11, exclude-Patterns
+  - **isort**: Black-Profil, known_first_party/third_party Kategorien
+  - **flake8**: E203/W503-Ignore, max-line-length 88
+  - **mypy**: ignore-missing-imports, Python 3.11
+
+- **🎯 Erweiterte Makefile-Targets:** Entwicklerfreundliche Formatierungs-Automation
+  - `make format`: Automatische Code-Formatierung (black + isort)
+  - `make check-format`: Formatierung prüfen ohne Änderungen
+  - `make fix-all`: Formatierung + Linting in einem Kommando
+  - `make pre-commit-install`: Pre-Commit-Hooks Setup
+  - `make pre-commit-run`: Manuelle Pre-Commit-Ausführung
+
+- **📜 Cross-Platform Format-Scripts:** Bash & PowerShell Automatisierung
+  - `scripts/format-check.sh --fix`: Bash-Script für Linux/macOS
+  - `scripts/format-check.ps1 -Fix`: PowerShell-Script für Windows
+  - **Features**: Trailing-whitespace, end-of-file-newlines, farbiger Output
+  - **Modi**: Check-only oder automatische Korrektur
+
+- **📚 Umfassende Entwicklungsrichtlinien:** `docs/DEVELOPMENT_GUIDELINES.md`
+  - **Code-Stil-Standards**: Import-Reihenfolge, Docstring-Format, Type-Hints
+  - **IDE-Konfiguration**: VS Code/PyCharm Setup-Anleitungen
+  - **Häufige Fehler**: isort/black/flake8 Anti-Pattern mit Lösungen
+  - **Workflow-Integration**: Pre-Commit, CI/CD, lokale Entwicklung
+
+- **🔧 IDE-Integration:** `.vscode/settings.json` für automatische Formatierung
+  - **Format-on-Save**: Automatische Black/isort-Ausführung
+  - **Linting**: flake8, mypy Integration
+  - **File-Management**: Trailing-whitespace, final-newlines
+  - **Python-Testing**: pytest-Integration, Coverage-Reports
+
+### Präventive Maßnahmen gegen Formatierungsfehler
+- **✅ GitHub Actions Stabilität:** Verhindert isort/black-Pipeline-Fehler
+- **✅ Entwickler-Experience:** Ein Kommando löst alle Formatierungsprobleme
+- **✅ Konsistente Code-Qualität:** Einheitliche Standards projektübergreifend
+- **✅ Zero-Configuration:** Pre-Commit-Hooks arbeiten automatisch
+- **✅ Cross-Platform:** Windows PowerShell + Linux/macOS Bash Support
