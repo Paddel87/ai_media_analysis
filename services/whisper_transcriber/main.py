@@ -1,5 +1,5 @@
 # AI Media Analysis - Whisper Transcriber Service
-# Beschreibung: 
+# Beschreibung:
 # - Transkription von Audio-Dateien mit OpenAI Whisper
 # - GPU-Beschleunigung für Echtzeit-Performance
 # - Unterstützung verschiedener Audio-Formate
