@@ -1,34 +1,172 @@
-# AI Media Analysis System - Makefile
-# Vereinfacht Test-Ausführung und Entwicklungsaufgaben
+# AI Media Analysis System - VPS-Optimiertes Makefile
+# Vereinfacht Test-Ausführung und VPS-Development-Aufgaben
 
 .PHONY: help install test test-unit test-integration test-e2e test-performance
 .PHONY: test-coverage test-lint test-security test-docker test-all 
 .PHONY: format lint clean setup dev-setup ci-setup
 .PHONY: run-services stop-services restart-services health-check
+.PHONY: vps-setup vps-deploy vps-test logs-all monitor
 
 # Default target
 help: ## Zeigt diese Hilfe an
-	@echo "AI Media Analysis System - Entwicklungskommandos"
+	@echo "AI Media Analysis System - VPS-Optimierte Entwicklungskommandos"
 	@echo ""
-	@echo "Verfügbare Targets:"
+	@echo "=== QUICK START ==="
+	@echo "  make dev-setup      - Komplette Development-Umgebung einrichten"
+	@echo "  make quick-start    - Services schnell starten"
+	@echo "  make test          - Alle Tests ausführen"
+	@echo ""
+	@echo "=== DEVELOPMENT ==="
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# Installation und Setup
+# =============================================================================
+# INSTALLATION UND SETUP
+# =============================================================================
+
 install: ## Installiert alle Abhängigkeiten
 	@echo "📦 Installing dependencies..."
 	python -m pip install --upgrade pip
 	pip install -r requirements.txt
+	pip install -r requirements-ci.txt
 
-dev-setup: install ## Setup für Entwicklungsumgebung
-	@echo "🛠️  Setting up development environment..."
-	python run_tests.py --check-env
-	pre-commit install || echo "pre-commit not available"
+dev-setup: ## Komplette Development-Umgebung einrichten
+	@echo "🛠️  Setting up complete development environment..."
+	@if [ -f "scripts/dev-setup.sh" ]; then \
+		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh; \
+	else \
+		$(MAKE) install && python run_tests.py --check-env; \
+	fi
+
+quick-setup: ## Schnelle minimale Einrichtung
+	@echo "⚡ Quick development setup..."
+	@if [ -f "scripts/dev-setup.sh" ]; then \
+		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh --quick; \
+	else \
+		$(MAKE) install; \
+	fi
 
 ci-setup: install ## Setup für CI/CD-Umgebung
 	@echo "🔧 Setting up CI environment..."
 	python run_tests.py --check-env
 
-# Test-Ausführung
+# =============================================================================
+# VPS-SPEZIFISCHE ENTWICKLUNG
+# =============================================================================
+
+vps-setup: ## VPS-Development-Umgebung vorbereiten
+	@echo "🌐 Setting up VPS development environment..."
+	@mkdir -p config logs data/{uploads,results,backups}
+	@echo "✅ VPS directory structure created"
+	@if [ ! -f ".env" ] && [ -f "config/environment.example" ]; then \
+		cp config/environment.example .env; \
+		echo "⚠️  Please edit .env file for your VPS configuration"; \
+	fi
+
+vps-deploy: vps-setup ## VPS-Deployment vorbereiten
+	@echo "🚀 Preparing VPS deployment..."
+	@echo "Building VPS-optimized Docker images..."
+	docker-compose build --parallel redis vector-db data-persistence nginx
+	@echo "✅ VPS deployment ready"
+
+vps-test: ## VPS-spezifische Tests ausführen
+	@echo "🧪 Running VPS-specific tests..."
+	python run_tests.py --unit -m "not gpu and not requires_gpu" -v
+	@echo "Testing VPS resource limits..."
+	@if command -v docker &> /dev/null; then \
+		echo "🐳 Testing Docker resource constraints..."; \
+		docker run --rm --memory=2g --cpus=2 python:3.11-slim python -c "print('✅ VPS resource limits OK')"; \
+	fi
+
+# =============================================================================
+# SERVICES MANAGEMENT
+# =============================================================================
+
+quick-start: ## Services schnell für Development starten
+	@echo "🚀 Quick starting development services..."
+	@if [ -f "scripts/quick-start.sh" ]; then \
+		chmod +x scripts/quick-start.sh && ./scripts/quick-start.sh; \
+	else \
+		$(MAKE) run-core-services; \
+	fi
+
+run-services: ## Startet alle Services mit Docker Compose
+	@echo "🚀 Starting all services..."
+	docker-compose up -d
+	@echo "⏳ Waiting for services to be ready..."
+	sleep 30
+	@$(MAKE) health-check
+
+run-core-services: ## Startet nur Core-Services (Redis, Vector-DB, Nginx)
+	@echo "🚀 Starting core services for development..."
+	docker-compose up -d redis vector-db data-persistence nginx
+	@echo "⏳ Waiting for core services..."
+	sleep 20
+	@$(MAKE) health-check-core
+
+run-ai-services: ## Startet alle AI-Services (CPU-optimiert)
+	@echo "🤖 Starting AI services (CPU-optimized)..."
+	docker-compose up -d pose_estimation ocr_detection clip_nsfw face_reid whisper_transcriber
+	@echo "⏳ Waiting for AI services..."
+	sleep 45
+	@$(MAKE) health-check-ai
+
+stop-services: ## Stoppt alle Services
+	@echo "🛑 Stopping all services..."
+	docker-compose down
+
+stop-all: ## Stoppt alle Services und entfernt Volumes
+	@echo "🛑 Stopping all services and removing volumes..."
+	docker-compose down -v
+
+restart-services: stop-services run-services ## Startet alle Services neu
+
+restart-core: ## Startet nur Core-Services neu
+	@echo "🔄 Restarting core services..."
+	docker-compose restart redis vector-db data-persistence nginx
+	sleep 10
+	@$(MAKE) health-check-core
+
+# =============================================================================
+# HEALTH CHECKS UND MONITORING
+# =============================================================================
+
+health-check: ## Überprüft alle Service-Health
+	@echo "🏥 Checking all service health..."
+	@$(MAKE) health-check-core
+	@$(MAKE) health-check-ai
+
+health-check-core: ## Überprüft Core-Service-Health
+	@echo "🏥 Checking core service health..."
+	@curl -f http://localhost/health > /dev/null 2>&1 && echo "✅ Nginx healthy" || echo "❌ Nginx not healthy"
+	@curl -f http://localhost:8002/health > /dev/null 2>&1 && echo "✅ Vector DB healthy" || echo "❌ Vector DB not healthy"
+	@docker exec ai_media_analysis_redis_1 redis-cli ping > /dev/null 2>&1 && echo "✅ Redis healthy" || echo "❌ Redis not healthy"
+
+health-check-ai: ## Überprüft AI-Service-Health
+	@echo "🏥 Checking AI service health..."
+	@curl -f http://localhost:8001/health > /dev/null 2>&1 && echo "✅ Whisper healthy" || echo "❌ Whisper not healthy"
+	@docker ps --filter "name=ai_pose_estimation" --filter "status=running" -q > /dev/null && echo "✅ Pose Estimation running" || echo "❌ Pose Estimation not running"
+	@docker ps --filter "name=ai_ocr_detection" --filter "status=running" -q > /dev/null && echo "✅ OCR Detection running" || echo "❌ OCR Detection not running"
+	@docker ps --filter "name=ai_clip_nsfw" --filter "status=running" -q > /dev/null && echo "✅ NSFW Detection running" || echo "❌ NSFW Detection not running"
+	@docker ps --filter "name=ai_face_reid" --filter "status=running" -q > /dev/null && echo "✅ Face ReID running" || echo "❌ Face ReID not running"
+
+monitor: ## Zeigt kontinuierliches Service-Monitoring
+	@echo "📊 Starting continuous service monitoring (Ctrl+C to stop)..."
+	@while true; do \
+		clear; \
+		echo "=== AI Media Analysis - Service Monitor ==="; \
+		echo "Time: $$(date)"; \
+		echo ""; \
+		$(MAKE) health-check 2>/dev/null; \
+		echo ""; \
+		echo "=== Resource Usage ==="; \
+		docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" | head -10; \
+		sleep 10; \
+	done
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
 test: ## Führt alle Tests aus (ohne E2E und Performance)
 	@echo "🧪 Running all tests..."
 	python run_tests.py -v
@@ -62,7 +200,16 @@ test-all: ## Führt komplette Test-Suite aus
 	@echo "🚀 Running comprehensive test suite..."
 	python run_tests.py --all -v
 
-# Code-Qualität
+test-fast: test-unit ## Schnelle Tests (nur Unit Tests)
+
+test-slow: test-integration test-e2e test-performance ## Langsame Tests
+
+test-ci: test-lint test-unit test-integration test-coverage ## Vollständige CI-Tests
+
+# =============================================================================
+# CODE-QUALITÄT
+# =============================================================================
+
 lint: ## Führt Code-Linting aus
 	@echo "🧹 Running code linting..."
 	python run_tests.py --lint
@@ -77,35 +224,16 @@ test-security: ## Führt Security-Scan aus
 	@echo "🔒 Running security scan..."
 	python run_tests.py --security
 
-# Service-Management (Docker)
-run-services: ## Startet alle Services mit Docker Compose
-	@echo "🚀 Starting all services..."
-	docker-compose up -d
-	@echo "⏳ Waiting for services to be ready..."
-	sleep 30
-	@make health-check
+pre-commit: format lint test-unit ## Pre-commit Hook
 
-stop-services: ## Stoppt alle Services
-	@echo "🛑 Stopping all services..."
-	docker-compose down
+# =============================================================================
+# SERVICE-SPEZIFISCHE TESTS
+# =============================================================================
 
-restart-services: stop-services run-services ## Startet alle Services neu
-
-health-check: ## Überprüft Service-Health
-	@echo "🏥 Checking service health..."
-	@curl -f http://localhost:8000/health || echo "❌ Main API not healthy"
-	@curl -f http://localhost:8001/health || echo "❌ LLM Service not healthy"
-	@curl -f http://localhost:8002/health || echo "❌ Vector DB not healthy"
-	@curl -f http://localhost:8003/health || echo "❌ Whisper Service not healthy"
-
-# Service-spezifische Tests
-test-llm-service: ## Testet nur LLM Service
-	@echo "🤖 Testing LLM Service..."
-	python -m pytest services/llm_service/tests/ -v
-
-test-vision-service: ## Testet nur Vision Pipeline
-	@echo "👁️  Testing Vision Pipeline..."
-	python -m pytest services/vision_pipeline/tests/ -v
+test-redis: ## Testet nur Redis Service
+	@echo "📮 Testing Redis Service..."
+	@docker exec ai_media_analysis_redis_1 redis-cli ping || echo "❌ Redis connection failed"
+	@docker exec ai_media_analysis_redis_1 redis-cli info memory | grep used_memory_human || echo "❌ Redis memory check failed"
 
 test-vector-db: ## Testet nur Vector Database
 	@echo "🗄️  Testing Vector Database..."
@@ -113,9 +241,46 @@ test-vector-db: ## Testet nur Vector Database
 
 test-whisper-service: ## Testet nur Whisper Service
 	@echo "🎤 Testing Whisper Service..."
-	python -m pytest services/whisper_service/tests/ -v
+	@curl -f http://localhost:8001/health > /dev/null 2>&1 && echo "✅ Whisper API responding" || echo "❌ Whisper API not responding"
 
-# Entwicklungstools
+test-nginx: ## Testet Nginx Configuration
+	@echo "🌐 Testing Nginx..."
+	@curl -f http://localhost/health > /dev/null 2>&1 && echo "✅ Nginx health endpoint OK" || echo "❌ Nginx health endpoint failed"
+	@curl -f http://localhost:8002/health > /dev/null 2>&1 && echo "✅ Nginx proxy to Vector DB OK" || echo "❌ Nginx proxy failed"
+
+# =============================================================================
+# LOGGING UND DEBUGGING
+# =============================================================================
+
+logs: ## Zeigt alle Docker Service Logs
+	docker-compose logs -f
+
+logs-core: ## Zeigt Core Service Logs
+	docker-compose logs -f redis vector-db data-persistence nginx
+
+logs-ai: ## Zeigt AI Service Logs
+	docker-compose logs -f pose_estimation ocr_detection clip_nsfw face_reid whisper_transcriber
+
+logs-redis: ## Zeigt nur Redis Logs
+	docker-compose logs -f redis
+
+logs-vector: ## Zeigt nur Vector DB Logs
+	docker-compose logs -f vector-db
+
+logs-whisper: ## Zeigt nur Whisper Logs
+	docker-compose logs -f whisper_transcriber
+
+logs-nginx: ## Zeigt nur Nginx Logs
+	docker-compose logs -f nginx
+
+logs-all: ## Zeigt alle Logs mit Timestamps
+	@echo "📜 Showing all service logs..."
+	docker-compose logs -f --timestamps
+
+# =============================================================================
+# ENTWICKLUNGSTOOLS
+# =============================================================================
+
 clean: ## Bereinigt temporäre Dateien
 	@echo "🧽 Cleaning up..."
 	python run_tests.py --cleanup
@@ -126,81 +291,87 @@ clean: ## Bereinigt temporäre Dateien
 	rm -rf .pytest_cache/ htmlcov/ .coverage coverage.xml
 	@echo "✅ Cleanup completed"
 
+clean-docker: ## Bereinigt Docker-Artefakte
+	@echo "🐳 Cleaning Docker artifacts..."
+	docker-compose down -v
+	docker system prune -f
+	docker volume prune -f
+	@echo "✅ Docker cleanup completed"
+
+clean-all: clean clean-docker ## Vollständige Bereinigung
+
+reset-dev: clean-all ## Reset komplette Development-Umgebung
+	@echo "🔄 Resetting development environment..."
+	@if [ -f "scripts/reset-dev.sh" ]; then \
+		chmod +x scripts/reset-dev.sh && ./scripts/reset-dev.sh; \
+	else \
+		rm -rf data/uploads/* data/results/* logs/* 2>/dev/null || true; \
+		echo "✅ Development environment reset"; \
+	fi
+
+# =============================================================================
+# UTILITY-TARGETS
+# =============================================================================
+
 setup: dev-setup ## Alias für dev-setup
 
-# Quick-Commands für CI/CD
-ci-test: test-lint test-unit test-integration ## CI-Pipeline Tests
-
-pre-commit: format lint test-unit ## Pre-commit Hook
-
-# Dokumentation
-docs: ## Generiert Dokumentation
-	@echo "📚 Generating documentation..."
-	@echo "TODO: Add documentation generation"
-
-# Utility-Targets
 check-deps: ## Überprüft Abhängigkeiten auf Updates
 	@echo "🔍 Checking for dependency updates..."
 	pip list --outdated
 
 install-dev-tools: ## Installiert zusätzliche Entwicklungstools
 	@echo "🛠️  Installing development tools..."
-	pip install bandit safety pre-commit
+	pip install bandit safety pre-commit pytest-benchmark
 
 update-deps: ## Aktualisiert Abhängigkeiten
 	@echo "⬆️  Updating dependencies..."
 	pip install --upgrade -r requirements.txt
+	pip install --upgrade -r requirements-ci.txt
 
-# Spezielle Test-Modi
-test-fast: test-unit ## Schnelle Tests (nur Unit Tests)
+# =============================================================================
+# PERFORMANCE UND BENCHMARKS
+# =============================================================================
 
-test-slow: test-integration test-e2e test-performance ## Langsame Tests
+benchmark: ## Führt Performance-Benchmarks aus
+	@echo "⚡ Running performance benchmarks..."
+	python run_tests.py --performance -v
+	@echo "📊 Benchmark results saved to benchmarks/"
 
-test-ci: ci-test test-coverage ## Vollständige CI-Tests
+stress-test: ## Führt Stress-Tests aus
+	@echo "💪 Running stress tests..."
+	@echo "Testing Redis under load..."
+	@for i in {1..100}; do docker exec ai_media_analysis_redis_1 redis-cli set "test_$$i" "value_$$i" > /dev/null; done
+	@echo "✅ Redis stress test completed"
 
-# Service-Logs
-logs: ## Zeigt Docker Service Logs
-	docker-compose logs -f
+load-test: ## Führt Load-Tests aus
+	@echo "📈 Running load tests..."
+	@echo "Note: This requires services to be running (make run-services)"
+	@ab -n 100 -c 10 http://localhost/health || echo "❌ Apache Bench (ab) not installed"
 
-logs-llm: ## Zeigt LLM Service Logs
-	docker-compose logs -f llm-service
+# =============================================================================
+# DOKUMENTATION
+# =============================================================================
 
-logs-vision: ## Zeigt Vision Pipeline Logs
-	docker-compose logs -f vision-pipeline
+docs: ## Generiert Dokumentation
+	@echo "📚 Generating documentation..."
+	@echo "TODO: Add documentation generation"
 
-logs-vector: ## Zeigt Vector DB Logs
-	docker-compose logs -f vector-db
+docs-serve: ## Startet lokalen Dokumentations-Server
+	@echo "📖 Starting documentation server..."
+	@echo "TODO: Add documentation server"
 
-logs-whisper: ## Zeigt Whisper Service Logs
-	docker-compose logs -f whisper-service
+# =============================================================================
+# PRODUCTION-VORBEREITUNG
+# =============================================================================
 
-# Monitoring
-monitor: ## Zeigt Service-Status
-	@echo "📊 Service Status:"
-	@docker-compose ps
-	@echo ""
-	@echo "💾 Disk Usage:"
-	@df -h | head -n 2
-	@echo ""
-	@echo "🧠 Memory Usage:"
-	@free -h
-	@echo ""
-	@echo "⚙️  CPU Usage:"
-	@top -bn1 | grep "Cpu(s)" | head -n 1
+build-production: ## Buildet Production-Docker-Images
+	@echo "🏭 Building production Docker images..."
+	docker-compose -f docker-compose.prod.yml build || echo "⚠️  docker-compose.prod.yml not found"
 
-# Default Python und Test-Runner
-PYTHON := python3
-TEST_RUNNER := $(PYTHON) run_tests.py
+deploy-staging: ## Deployed zu Staging-Umgebung
+	@echo "🎭 Deploying to staging..."
+	@echo "TODO: Add staging deployment"
 
-# Override für verschiedene Python-Versionen
-test-python39:
-	@echo "🐍 Testing with Python 3.9..."
-	python3.9 run_tests.py --unit -v
-
-test-python310:
-	@echo "🐍 Testing with Python 3.10..."
-	python3.10 run_tests.py --unit -v
-
-test-python311:
-	@echo "🐍 Testing with Python 3.11..."
-	python3.11 run_tests.py --unit -v 
+deploy-production: ## Deployed zu Production-Umgebung
+	@echo "🚀 Deploying to production..."
+	@echo "TODO: Add production deployment" 

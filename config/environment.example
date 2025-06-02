@@ -1,0 +1,217 @@
+# AI Media Analysis System - Environment Configuration
+# Kopiere diese Datei zu .env und passe die Werte an deine Umgebung an
+
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
+
+# Development/Production Mode
+NODE_ENV=development
+DEBUG=true
+LOG_LEVEL=INFO
+PYTHONUNBUFFERED=1
+
+# Application Base Configuration
+APP_NAME="AI Media Analysis System"
+APP_VERSION="0.4.0"
+API_BASE_URL=http://localhost
+
+# =============================================================================
+# VPS DEPLOYMENT CONFIGURATION
+# =============================================================================
+
+# VPS Mode (local/vps/cloud)
+DEPLOYMENT_MODE=local
+VPS_PROVIDER=local
+CLOUD_MODE=false
+
+# Resource Limits (für VPS-Deployment)
+MAX_MEMORY_PER_SERVICE=2G
+MAX_CPU_PER_SERVICE=2
+TOTAL_VPS_MEMORY=8G
+TOTAL_VPS_CPU=4
+
+# =============================================================================
+# DOCKER CONFIGURATION
+# =============================================================================
+
+# Docker Compose
+COMPOSE_PROJECT_NAME=ai_media_analysis
+COMPOSE_HTTP_TIMEOUT=120
+DOCKER_BUILDKIT=1
+
+# Service Ports
+NGINX_PORT=80
+NGINX_SSL_PORT=443
+REDIS_PORT=6379
+VECTOR_DB_PORT=8002
+WHISPER_PORT=8001
+STREAMLIT_PORT=8501
+
+# =============================================================================
+# REDIS CONFIGURATION
+# =============================================================================
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+REDIS_MAX_MEMORY=1gb
+REDIS_MAX_MEMORY_POLICY=allkeys-lru
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# Vector Database
+VECTOR_DB_HOST=vector-db
+VECTOR_DB_PORT=8000
+VECTOR_DB_COLLECTION=media_embeddings
+FAISS_CPU_ONLY=1
+
+# =============================================================================
+# AI SERVICE CONFIGURATION
+# =============================================================================
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=2048
+
+# Whisper Configuration
+WHISPER_MODEL_SIZE=base
+WHISPER_LANGUAGE=auto
+WHISPER_DEVICE=cpu
+
+# CLIP/NSFW Configuration
+CLIP_MODEL=openai/clip-vit-base-patch32
+NSFW_THRESHOLD=0.7
+
+# OCR Configuration
+OCR_LANGUAGE=deu+eng
+OCR_DPI=300
+
+# =============================================================================
+# CLOUD AI CONFIGURATION (Vast.ai)
+# =============================================================================
+
+# Vast.ai API
+VASTAI_API_KEY=your_vastai_api_key_here
+VASTAI_AUTO_SCALE=false
+VASTAI_MAX_INSTANCES=3
+VASTAI_INSTANCE_TYPE=RTX3080
+VASTAI_MAX_PRICE_PER_HOUR=0.50
+
+# Cloud AI Fallback
+CLOUD_AI_TIMEOUT=300
+CLOUD_AI_RETRY_ATTEMPTS=3
+CLOUD_AI_FALLBACK_LOCAL=true
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+# JWT/Authentication
+SECRET_KEY=your_secret_key_here_change_in_production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# SSL Configuration (Production)
+SSL_ENABLED=false
+SSL_CERT_PATH=/etc/ssl/certs/cert.pem
+SSL_KEY_PATH=/etc/ssl/private/key.pem
+
+# =============================================================================
+# MONITORING & LOGGING
+# =============================================================================
+
+# Logging
+LOG_FORMAT=json
+LOG_FILE=/app/logs/app.log
+LOG_ROTATION=daily
+LOG_RETENTION_DAYS=30
+
+# Health Checks
+HEALTH_CHECK_INTERVAL=30s
+HEALTH_CHECK_TIMEOUT=10s
+HEALTH_CHECK_RETRIES=3
+
+# Metrics
+METRICS_ENABLED=true
+PROMETHEUS_PORT=9090
+
+# =============================================================================
+# STORAGE CONFIGURATION
+# =============================================================================
+
+# Local Storage
+DATA_PATH=/app/data
+UPLOAD_PATH=/app/data/uploads
+RESULTS_PATH=/app/data/results
+MODELS_PATH=/app/models
+
+# =============================================================================
+# DEVELOPMENT CONFIGURATION
+# =============================================================================
+
+# Development Mode
+DEV_MODE=true
+DEV_RELOAD=true
+DEV_MOCK_EXTERNAL_APIS=false
+
+# Testing
+TEST_DATABASE_URL=sqlite:///./test.db
+TEST_REDIS_DB=1
+PYTEST_TIMEOUT=300
+
+# Code Quality
+BLACK_LINE_LENGTH=88
+FLAKE8_MAX_LINE_LENGTH=88
+MYPY_STRICT=false
+
+# =============================================================================
+# PERFORMANCE CONFIGURATION
+# =============================================================================
+
+# API Limits
+MAX_REQUESTS_PER_MINUTE=60
+MAX_FILE_SIZE_MB=100
+MAX_BATCH_SIZE=10
+
+# Processing Limits
+MAX_CONCURRENT_JOBS=5
+JOB_TIMEOUT_MINUTES=30
+CLEANUP_INTERVAL_HOURS=24
+
+# Memory Management
+TORCH_MEMORY_FRACTION=0.8
+OPENCV_MEMORY_LIMIT=1G
+
+# =============================================================================
+# BACKUP CONFIGURATION
+# =============================================================================
+
+# Backup Settings
+BACKUP_ENABLED=true
+BACKUP_INTERVAL_HOURS=24
+BACKUP_RETENTION_DAYS=7
+BACKUP_PATH=/app/backups
+
+# =============================================================================
+# ADVANCED CONFIGURATION
+# =============================================================================
+
+# Network
+HTTP_TIMEOUT=30
+MAX_CONNECTIONS=100
+KEEP_ALIVE_TIMEOUT=5
+
+# Cache
+CACHE_TTL_SECONDS=3600
+CACHE_MAX_SIZE_MB=512
+
+# Feature Flags
+FEATURE_CLOUD_AI=true
+FEATURE_BATCH_PROCESSING=true
+FEATURE_REAL_TIME_PROCESSING=false
+FEATURE_ANALYTICS=true 

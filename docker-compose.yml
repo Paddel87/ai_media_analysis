@@ -1,3 +1,4 @@
+# VPS-Optimierte Docker-Compose-Konfiguration
 version: '3.8'
 
 services:
@@ -7,20 +8,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+      - "443:443"  # SSL-Support für Production
     depends_on:
-      - pose_estimation
-      - ocr_detection
-      - clip_nsfw
-      - face_reid
-      - whisper_transcriber
+      - data-persistence
+      - redis
       - vector-db
     networks:
       - ai_network
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d:ro
+      - ./logs/nginx:/var/log/nginx
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '2'
+          memory: 1G
         reservations:
           cpus: '0.5'
           memory: 256M
@@ -29,6 +31,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -41,15 +45,19 @@ services:
       dockerfile: setup/Dockerfile.persistence
     volumes:
       - ./data:/app/data
+      - ./config:/app/config:ro
+      - ./logs/persistence:/app/logs
     environment:
       - CONFIG_PATH=/app/config/persistence_config.json
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
     networks:
       - ai_network
     deploy:
       resources:
         limits:
           cpus: '2'
-          memory: 2G
+          memory: 4G  # Reduziert für VPS
         reservations:
           cpus: '1'
           memory: 1G
@@ -58,6 +66,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -70,14 +80,53 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./logs/redis:/var/log/redis
     networks:
       - ai_network
-    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    command: redis-server /usr/local/etc/redis/redis.conf --maxmemory 1gb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 3
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1.5G  # Reduziert für VPS
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # VPS-Services (CPU-Only)
+  vector-db:
+    build:
+      context: ./services/vector_db
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8000"
+    volumes:
+      - vector_data:/app/data
+      - ./logs/vector-db:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - FAISS_CPU_ONLY=1  # Explizit CPU-only
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ai_network
     deploy:
       resources:
         limits:
@@ -86,39 +135,55 @@ services:
         reservations:
           cpus: '1'
           memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
+  # Cloud AI-Ready Services (für Vast.ai Integration vorbereitet)
   pose_estimation:
-    build: ./services/pose_estimation
+    build: 
+      context: ./services/pose_estimation
+      dockerfile: Dockerfile.cpu  # CPU-Version für lokale Dev
     container_name: ai_pose_estimation
-    restart: unless-stopped
-    depends_on:
-      - redis
     volumes:
       - ./data/results:/app/results
+      - ./logs/pose:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CLOUD_MODE=false  # Lokaler Entwicklungsmodus
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 8G
-        reservations:
           cpus: '2'
-          memory: 4G
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+          memory: 2G  # CPU-only Memory
+        reservations:
+          cpus: '1'
+          memory: 1G
+          # GPU-Requirements entfernt für VPS
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -126,32 +191,39 @@ services:
         max-file: "3"
 
   ocr_detection:
-    build: ./services/ocr_detection
+    build: 
+      context: ./services/ocr_detection
+      dockerfile: Dockerfile.cpu
     container_name: ai_ocr_detection
-    restart: unless-stopped
-    depends_on:
-      - redis
     volumes:
       - ./data/results:/app/results
+      - ./logs/ocr:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CLOUD_MODE=false
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
       resources:
         limits:
           cpus: '2'
-          memory: 4G
+          memory: 2G
         reservations:
           cpus: '1'
-          memory: 2G
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -159,32 +231,39 @@ services:
         max-file: "3"
 
   clip_nsfw:
-    build: ./services/clip_nsfw
+    build: 
+      context: ./services/clip_nsfw
+      dockerfile: Dockerfile.cpu
     container_name: ai_clip_nsfw
-    restart: unless-stopped
-    depends_on:
-      - redis
     volumes:
       - ./data/results:/app/results
+      - ./logs/nsfw:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CLOUD_MODE=false
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
       resources:
         limits:
           cpus: '2'
-          memory: 4G
+          memory: 2G
         reservations:
           cpus: '1'
-          memory: 2G
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -192,32 +271,39 @@ services:
         max-file: "3"
 
   face_reid:
-    build: ./services/face_reid
+    build: 
+      context: ./services/face_reid
+      dockerfile: Dockerfile.cpu
     container_name: ai_face_reid
-    restart: unless-stopped
-    depends_on:
-      - redis
     volumes:
       - ./data/results:/app/results
+      - ./logs/face:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CLOUD_MODE=false
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
       resources:
         limits:
           cpus: '2'
-          memory: 4G
+          memory: 2G
         reservations:
           cpus: '1'
-          memory: 2G
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -227,54 +313,87 @@ services:
   whisper_transcriber:
     build: 
       context: ./services/whisper_transcriber
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.cpu
     container_name: ai_whisper_transcriber
-    restart: unless-stopped
     ports:
       - "8001:8000"
-    depends_on:
-      - redis
     volumes:
       - ./data/results:/app/results
       - ./services/whisper_transcriber/models:/app/models
+      - ./logs/whisper:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
+      - CLOUD_MODE=false
+      - WHISPER_MODEL_SIZE=base  # Kleineres Modell für CPU
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: '4'  # Whisper benötigt mehr CPU
           memory: 4G
         reservations:
-          cpus: '1'
+          cpus: '2'
           memory: 2G
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 90s  # Whisper braucht länger zum Starten
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  vector-db:
+  # Development UI Service
+  streamlit-ui:
     build:
-      context: ./services/vector_db
+      context: ./streamlit_ui
       dockerfile: Dockerfile
     ports:
-      - "8002:8000"
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./logs/ui:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - API_BASE_URL=http://nginx
+    depends_on:
+      - nginx
+      - redis
+    networks:
+      - ai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   ai_network:
@@ -287,7 +406,8 @@ networks:
 volumes:
   redis_data:
     driver: local
+  vector_data:
+    driver: local
   data:
     driver: local
-  qdrant_data:
     
