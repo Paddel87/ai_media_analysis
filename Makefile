@@ -2,7 +2,133 @@
 # Vereinfacht Test-Ausführung und VPS-Development-Aufgaben
 
 .PHONY: help install test test-unit test-integration test-e2e test-performance
-.PHONY: test-coverage test-lint test-security test-docker test-all 
+.PHONY: test-coverage test-lint test-security test-docker test-all
+.PHONY: format lint clean setup dev-setup ci-setup
+.PHONY: run-services stop-services restart-services health-check
+.PHONY: vps-setup vps-deploy vps-test logs-all monitor
+.PHONY: format check-format lint pre-commit-install pre-commit-run
+
+# Default target
+help: ## Zeigt diese Hilfe an
+	@echo "AI Media Analysis System - VPS-Optimierte Entwicklungskommandos"
+	@echo ""
+	@echo "=== QUICK START ==="
+	@echo "  make install-dev    - Development-Umgebung einrichten"
+	@echo "  make install-test   - Test-Umgebung einrichten"
+	@echo "  make quick-start    - Services schnell starten"
+	@echo "  make test           - Alle Tests ausführen"
+	@echo ""
+	@echo "=== INSTALLATION ==="
+	@echo "  make install        - Basis-Dependencies (Produktion)"
+	@echo "  make install-dev    - Development-Dependencies"
+	@echo "  make install-test   - Test-Dependencies"
+	@echo "  make install-llm    - LLM Service Dependencies"
+	@echo "  make install-vision - Vision Service Dependencies"
+	@echo "  make install-cloud  - Cloud Storage Dependencies"
+	@echo "  make install-all    - Alle Dependencies (lokal)"
+	@echo ""
+	@echo "=== DEVELOPMENT ==="
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# =============================================================================
+# INSTALLATION UND SETUP
+# =============================================================================
+
+install: ## Basis-Installation (Produktion)
+	@echo "📦 Installing base dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/base.txt
+
+install-dev: ## Development-Installation
+	@echo "🛠️ Installing development dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/development.txt
+
+install-test: ## Test-Installation
+	@echo "🧪 Installing test dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/testing.txt
+
+install-llm: ## LLM Service Dependencies
+	@echo "🤖 Installing LLM dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/llm.txt
+
+install-vision: ## Vision Service Dependencies
+	@echo "👁️ Installing vision dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/vision.txt
+
+install-cloud: ## Cloud Storage Dependencies
+	@echo "☁️ Installing cloud dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/cloud.txt
+
+install-all: ## Alle Dependencies (für lokale Entwicklung)
+	@echo "📦 Installing all dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/testing.txt
+	pip install -r requirements/services/llm.txt
+	pip install -r requirements/services/vision.txt
+	pip install -r requirements/services/cloud.txt
+
+# Legacy support - weiterhin functional für Backwards Compatibility
+install-legacy: ## Legacy installation (alte requirements.txt)
+	@echo "📦 Installing legacy dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements.txt
+	pip install -r requirements-ci.txt
+
+dev-setup: install-dev ## Komplette Development-Umgebung
+	@echo "🛠️ Setting up complete development environment..."
+	@if [ -f "scripts/dev-setup.sh" ]; then \
+		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh; \
+	else \
+		python run_tests.py --check-env; \
+	fi
+
+quick-setup: install ## Schnelle minimale Einrichtung
+	@echo "⚡ Quick development setup..."
+	@if [ -f "scripts/dev-setup.sh" ]; then \
+		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh --quick; \
+	else \
+		@echo "✅ Quick setup completed"; \
+	fi
+
+ci-setup: install-test ## Setup für CI/CD-Umgebung
+	@echo "🔧 Setting up CI environment..."
+	python run_tests.py --check-env
+
+# =============================================================================
+# VPS-SPEZIFISCHE ENTWICKLUNG
+# =============================================================================
+
+vps-setup: ## VPS-Development-Umgebung vorbereiten
+	@echo "🌐 Setting up VPS development environment..."
+	@mkdir -p config logs data/{uploads,results,backups}
+	@echo "✅ VPS directory structure created"
+	@if [ ! -f ".env" ] && [ -f "config/environment.example" ]; then \
+		cp config/environment.example .env; \
+		echo "⚠️  Please edit .env file for your VPS configuration"; \
+	fi
+
+vps-deploy: vps-setup ## VPS-Deployment vorbereiten
+	@echo "🚀 Preparing VPS deployment..."
+	@echo "Building VPS-optimized Docker images..."
+	docker-compose build --parallel redis vector-db data-persistence nginx
+	@echo "✅ VPS deployment ready"
+
+vps-test: ## VPS-spezifische Tests ausführen
+	@echo "🧪 Running VPS-specific tests..."
+	python run_tests.py --unit -m "not gpu and not requires_gpu" -v
+	@echo "Testing VPS resource limits..."
+	@if command -v docker &> /dev/null; then \
+		echo "🐳 Testing Docker resource constraints..."; \
+# AI Media Analysis System - VPS-Optimiertes Makefile
+# Vereinfacht Test-Ausführung und VPS-Development-Aufgaben
+
+.PHONY: help install test test-unit test-integration test-e2e test-performance
+.PHONY: test-coverage test-lint test-security test-docker test-all
 .PHONY: format lint clean setup dev-setup ci-setup
 .PHONY: run-services stop-services restart-services health-check
 .PHONY: vps-setup vps-deploy vps-test logs-all monitor
@@ -24,29 +150,68 @@ help: ## Zeigt diese Hilfe an
 # INSTALLATION UND SETUP
 # =============================================================================
 
-install: ## Installiert alle Abhängigkeiten
-	@echo "📦 Installing dependencies..."
+install: ## Basis-Installation (Produktion)
+	@echo "📦 Installing base dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/base.txt
+
+install-dev: ## Development-Installation
+	@echo "🛠️ Installing development dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/development.txt
+
+install-test: ## Test-Installation
+	@echo "🧪 Installing test dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/testing.txt
+
+install-llm: ## LLM Service Dependencies
+	@echo "🤖 Installing LLM dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/llm.txt
+
+install-vision: ## Vision Service Dependencies
+	@echo "👁️ Installing vision dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/vision.txt
+
+install-cloud: ## Cloud Storage Dependencies
+	@echo "☁️ Installing cloud dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/services/cloud.txt
+
+install-all: ## Alle Dependencies (für lokale Entwicklung)
+	@echo "📦 Installing all dependencies..."
+	python -m pip install --upgrade pip
+	pip install -r requirements/testing.txt
+	pip install -r requirements/services/llm.txt
+	pip install -r requirements/services/vision.txt
+	pip install -r requirements/services/cloud.txt
+
+# Legacy support - weiterhin functional für Backwards Compatibility
+install-legacy: ## Legacy installation (alte requirements.txt)
+	@echo "📦 Installing legacy dependencies..."
 	python -m pip install --upgrade pip
 	pip install -r requirements.txt
 	pip install -r requirements-ci.txt
 
-dev-setup: ## Komplette Development-Umgebung einrichten
-	@echo "🛠️  Setting up complete development environment..."
+dev-setup: install-dev ## Komplette Development-Umgebung
+	@echo "🛠️ Setting up complete development environment..."
 	@if [ -f "scripts/dev-setup.sh" ]; then \
 		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh; \
 	else \
-		$(MAKE) install && python run_tests.py --check-env; \
+		python run_tests.py --check-env; \
 	fi
 
-quick-setup: ## Schnelle minimale Einrichtung
+quick-setup: install ## Schnelle minimale Einrichtung
 	@echo "⚡ Quick development setup..."
 	@if [ -f "scripts/dev-setup.sh" ]; then \
 		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh --quick; \
 	else \
-		$(MAKE) install; \
+		@echo "✅ Quick setup completed"; \
 	fi
 
-ci-setup: install ## Setup für CI/CD-Umgebung
+ci-setup: install-test ## Setup für CI/CD-Umgebung
 	@echo "🔧 Setting up CI environment..."
 	python run_tests.py --check-env
 
@@ -398,4 +563,4 @@ deploy-staging: ## Deployed zu Staging-Umgebung
 
 deploy-production: ## Deployed zu Production-Umgebung
 	@echo "🚀 Deploying to production..."
-	@echo "TODO: Add production deployment" 
+	@echo "TODO: Add production deployment"
