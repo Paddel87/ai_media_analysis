@@ -1,38 +1,41 @@
+import asyncio
+import importlib
+import inspect
+import json
+import logging
+import os
+import sys
+import time
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, cast
+
+import aiofiles
 import cv2
 import mmcv
 import numpy as np
+import psutil
+import redis.asyncio as redis
 import torch
 import uvicorn
-import time
-from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks, Depends
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from mmpose.apis import inference_topdown as real_inference_topdown, init_model
-from mmpose.structures import merge_data_samples, PoseDataSample
-from pydantic import BaseModel
-import logging
-import os
-from typing import List, Optional, Dict, Any, cast
-import psutil
-import uuid
-import json
-import redis.asyncio as redis
-from tenacity import retry, stop_after_attempt, wait_exponential
-import aiofiles
-import asyncio
-from datetime import datetime, timedelta
 from mmengine.model import BaseModel as MMBaseModel
-import sys
-import inspect
-from config import get_settings
-import importlib
+from mmpose.apis import inference_topdown as real_inference_topdown
+from mmpose.apis import init_model
+from mmpose.structures import PoseDataSample, merge_data_samples
 from optimization import (
-    MemoryManager,
-    ConcurrencyManager,
     CacheManager,
-    ResourceMonitor,
+    ConcurrencyManager,
     DegradationManager,
-    WorkerManager
+    MemoryManager,
+    ResourceMonitor,
+    WorkerManager,
 )
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from config import get_settings
 
 # Logging Konfiguration
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +44,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Pose Estimation Service",
     description="CPU-optimierter Service für Pose Estimation",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Konfiguration
@@ -71,6 +74,7 @@ worker_manager: Optional[WorkerManager] = None
 
 # Prozess-Startzeit für Uptime
 process_start_time = time.time()
+
 
 # In-Memory-Redis-Fallback für Tests
 class InMemoryRedis:
@@ -103,24 +107,29 @@ class InMemoryRedis:
         self.store.clear()
         self.expiry.clear()
 
+
 # DummyModel für Testbetrieb
 class DummyModel:
     def __init__(self):
         pass
+
 
 # Dummy-Inferenzfunktion für Testbetrieb
 async def dummy_inference_topdown(model, img):
     class DummyResult:
         def __init__(self):
             self.pred_instances = {
-                'keypoints': torch.tensor([[[0.0, 0.0], [1.0, 1.0]]]),
-                'keypoint_scores': torch.tensor([[0.9, 0.8]])
+                "keypoints": torch.tensor([[[0.0, 0.0], [1.0, 1.0]]]),
+                "keypoint_scores": torch.tensor([[0.9, 0.8]]),
             }
+
     return [DummyResult()]
+
 
 # Hilfsfunktion für Tests, um Settings-Cache zu leeren
 def force_reload_settings():
     importlib.reload(__import__("config"))
+
 
 # Initialisierung für Testmodus direkt beim Import
 TESTING = os.getenv("TESTING", "0") == "1" or any("pytest" in arg for arg in sys.argv)
@@ -131,12 +140,14 @@ if TESTING:
     inference_topdown = dummy_inference_topdown
     logger.info("DummyModel für TESTING aktiviert (Import)")
 
+
 # Pydantic Models
 class PoseResponse(BaseModel):
     keypoints: List[List[List[float]]]
     scores: List[List[float]]
     num_people: int
     processing_time: float
+
 
 class BatchStatus(BaseModel):
     status: str
@@ -149,15 +160,18 @@ class BatchStatus(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 # Redis Dependencies
 async def get_redis() -> Any:
     if redis_client is None:
         raise HTTPException(status_code=503, detail="Redis nicht verfügbar")
     return redis_client
 
+
 # Globales Concurrency-Limit (Semaphore)
 CONCURRENCY_LIMIT = getattr(settings, "batch_size_limit", 100)
 semaphore = asyncio.Semaphore(CONCURRENCY_LIMIT)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -191,6 +205,7 @@ async def startup_event():
         logger.error(f"Fehler bei der Initialisierung: {e}")
         raise
 
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def process_single_image(file_path: str) -> Dict[str, Any]:
     if model is None:
@@ -200,7 +215,9 @@ async def process_single_image(file_path: str) -> Dict[str, Any]:
         if img is None:
             raise ValueError("Bild konnte nicht geladen werden")
         start_time = time.time()
-        TESTING = os.getenv("TESTING", "0") == "1" or any("pytest" in arg for arg in sys.argv)
+        TESTING = os.getenv("TESTING", "0") == "1" or any(
+            "pytest" in arg for arg in sys.argv
+        )
         if inference_topdown is None:
             if TESTING:
                 keypoints = torch.tensor([[[0.0, 0.0], [1.0, 1.0]]])
@@ -210,15 +227,19 @@ async def process_single_image(file_path: str) -> Dict[str, Any]:
         elif TESTING and inspect.iscoroutinefunction(inference_topdown):
             results = await inference_topdown(model, img)
             results = results[0]
-            keypoints = results.pred_instances['keypoints']
-            scores = results.pred_instances['keypoint_scores']
+            keypoints = results.pred_instances["keypoints"]
+            scores = results.pred_instances["keypoint_scores"]
         else:
             if inspect.iscoroutinefunction(inference_topdown):
-                raise ValueError("inference_topdown darf im echten Modus kein Coroutine sein!")
-            results = cast(List[PoseDataSample], inference_topdown(cast(MMBaseModel, model), img))
+                raise ValueError(
+                    "inference_topdown darf im echten Modus kein Coroutine sein!"
+                )
+            results = cast(
+                List[PoseDataSample], inference_topdown(cast(MMBaseModel, model), img)
+            )
             results = merge_data_samples(results)
-            keypoints = results.pred_instances.get('keypoints', None)
-            scores = results.pred_instances.get('keypoint_scores', None)
+            keypoints = results.pred_instances.get("keypoints", None)
+            scores = results.pred_instances.get("keypoint_scores", None)
         processing_time = time.time() - start_time
         if keypoints is None or scores is None:
             raise ValueError("Keine Keypoints oder Scores gefunden")
@@ -226,11 +247,12 @@ async def process_single_image(file_path: str) -> Dict[str, Any]:
             "keypoints": keypoints.cpu().numpy().tolist(),
             "scores": scores.cpu().numpy().tolist(),
             "num_people": len(keypoints),
-            "processing_time": processing_time
+            "processing_time": processing_time,
         }
     except Exception as e:
         logger.error(f"Fehler bei der Bildverarbeitung: {e}")
         raise
+
 
 async def update_batch_status(
     redis_client: redis.Redis,
@@ -241,7 +263,7 @@ async def update_batch_status(
     processed_files: int,
     failed_files: int,
     results: Optional[Dict[str, Any]] = None,
-    error: Optional[str] = None
+    error: Optional[str] = None,
 ):
     batch_status = BatchStatus(
         status=status,
@@ -252,14 +274,13 @@ async def update_batch_status(
         results=results,
         error=error,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
 
     await redis_client.setex(
-        f"batch:{batch_id}",
-        BATCH_EXPIRY,
-        json.dumps(batch_status.dict(), default=str)
+        f"batch:{batch_id}", BATCH_EXPIRY, json.dumps(batch_status.dict(), default=str)
     )
+
 
 async def check_system_health() -> Optional[Dict[str, Any]]:
     """Überprüft die System-Gesundheit und gibt ggf. einen Fehler zurück."""
@@ -270,7 +291,7 @@ async def check_system_health() -> Optional[Dict[str, Any]]:
             "status_code": 503,
             "detail": "System überlastet",
             "retry_after": 30,
-            "reason": "high_cpu_usage"
+            "reason": "high_cpu_usage",
         }
 
     if metrics["memory_usage"] > 90:
@@ -278,7 +299,7 @@ async def check_system_health() -> Optional[Dict[str, Any]]:
             "status_code": 503,
             "detail": "Speicher überlastet",
             "retry_after": 30,
-            "reason": "high_memory_usage"
+            "reason": "high_memory_usage",
         }
 
     if metrics["processing_queue"] > settings.max_workers * 2:
@@ -286,18 +307,26 @@ async def check_system_health() -> Optional[Dict[str, Any]]:
             "status_code": 503,
             "detail": "Verarbeitungswarteschlange voll",
             "retry_after": 15,
-            "reason": "queue_full"
+            "reason": "queue_full",
         }
 
     return None
 
+
 @app.post("/analyze", response_model=PoseResponse)
 async def analyze_pose(file: UploadFile = File(...)):
-    if not all([memory_manager, concurrency_manager, cache_manager,
-                resource_monitor, degradation_manager, worker_manager]):
+    if not all(
+        [
+            memory_manager,
+            concurrency_manager,
+            cache_manager,
+            resource_monitor,
+            degradation_manager,
+            worker_manager,
+        ]
+    ):
         raise HTTPException(
-            status_code=503,
-            detail="Service nicht vollständig initialisiert"
+            status_code=503, detail="Service nicht vollständig initialisiert"
         )
 
     try:
@@ -319,16 +348,16 @@ async def analyze_pose(file: UploadFile = File(...)):
                 content={
                     "error": "Zu viele gleichzeitige Anfragen. Bitte später erneut versuchen.",
                     "retry_after": 10,
-                    "reason": "concurrency_limit"
-                }
+                    "reason": "concurrency_limit",
+                },
             )
 
         try:
             # Validiere Dateityp
-            if file.content_type and not file.content_type.startswith('image/'):
+            if file.content_type and not file.content_type.startswith("image/"):
                 raise HTTPException(
                     status_code=400,
-                    detail="Ungültiges Dateiformat. Nur Bilder werden akzeptiert."
+                    detail="Ungültiges Dateiformat. Nur Bilder werden akzeptiert.",
                 )
 
             # Cache-Check
@@ -340,7 +369,7 @@ async def analyze_pose(file: UploadFile = File(...)):
             # Speichere temporäre Datei
             temp_file = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.jpg")
             try:
-                async with aiofiles.open(temp_file, 'wb') as out_file:
+                async with aiofiles.open(temp_file, "wb") as out_file:
                     content = await file.read()
                     await out_file.write(content)
 
@@ -358,22 +387,17 @@ async def analyze_pose(file: UploadFile = File(...)):
             concurrency_manager.semaphore.release()
     except ValueError as e:
         logger.error(f"Fehler bei der Pose Estimation: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Unerwarteter Fehler: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Interner Server-Fehler"
-        )
+        raise HTTPException(status_code=500, detail="Interner Server-Fehler")
+
 
 @app.post("/analyze/batch")
 async def analyze_batch(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
-    redis_client: redis.Redis = Depends(get_redis)
+    redis_client: redis.Redis = Depends(get_redis),
 ):
     """Verarbeitet einen Batch von Bildern."""
     # System-Gesundheit prüfen
@@ -384,14 +408,14 @@ async def analyze_batch(
             content={
                 "detail": health_check["detail"],
                 "retry_after": health_check["retry_after"],
-                "reason": health_check["reason"]
-            }
+                "reason": health_check["reason"],
+            },
         )
 
     if len(files) > MAX_BATCH_SIZE:
         raise HTTPException(
             status_code=400,
-            detail=f"Maximale Batch-Größe von {MAX_BATCH_SIZE} Dateien überschritten"
+            detail=f"Maximale Batch-Größe von {MAX_BATCH_SIZE} Dateien überschritten",
         )
 
     batch_id = str(uuid.uuid4())
@@ -404,7 +428,7 @@ async def analyze_batch(
         progress=0,
         total_files=len(files),
         processed_files=0,
-        failed_files=0
+        failed_files=0,
     )
 
     async def process_batch():
@@ -417,7 +441,7 @@ async def analyze_batch(
                 try:
                     # Temporäre Datei speichern
                     temp_path = os.path.join(TEMP_DIR, f"{batch_id}_{i}.jpg")
-                    async with aiofiles.open(temp_path, 'wb') as f:
+                    async with aiofiles.open(temp_path, "wb") as f:
                         await f.write(await file.read())
 
                     # Bild verarbeiten
@@ -429,7 +453,9 @@ async def analyze_batch(
                     os.remove(temp_path)
 
                 except Exception as e:
-                    logger.error(f"Fehler bei der Verarbeitung von {file.filename}: {e}")
+                    logger.error(
+                        f"Fehler bei der Verarbeitung von {file.filename}: {e}"
+                    )
                     results[file.filename] = {"error": str(e)}
                     failed_files += 1
 
@@ -443,7 +469,7 @@ async def analyze_batch(
                     total_files=len(files),
                     processed_files=processed_files,
                     failed_files=failed_files,
-                    results=results
+                    results=results,
                 )
 
             # Finalen Status setzen
@@ -455,7 +481,7 @@ async def analyze_batch(
                 total_files=len(files),
                 processed_files=processed_files,
                 failed_files=failed_files,
-                results=results
+                results=results,
             )
 
         except Exception as e:
@@ -468,28 +494,24 @@ async def analyze_batch(
                 total_files=len(files),
                 processed_files=processed_files,
                 failed_files=failed_files,
-                error=str(e)
+                error=str(e),
             )
 
     background_tasks.add_task(process_batch)
     return {"batch_id": batch_id}
 
+
 @app.get("/analyze/batch/{batch_id}/status")
-async def batch_status(
-    batch_id: str,
-    redis_client: redis.Redis = Depends(get_redis)
-):
+async def batch_status(batch_id: str, redis_client: redis.Redis = Depends(get_redis)):
     status_data = await redis_client.get(f"batch:{batch_id}")
     if not status_data:
         raise HTTPException(status_code=404, detail="Batch-ID nicht gefunden")
 
     return json.loads(status_data)
 
+
 @app.get("/analyze/batch/{batch_id}/results")
-async def batch_results(
-    batch_id: str,
-    redis_client: redis.Redis = Depends(get_redis)
-):
+async def batch_results(batch_id: str, redis_client: redis.Redis = Depends(get_redis)):
     status_data = await redis_client.get(f"batch:{batch_id}")
     if not status_data:
         raise HTTPException(status_code=404, detail="Batch-ID nicht gefunden")
@@ -498,10 +520,11 @@ async def batch_results(
     if status["status"] != "completed":
         raise HTTPException(
             status_code=400,
-            detail=f"Batch noch nicht abgeschlossen. Status: {status['status']}"
+            detail=f"Batch noch nicht abgeschlossen. Status: {status['status']}",
         )
 
     return status["results"]
+
 
 @app.get("/health")
 async def health_check():
@@ -512,37 +535,52 @@ async def health_check():
         "status": "healthy",
         "model_loaded": True,
         "device": str(device),
-        "memory_usage": f"{torch.cuda.memory_allocated() / 1024**2:.2f}MB" if torch.cuda.is_available() else "N/A",
+        "memory_usage": (
+            f"{torch.cuda.memory_allocated() / 1024**2:.2f}MB"
+            if torch.cuda.is_available()
+            else "N/A"
+        ),
         "version": app.version,
-        "uptime": uptime
+        "uptime": uptime,
     }
+
 
 def get_system_metrics() -> Dict[str, float]:
     """Gibt aktuelle System-Metriken zurück."""
     return {
         "cpu_usage": psutil.cpu_percent(),
         "memory_usage": psutil.virtual_memory().percent,
-        "processing_queue": len(asyncio.all_tasks())  # Anzahl der aktiven Tasks
+        "processing_queue": len(asyncio.all_tasks()),  # Anzahl der aktiven Tasks
     }
+
 
 @app.get("/metrics")
 async def metrics():
     """Gibt aktuelle System-Metriken zurück."""
-    if not all([resource_monitor, concurrency_manager, cache_manager,
-                degradation_manager, worker_manager]):
+    if not all(
+        [
+            resource_monitor,
+            concurrency_manager,
+            cache_manager,
+            degradation_manager,
+            worker_manager,
+        ]
+    ):
         raise HTTPException(
-            status_code=503,
-            detail="Service nicht vollständig initialisiert"
+            status_code=503, detail="Service nicht vollständig initialisiert"
         )
 
     metrics = await resource_monitor.monitor_resources()
-    metrics.update({
-        "concurrency_limit": concurrency_manager.current_limit,
-        "cache_size": await cache_manager.get_cache_size(),
-        "degradation_level": degradation_manager.current_level,
-        "worker_count": worker_manager.current_workers
-    })
+    metrics.update(
+        {
+            "concurrency_limit": concurrency_manager.current_limit,
+            "cache_size": await cache_manager.get_cache_size(),
+            "degradation_level": degradation_manager.current_level,
+            "worker_count": worker_manager.current_workers,
+        }
+    )
     return metrics
+
 
 @app.get("/config")
 async def config():
@@ -551,16 +589,13 @@ async def config():
         "max_workers": settings.max_workers,
         "memory_limit": settings.memory_limit,
         "batch_size_limit": settings.batch_size_limit,
-        "processing_timeout": settings.processing_timeout
+        "processing_timeout": settings.processing_timeout,
     }
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     workers = int(os.getenv("MAX_WORKERS", "2"))
     uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        workers=workers,
-        log_level="info"
+        "main:app", host="0.0.0.0", port=port, workers=workers, log_level="info"
     )

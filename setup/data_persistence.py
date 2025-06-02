@@ -1,20 +1,21 @@
-import os
 import json
-import shutil
 import logging
+import os
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class DataPersistenceManager:
     def __init__(self, config_path):
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             self.config = json.load(f)
-        self.storage_paths = self.config['storage_paths']
-        self.retention_policy = self.config['retention_policy']
-        self.backup_config = self.config['backup_config']
+        self.storage_paths = self.config["storage_paths"]
+        self.retention_policy = self.config["retention_policy"]
+        self.backup_config = self.config["backup_config"]
 
     def ensure_directories(self):
         """Erstellt alle notwendigen Verzeichnisse."""
@@ -29,27 +30,29 @@ class DataPersistenceManager:
             if not path:
                 continue
 
-            max_age = timedelta(days=policy['max_age_days'])
+            max_age = timedelta(days=policy["max_age_days"])
             current_time = datetime.now()
 
-            for item in Path(path).glob('*'):
+            for item in Path(path).glob("*"):
                 if item.is_file():
-                    file_age = current_time - datetime.fromtimestamp(item.stat().st_mtime)
+                    file_age = current_time - datetime.fromtimestamp(
+                        item.stat().st_mtime
+                    )
                     if file_age > max_age:
                         item.unlink()
                         logger.info(f"Alte Datei gelöscht: {item}")
 
     def create_backup(self):
         """Erstellt ein Backup der wichtigen Daten."""
-        if not self.backup_config['enabled']:
+        if not self.backup_config["enabled"]:
             return
 
-        backup_path = Path(self.backup_config['target_path'])
+        backup_path = Path(self.backup_config["target_path"])
         backup_path.mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
         for data_type, path in self.storage_paths.items():
-            if data_type in ['models', 'results']:
+            if data_type in ["models", "results"]:
                 backup_dir = backup_path / f"{data_type}_{timestamp}"
                 shutil.copytree(path, backup_dir)
                 logger.info(f"Backup erstellt: {backup_dir}")
@@ -61,21 +64,29 @@ class DataPersistenceManager:
             if not path:
                 continue
 
-            total_size = sum(f.stat().st_size for f in Path(path).glob('**/*') if f.is_file())
-            max_size = policy['max_size_gb'] * 1024 * 1024 * 1024  # Konvertierung in Bytes
+            total_size = sum(
+                f.stat().st_size for f in Path(path).glob("**/*") if f.is_file()
+            )
+            max_size = (
+                policy["max_size_gb"] * 1024 * 1024 * 1024
+            )  # Konvertierung in Bytes
 
             if total_size > max_size:
-                logger.warning(f"Speicherlimit überschritten für {data_type}: {total_size / (1024**3):.2f}GB")
+                logger.warning(
+                    f"Speicherlimit überschritten für {data_type}: {total_size / (1024**3):.2f}GB"
+                )
+
 
 def main():
     config_path = "data_schema/persistence_config.json"
     manager = DataPersistenceManager(config_path)
-    
+
     # Führe alle Wartungsaufgaben aus
     manager.ensure_directories()
     manager.cleanup_old_data()
     manager.create_backup()
     manager.check_storage_limits()
 
+
 if __name__ == "__main__":
-    main() 
+    main()

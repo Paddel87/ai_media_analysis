@@ -1,19 +1,22 @@
-import pytest
-import pytest_asyncio
-import numpy as np
-import redis.asyncio as redis
-from fastapi.testclient import TestClient
 import asyncio
-from datetime import datetime, timedelta
 import json
 import os
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
-from main import app, BatchStatus
+
+import numpy as np
+import pytest
+import pytest_asyncio
+import redis.asyncio as redis
+from fastapi.testclient import TestClient
+from main import BatchStatus, app
+
 
 # Test Client Setup
 @pytest.fixture
 def client():
     return TestClient(app)
+
 
 # Redis Connection Fixture
 @pytest_asyncio.fixture
@@ -22,34 +25,31 @@ async def redis_client():
         host=os.getenv("REDIS_HOST", "localhost"),
         port=int(os.getenv("REDIS_PORT", 6379)),
         db=0,
-        decode_responses=True
+        decode_responses=True,
     )
     yield client
     await client.close()
 
+
 # Mock für das Pose Estimation Modell
 @pytest.fixture
 def mock_model():
-    with patch('main.init_model') as mock:
+    with patch("main.init_model") as mock:
         model = Mock()
         # Mock für die Modell-Ausgabe
         mock_keypoints = np.array([[[100, 200], [150, 250], [200, 300]]])
         mock_scores = np.array([[0.9, 0.8, 0.7]])
         model.return_value = Mock(
-            pred_instances=Mock(
-                get=Mock(return_value=mock_keypoints)
-            )
+            pred_instances=Mock(get=Mock(return_value=mock_keypoints))
         )
         yield mock
+
 
 # Test für Batch-Upload
 @pytest.mark.asyncio
 async def test_batch_upload(client, mock_model):
     # Test-Bilder erstellen
-    test_images = [
-        np.zeros((100, 100, 3), dtype=np.uint8).tobytes()
-        for _ in range(3)
-    ]
+    test_images = [np.zeros((100, 100, 3), dtype=np.uint8).tobytes() for _ in range(3)]
 
     # Batch Request simulieren
     files = [
@@ -73,6 +73,7 @@ async def test_batch_upload(client, mock_model):
     assert status["processed_files"] == 0
     assert status["failed_files"] == 0
 
+
 # Test für Batch-Größenlimit
 @pytest.mark.asyncio
 async def test_batch_size_limit(client):
@@ -91,6 +92,7 @@ async def test_batch_size_limit(client):
     assert response.status_code == 400
     assert "Maximale Batch-Größe" in response.json()["detail"]
 
+
 # Test für Batch-Status-Aktualisierung
 @pytest.mark.asyncio
 async def test_batch_status_update(client, mock_model):
@@ -99,8 +101,7 @@ async def test_batch_status_update(client, mock_model):
 
     # Batch Request
     response = client.post(
-        "/analyze/batch",
-        files=[("files", ("test.jpg", test_image, "image/jpeg"))]
+        "/analyze/batch", files=[("files", ("test.jpg", test_image, "image/jpeg"))]
     )
     batch_id = response.json()["batch_id"]
 
@@ -114,6 +115,7 @@ async def test_batch_status_update(client, mock_model):
     assert status_data["status"] in ["processing", "completed"]
     assert status_data["progress"] > 0
 
+
 # Test für Batch-Ergebnisse
 @pytest.mark.asyncio
 async def test_batch_results(client, mock_model):
@@ -122,8 +124,7 @@ async def test_batch_results(client, mock_model):
 
     # Batch Request
     response = client.post(
-        "/analyze/batch",
-        files=[("files", ("test.jpg", test_image, "image/jpeg"))]
+        "/analyze/batch", files=[("files", ("test.jpg", test_image, "image/jpeg"))]
     )
     batch_id = response.json()["batch_id"]
 
@@ -142,6 +143,7 @@ async def test_batch_results(client, mock_model):
         assert "keypoints" in results["test.jpg"]
         assert "scores" in results["test.jpg"]
 
+
 # Test für Batch-Ablauf
 @pytest.mark.asyncio
 async def test_batch_expiry(client):
@@ -150,8 +152,7 @@ async def test_batch_expiry(client):
 
     # Batch Request
     response = client.post(
-        "/analyze/batch",
-        files=[("files", ("test.jpg", test_image, "image/jpeg"))]
+        "/analyze/batch", files=[("files", ("test.jpg", test_image, "image/jpeg"))]
     )
     batch_id = response.json()["batch_id"]
 
@@ -159,6 +160,7 @@ async def test_batch_expiry(client):
     await asyncio.sleep(1)
     status_response = client.get(f"/analyze/batch/{batch_id}/status")
     assert status_response.status_code == 200 or status_response.status_code == 404
+
 
 # Test für Fehlerbehandlung im Batch
 @pytest.mark.asyncio
@@ -168,8 +170,7 @@ async def test_batch_error_handling(client):
 
     # Batch Request
     response = client.post(
-        "/analyze/batch",
-        files=[("files", ("test.jpg", invalid_image, "image/jpeg"))]
+        "/analyze/batch", files=[("files", ("test.jpg", invalid_image, "image/jpeg"))]
     )
     batch_id = response.json()["batch_id"]
 
@@ -183,6 +184,7 @@ async def test_batch_error_handling(client):
     assert status_data["failed_files"] > 0
     assert "error" in status_data["results"]["test.jpg"]
 
+
 # Test für Retry-Logik
 @pytest.mark.asyncio
 async def test_batch_retry_logic(client, mock_model):
@@ -194,8 +196,7 @@ async def test_batch_retry_logic(client, mock_model):
 
     # Batch Request
     response = client.post(
-        "/analyze/batch",
-        files=[("files", ("test.jpg", test_image, "image/jpeg"))]
+        "/analyze/batch", files=[("files", ("test.jpg", test_image, "image/jpeg"))]
     )
     batch_id = response.json()["batch_id"]
 

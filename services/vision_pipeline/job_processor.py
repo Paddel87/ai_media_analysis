@@ -18,12 +18,11 @@ import aiohttp
 import numpy as np
 import redis
 import torch
+from common.logging_config import ServiceLogger
 from rq import Queue, Worker
 from rq.job import Job
 from rq.worker import HerokuWorker
 from vision_pipeline import VisionPipeline
-
-from common.logging_config import ServiceLogger
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

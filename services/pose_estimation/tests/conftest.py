@@ -1,7 +1,8 @@
-import pytest
-from typing import Dict, Optional, AsyncGenerator
 import time
+from typing import AsyncGenerator, Dict, Optional
 from unittest.mock import AsyncMock
+
+import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 
