@@ -1,0 +1,110 @@
+# 🧭 AI Media Analysis – Development Strategy
+
+## 🔑 Grundprinzipien
+
+- „Langsam, aber gründlich“ bleibt Leitmotiv.
+- Keine neuen Features ohne validierte Basis.
+- Jede Änderung muss testbar und dokumentierbar sein.
+- Nur integrierte, getestete Module dürfen in `main`.
+
+---
+
+## 📐 Phasenbasierter Entwicklungsplan
+
+| Phase         | Ziel                                                  | Status     | Dauer (realistisch)   |
+|---------------|-------------------------------------------------------|------------|------------------------|
+| Alpha 0.4.0   | Kompletter Docker-Start, Healthchecks, Logs prüfen    | 🔄 Offen   | 2–4 Wochen             |
+| Alpha 0.5.0   | Integrationstest: Services kommunizieren              | 🔄 Offen   | 4–6 Wochen             |
+| Beta 0.6.0    | End-to-End Workflow, Datenflüsse, UI sichtbar         | 🔄 Offen   | 6–12 Wochen            |
+| Beta 0.9.0    | Feature Freeze, Performance-Baseline                  | 🔄 Offen   | +4 Wochen              |
+| RC 0.10.0     | Bugfixes, UI stabil, Deployment testbar               | 🔄 Offen   | +2–3 Wochen            |
+| v1.0.0        | Produktionsreif, dokumentiert, Enterprise-ready       | ⏳ 2026    | 12–18 Monate (gesamt)  |
+
+---
+
+## 🧱 Modularer Entwicklungsansatz
+
+- Jedes Service-Modul wird isoliert entwickelt:
+  - Eigener Dockerfile
+  - Eigene Tests
+  - Eigene README
+- Keine Cross-Service-Änderung ohne Mocks & Tests.
+- Neues Service? → Erst YAML-Dummy, dann Code.
+
+---
+
+## 🧪 Teststrategie
+
+| Testtyp        | Tools/Frameworks        | Frequenz           | Status |
+|----------------|--------------------------|---------------------|--------|
+| Unit Tests     | `pytest`                 | bei jedem Push      | ✅     |
+| Integration    | `docker-compose`, Mocks  | bei jedem Merge     | 🔄     |
+| E2E            | `Playwright`, Media-Files| manuell, 1x pro Woche | ❌   |
+| Security       | `Bandit`, `Safety`       | in CI/CD-Pipeline   | ✅     |
+| Performance    | `Locust`, `timeit`       | manuell, RC-relevant| ❌     |
+
+---
+
+## ⚙️ CI/CD Strategy
+
+- `main` ist immer deployable
+- Branches müssen alle Tests bestehen
+- Pre-Commit: `black`, `flake8`, `isort`, `mypy`
+- Deployment manuell über SSH oder n8n
+
+---
+
+## 🧠 Knowledge Management
+
+- `docs/` ist verpflichtend.
+- Jeder Service braucht:
+  - `README.md`
+  - `API.md` (wenn zutreffend)
+  - `testplan.md`
+- `CHANGELOG.md` bei jeder Änderung aktualisieren
+
+---
+
+## 🔥 Fail-Fast und Recovery
+
+- Fehlererkennung durch:
+  - Healthchecks in Docker
+  - sichtbare CI/CD-Failures
+- Rollbacks über Git-Tags
+- Keine Live-Änderungen an `main`
+
+---
+
+## 🧭 Strategische Tools
+
+| Kategorie       | Tools                            | Zweck                     |
+|-----------------|----------------------------------|---------------------------|
+| Editor/IDE      | Cursor Pro + Claude Sonnet       | Dev + Refactoring         |
+| Testing         | `pytest`, `tox`, `mock`          | Unit + Integration        |
+| CI/CD           | GitHub Actions, Codecov          | Tests, Coverage           |
+| Doku            | `mkdocs`, Markdown               | Developer Guides          |
+| Monitoring      | (später) Prometheus, Loki        | Logs, Health              |
+
+---
+
+## 🛡️ Technische Guardrails
+
+- Neue Module nur mit:
+  - 2+ Unit-Tests
+  - Dokumentation
+  - CI/CD-Testlauf
+- Jeder Service braucht:
+  - Logging
+  - Fehlerbehandlung
+  - Healthcheck-Endpoint
+
+---
+
+## 🎯 Ziel für Alpha 0.4.0
+
+- `docker-compose up` startet fehlerfrei
+- Alle 9 Services zeigen "healthy"
+- NGINX erreichbar (Port 80)
+- Logs verständlich und funktional
+
+Ergebnis: Screenshot + Pull Request mit Nachweis
