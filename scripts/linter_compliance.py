@@ -417,7 +417,7 @@ class LinterComplianceChecker:
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(self.results, f, indent=2)
 
-        print(f"📋 Reports generated:")
+        print("📋 Reports generated:")
         print(f"  - Markdown: {report_file}")
         print(f"  - JSON: {json_file}")
 

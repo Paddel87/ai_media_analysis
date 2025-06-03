@@ -2,9 +2,8 @@ import hashlib
 import json
 import logging
 import os
-import re
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel

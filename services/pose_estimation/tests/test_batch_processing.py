@@ -1,7 +1,5 @@
 import asyncio
-import json
 import os
-from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -9,7 +7,7 @@ import pytest
 import pytest_asyncio
 import redis.asyncio as redis
 from fastapi.testclient import TestClient
-from main import BatchStatus, app
+from main import app
 
 
 # Test Client Setup
@@ -38,7 +36,7 @@ def mock_model():
         model = Mock()
         # Mock für die Modell-Ausgabe
         mock_keypoints = np.array([[[100, 200], [150, 250], [200, 300]]])
-        mock_scores = np.array([[0.9, 0.8, 0.7]])
+        # Mock scores for inference tests: np.array([[0.9, 0.8, 0.7]])
         model.return_value = Mock(
             pred_instances=Mock(get=Mock(return_value=mock_keypoints))
         )

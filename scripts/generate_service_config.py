@@ -380,7 +380,7 @@ def main():
     # Service zu docker-compose.yml hinzufügen
     if update_docker_compose(service_name):
         print(f"🎉 Service '{service_name}' erfolgreich integriert!")
-        print(f"\n📊 Nächste Schritte:")
+        print("\n📊 Nächste Schritte:")
         print(f"  1. docker-compose build {service_name}")
         print(f"  2. docker-compose up -d {service_name}")
         print(f"  3. make service-test SERVICE={service_name}")

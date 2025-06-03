@@ -1,16 +1,12 @@
-import io
-import json
 import logging
-import os
 from typing import Dict, List, Optional
 
-import boto3
 import clip
 import cv2
 import numpy as np
 import torch
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException
 from PIL import Image
 from pydantic import BaseModel
 from transformers import CLIPModel, CLIPProcessor

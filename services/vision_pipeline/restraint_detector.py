@@ -1,18 +1,21 @@
+"""
+Restraint Detector für Vision Pipeline
+CPU-optimierter Service für die Erkennung von Fesselungen in Bildern
+"""
+
 import asyncio
 import hashlib
-import io
 import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import aiohttp
 import cv2
 import numpy as np
 import requests
-from PIL import Image
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger

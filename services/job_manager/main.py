@@ -9,11 +9,11 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import redis
 import uvicorn
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 # FastAPI App
@@ -175,7 +175,7 @@ async def health_check():
         try:
             redis_client.ping()
             redis_status = True
-        except:
+        except Exception:
             redis_status = False
 
     return {
@@ -255,7 +255,7 @@ async def get_job_status(job_id: str):
         if job_data.get("result"):
             try:
                 result = json.loads(job_data["result"])
-            except:
+            except Exception:
                 result = {"raw": job_data["result"]}
 
         return JobStatus(

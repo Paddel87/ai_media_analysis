@@ -6,8 +6,6 @@ Validiert alle wichtigen Konfigurationsdateien auf Korrektheit und Vollständigk
 
 import argparse
 import configparser
-import json
-import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Set
@@ -272,18 +270,18 @@ class ConfigValidator:
             content = pytest_ini_path.read_text(encoding="utf-8")
 
             # Simple duplicate check
-            lines = content.split('\n')
+            lines = content.split("\n")
             unique_lines = []
             seen = set()
 
             for line in lines:
-                line_key = line.split('=')[0].strip() if '=' in line else line.strip()
-                if line_key not in seen or line.startswith('['):
+                line_key = line.split("=")[0].strip() if "=" in line else line.strip()
+                if line_key not in seen or line.startswith("["):
                     unique_lines.append(line)
                     seen.add(line_key)
 
             if len(unique_lines) != len(lines):
-                new_content = '\n'.join(unique_lines)
+                new_content = "\n".join(unique_lines)
                 pytest_ini_path.write_text(new_content, encoding="utf-8")
                 self.fixes_applied.append("pytest.ini: Duplikate entfernt")
 

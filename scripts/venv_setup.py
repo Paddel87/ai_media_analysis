@@ -191,7 +191,7 @@ class VenvManager:
     def get_activation_instructions(self) -> str:
         """Gibt Platform-spezifische Aktivierungs-Anweisungen zurück."""
         if self.system_platform == "windows":
-            return f"""
+            return """
 🚀 venv-Setup abgeschlossen!
 
 Aktivierung für Windows:
@@ -204,7 +204,7 @@ Für Command Prompt:
     .venv\\Scripts\\activate.bat
 """
         else:
-            return f"""
+            return """
 🚀 venv-Setup abgeschlossen!
 
 Aktivierung für Linux/macOS:

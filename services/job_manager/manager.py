@@ -3,12 +3,10 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import lru_cache
 from typing import Dict, List, Optional
 
-import aiohttp
-import psutil
 import redis
 from gpu_providers import RunPodProvider, VastAIProvider
 
@@ -74,34 +72,77 @@ class JobManager:
                 await asyncio.sleep(30)
 
     async def _initialize_caches(self):
-        """Initialisiert die Caches mit vorhandenen Jobs und Batches"""
+        """Initialisiert die Caches mit vorhandenen Jobs und Batches."""
         try:
-            # Jobs laden
-            jobs_path = "data/jobs"
-            if os.path.exists(jobs_path):
-                for job_id in os.listdir(jobs_path):
-                    job_path = os.path.join(jobs_path, job_id)
-                    if os.path.isdir(job_path):
-                        metadata_path = os.path.join(job_path, "metadata.json")
-                        if os.path.exists(metadata_path):
-                            with open(metadata_path, "r") as f:
-                                job = json.load(f)
-                                self.job_cache[job_id] = job
+            # Phase 1: Job-Cache initialisieren
+            await self._load_job_cache()
 
-            # Batches laden
-            batches_path = "data/batches"
-            if os.path.exists(batches_path):
-                for batch_id in os.listdir(batches_path):
-                    batch_path = os.path.join(batches_path, batch_id)
-                    if os.path.isdir(batch_path):
-                        metadata_path = os.path.join(batch_path, "metadata.json")
-                        if os.path.exists(metadata_path):
-                            with open(metadata_path, "r") as f:
-                                batch = json.load(f)
-                                self.batch_cache[batch_id] = batch
+            # Phase 2: Batch-Cache initialisieren
+            await self._load_batch_cache()
+
+            # Phase 3: Cache-Statistiken loggen
+            self._log_cache_initialization()
 
         except Exception as e:
             logger.error(f"Fehler beim Initialisieren der Caches: {str(e)}")
+
+    async def _load_job_cache(self) -> None:
+        """Lädt Job-Metadaten in den Cache."""
+        jobs_path = "data/jobs"
+
+        if not os.path.exists(jobs_path):
+            return
+
+        for job_id in os.listdir(jobs_path):
+            try:
+                await self._load_single_job(jobs_path, job_id)
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden von Job {job_id}: {str(e)}")
+
+    async def _load_batch_cache(self) -> None:
+        """Lädt Batch-Metadaten in den Cache."""
+        batches_path = "data/batches"
+
+        if not os.path.exists(batches_path):
+            return
+
+        for batch_id in os.listdir(batches_path):
+            try:
+                await self._load_single_batch(batches_path, batch_id)
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden von Batch {batch_id}: {str(e)}")
+
+    async def _load_single_job(self, jobs_path: str, job_id: str) -> None:
+        """Lädt einen einzelnen Job in den Cache."""
+        job_path = os.path.join(jobs_path, job_id)
+
+        if not os.path.isdir(job_path):
+            return
+
+        metadata_path = os.path.join(job_path, "metadata.json")
+
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "r") as f:
+                job = json.load(f)
+                self.job_cache[job_id] = job
+
+    async def _load_single_batch(self, batches_path: str, batch_id: str) -> None:
+        """Lädt einen einzelnen Batch in den Cache."""
+        batch_path = os.path.join(batches_path, batch_id)
+
+        if not os.path.isdir(batch_path):
+            return
+
+        metadata_path = os.path.join(batch_path, "metadata.json")
+
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "r") as f:
+                batch = json.load(f)
+                self.batch_cache[batch_id] = batch
+
+    def _log_cache_initialization(self) -> None:
+        """Loggt Cache-Initialisierungs-Statistiken."""
+        logger.info(f"Cache initialisiert: {len(self.job_cache)} Jobs, {len(self.batch_cache)} Batches")
 
     async def process_pending_jobs(self):
         """Optimierte Verarbeitung wartender Jobs mit Batch-Processing"""

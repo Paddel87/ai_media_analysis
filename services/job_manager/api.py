@@ -4,7 +4,7 @@ import logging
 import os
 from typing import List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from manager import JobManager
 from pydantic import BaseModel
 

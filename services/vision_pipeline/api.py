@@ -1,15 +1,11 @@
-import logging
 import os
 from datetime import datetime
-from pathlib import Path
 from typing import List, Optional
 
 import aiohttp
 import redis
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi import BackgroundTasks, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
 from main import VisionPipeline
 from pydantic import BaseModel, Field, validator
 from rq import Queue
@@ -28,23 +24,23 @@ limiter = Limiter(key_func=get_remote_address)
 # FastAPI-App erstellen
 app = FastAPI(
     title="Vision Pipeline API",
-    description="""
-    API für die Verarbeitung von Bildern und Videos mit KI-Modulen.
-    
-    ## Features
-    - Parallele Verarbeitung mehrerer Videos und Bilder
-    - Optimiertes Batch-Processing für effiziente GPU-Nutzung
-    - Asynchrone Verarbeitung mit Job-Queue
-    - Frame-Sampling für effiziente Video-Analyse
-    
-    ## Fehlercodes
-    - 400: Ungültige Anfrage (z.B. nicht unterstütztes Dateiformat)
-    - 404: Job nicht gefunden
-    - 429: Zu viele Anfragen
-    - 503: Service nicht verfügbar
-    - 500: Interner Serverfehler
-    """,
     version="1.0.0",
+    description="""
+API für die Verarbeitung von Bildern und Videos mit KI-Modulen.
+
+## Features
+- Parallele Verarbeitung mehrerer Videos und Bilder
+- Optimiertes Batch-Processing für effiziente GPU-Nutzung
+- Asynchrone Verarbeitung mit Job-Queue
+- Frame-Sampling für effiziente Video-Analyse
+
+## Fehlercodes
+- 400: Ungültige Anfrage (z.B. nicht unterstütztes Dateiformat)
+- 404: Job nicht gefunden
+- 429: Zu viele Anfragen
+- 503: Service nicht verfügbar
+- 500: Interner Serverfehler
+""",
 )
 
 # CORS konfigurieren
@@ -245,7 +241,7 @@ async def analyze_videos(
         job_id = f"video_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # Job in Queue einreihen
-        job = queue.enqueue(
+        queue.enqueue(
             "job_processor.process_batch_job",
             args=(job_id, request.video_paths, "video"),
             job_id=job_id,
@@ -313,7 +309,7 @@ async def analyze_images(
         job_id = f"image_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # Job in Queue einreihen
-        job = queue.enqueue(
+        queue.enqueue(
             "job_processor.process_batch_job",
             args=(job_id, request.image_paths, "image"),
             job_id=job_id,

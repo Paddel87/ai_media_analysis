@@ -3,18 +3,16 @@ Embedding Server - Vector Management Service
 CPU-optimierter Embedding-Service für Text- und Medien-Embeddings
 """
 
-import asyncio
 import hashlib
 import logging
 import os
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import redis
 import uvicorn
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 # FastAPI App
@@ -144,7 +142,7 @@ async def health_check():
         try:
             redis_client.ping()
             redis_status = True
-        except:
+        except Exception:
             redis_status = False
 
     return {
@@ -264,7 +262,7 @@ async def get_stats():
                     "connected_clients": redis_info.get("connected_clients", 0),
                     "used_memory_human": redis_info.get("used_memory_human", "0B"),
                 }
-            except:
+            except Exception:
                 pass
 
         return stats

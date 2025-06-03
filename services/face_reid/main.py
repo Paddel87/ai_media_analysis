@@ -1,7 +1,5 @@
 import asyncio
 import base64
-import io
-import json
 import logging
 import os
 import pickle
@@ -12,16 +10,12 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
-import insightface
 import numpy as np
 import redis
 import requests
 import torch
-import torch.nn as nn
-import torchvision.transforms as transforms
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from insightface.app import FaceAnalysis
-from PIL import Image
 from pydantic import BaseModel
 
 # Logger konfigurieren

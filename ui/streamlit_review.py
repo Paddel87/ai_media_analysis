@@ -1,11 +1,9 @@
 import asyncio
-import json
 import logging
 import os
 import shutil
 import tempfile
 import threading
-import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -17,7 +15,6 @@ from typing import Any, Dict, List, Optional
 import aiofiles
 import boto3
 import dropbox
-import pandas as pd
 import requests
 import streamlit as st
 from azure.storage.blob import BlobServiceClient
@@ -228,8 +225,8 @@ class BatchUploadManager:
         """Verarbeitet die Download-Queue."""
         while True:
             try:
-                file_info = self.processing_queue.get()
-                # Implementiere hier die Verarbeitungslogik
+                # Process queue item
+                self.processing_queue.get()  # file_info not used
                 self.processing_queue.task_done()
             except Exception as e:
                 logging.error(f"Fehler in Download-Thread: {str(e)}")
@@ -532,6 +529,263 @@ def render_status_ui(status_manager: FileStatusManager):
                 st.error(file.error)
 
 
+def render_video_gallery(results: Dict[str, Any]) -> None:
+    """
+    Rendert die Video-Galerie mit optimierter UI-Struktur.
+
+    Args:
+        results: Video-Analyseergebnisse
+    """
+    st.header("🎬 Video Analyse Ergebnisse")
+
+    # Header und Metadaten
+    _render_gallery_header(results)
+
+    # Hauptinhalt basierend auf Datenstruktur
+    if _has_video_data(results):
+        _render_video_content(results)
+    else:
+        _render_empty_gallery()
+
+def _render_gallery_header(results: Dict[str, Any]) -> None:
+    """Rendert Header-Bereich der Galerie."""
+    # Statistiken im Header
+    col1, col2, col3, col4 = st.columns(4)
+
+    total_videos = len(results.get("videos", []))
+    total_frames = sum(len(v.get("frames", [])) for v in results.get("videos", []))
+
+    with col1:
+        st.metric("Videos", total_videos)
+    with col2:
+        st.metric("Frames", total_frames)
+    with col3:
+        processing_time = results.get("processing_time", 0)
+        st.metric("Zeit (s)", f"{processing_time:.1f}")
+    with col4:
+        confidence = results.get("average_confidence", 0)
+        st.metric("Ø Konfidenz", f"{confidence:.2f}")
+
+def _has_video_data(results: Dict[str, Any]) -> bool:
+    """Prüft ob Video-Daten vorhanden sind."""
+    return (
+        "videos" in results and
+        len(results["videos"]) > 0 and
+        any(v.get("frames") for v in results["videos"])
+    )
+
+def _render_video_content(results: Dict[str, Any]) -> None:
+    """Rendert den Hauptinhalt der Video-Galerie."""
+    videos = results.get("videos", [])
+
+    # Video-Tabs für Navigation
+    if len(videos) > 1:
+        _render_multi_video_tabs(videos)
+    else:
+        _render_single_video(videos[0])
+
+def _render_multi_video_tabs(videos: List[Dict[str, Any]]) -> None:
+    """Rendert Tab-Navigation für mehrere Videos."""
+    tab_names = [f"Video {i+1}: {v.get('filename', 'Unbekannt')}" for i, v in enumerate(videos)]
+    tabs = st.tabs(tab_names)
+
+    for tab, video_data in zip(tabs, videos):
+        with tab:
+            _render_single_video(video_data)
+
+def _render_single_video(video_data: Dict[str, Any]) -> None:
+    """Rendert ein einzelnes Video mit allen Details."""
+    # Video-Informationen
+    _render_video_info(video_data)
+
+    # Filter-Optionen
+    filter_options = _render_filter_controls(video_data)
+
+    # Frame-Galerie mit Filtern
+    _render_filtered_frames(video_data, filter_options)
+
+def _render_video_info(video_data: Dict[str, Any]) -> None:
+    """Rendert Video-Metadaten und Grundinformationen."""
+    st.subheader(f"📹 {video_data.get('filename', 'Video')}")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.write(f"**Dauer:** {video_data.get('duration', 0):.1f}s")
+        st.write(f"**FPS:** {video_data.get('fps', 0):.1f}")
+
+    with col2:
+        st.write(f"**Frames:** {len(video_data.get('frames', []))}")
+        st.write(f"**Auflösung:** {video_data.get('resolution', 'Unbekannt')}")
+
+    with col3:
+        confidence = video_data.get('average_confidence', 0)
+        st.write(f"**Ø Konfidenz:** {confidence:.2f}")
+
+        # Qualitäts-Indikator
+        if confidence > 0.8:
+            st.success("Hohe Qualität")
+        elif confidence > 0.6:
+            st.warning("Mittlere Qualität")
+        else:
+            st.error("Niedrige Qualität")
+
+def _render_filter_controls(video_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Rendert Filter-Kontrollen und gibt Filter-Optionen zurück."""
+    st.subheader("🔍 Filter-Optionen")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    # Verfügbare Erkennungstypen sammeln
+    available_types = _get_available_detection_types(video_data)
+
+    with col1:
+        selected_types = st.multiselect(
+            "Erkennungstypen",
+            available_types,
+            default=available_types
+        )
+
+    with col2:
+        min_confidence = st.slider(
+            "Min. Konfidenz",
+            0.0, 1.0, 0.5, 0.1
+        )
+
+    with col3:
+        # Zeitbereich-Filter
+        max_time = video_data.get('duration', 100)
+        time_range = st.slider(
+            "Zeitbereich (s)",
+            0.0, max_time, (0.0, max_time)
+        )
+
+    with col4:
+        # Sortierung
+        sort_by = st.selectbox(
+            "Sortieren nach",
+            ["Zeit", "Konfidenz", "Erkennungstyp"]
+        )
+
+    return {
+        "types": selected_types,
+        "min_confidence": min_confidence,
+        "time_range": time_range,
+        "sort_by": sort_by
+    }
+
+def _get_available_detection_types(video_data: Dict[str, Any]) -> List[str]:
+    """Ermittelt verfügbare Erkennungstypen im Video."""
+    types = set()
+    for frame in video_data.get("frames", []):
+        for detection in frame.get("detections", []):
+            types.add(detection.get("type", "unknown"))
+    return sorted(list(types))
+
+def _render_filtered_frames(video_data: Dict[str, Any], filters: Dict[str, Any]) -> None:
+    """Rendert gefilterte Frame-Galerie."""
+    frames = video_data.get("frames", [])
+    filtered_frames = _apply_frame_filters(frames, filters)
+
+    if not filtered_frames:
+        st.warning("Keine Frames entsprechen den Filterkriterien.")
+        return
+
+    st.subheader(f"🖼️ Frames ({len(filtered_frames)} von {len(frames)})")
+
+    # Grid-Layout für Frames
+    _render_frame_grid(filtered_frames)
+
+def _apply_frame_filters(frames: List[Dict[str, Any]], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Wendet Filter auf Frame-Liste an."""
+    filtered = []
+
+    for frame in frames:
+        if _frame_matches_filters(frame, filters):
+            filtered.append(frame)
+
+    # Sortierung anwenden
+    return _sort_frames(filtered, filters["sort_by"])
+
+def _frame_matches_filters(frame: Dict[str, Any], filters: Dict[str, Any]) -> bool:
+    """Prüft ob Frame den Filterkriterien entspricht."""
+    # Zeitbereich-Check
+    timestamp = frame.get("timestamp", 0)
+    if not (filters["time_range"][0] <= timestamp <= filters["time_range"][1]):
+        return False
+
+    # Erkennungstyp und Konfidenz-Check
+    frame_detections = frame.get("detections", [])
+
+    for detection in frame_detections:
+        detection_type = detection.get("type", "unknown")
+        confidence = detection.get("confidence", 0)
+
+        if (detection_type in filters["types"] and
+            confidence >= filters["min_confidence"]):
+            return True
+
+    return False
+
+def _sort_frames(frames: List[Dict[str, Any]], sort_by: str) -> List[Dict[str, Any]]:
+    """Sortiert Frames nach Kriterium."""
+    if sort_by == "Zeit":
+        return sorted(frames, key=lambda x: x.get("timestamp", 0))
+    elif sort_by == "Konfidenz":
+        return sorted(frames, key=lambda x: x.get("max_confidence", 0), reverse=True)
+    elif sort_by == "Erkennungstyp":
+        return sorted(frames, key=lambda x: x.get("primary_type", ""))
+    return frames
+
+def _render_frame_grid(frames: List[Dict[str, Any]]) -> None:
+    """Rendert Frame-Grid mit optimierter Performance."""
+    # Pagination für große Frame-Mengen
+    items_per_page = 12
+    total_pages = (len(frames) + items_per_page - 1) // items_per_page
+
+    if total_pages > 1:
+        page = st.selectbox("Seite", range(1, total_pages + 1)) - 1
+        start_idx = page * items_per_page
+        end_idx = min(start_idx + items_per_page, len(frames))
+        page_frames = frames[start_idx:end_idx]
+    else:
+        page_frames = frames
+
+    # 3-spaltige Grid-Darstellung
+    cols = st.columns(3)
+
+    for idx, frame in enumerate(page_frames):
+        col_idx = idx % 3
+        with cols[col_idx]:
+            _render_single_frame(frame)
+
+def _render_single_frame(frame: Dict[str, Any]) -> None:
+    """Rendert einen einzelnen Frame mit Details."""
+    # Frame-Bild
+    if "image_path" in frame:
+        try:
+            st.image(frame["image_path"], use_column_width=True)
+        except Exception:
+            st.error("Bild konnte nicht geladen werden")
+
+    # Frame-Metadaten
+    st.write(f"**Zeit:** {frame.get('timestamp', 0):.2f}s")
+
+    # Top-Erkennungen anzeigen
+    detections = frame.get("detections", [])[:3]  # Top 3
+    for detection in detections:
+        confidence = detection.get("confidence", 0)
+        det_type = detection.get("type", "unknown")
+        st.write(f"• {det_type}: {confidence:.2f}")
+
+def _render_empty_gallery() -> None:
+    """Rendert leere Galerie-Ansicht."""
+    st.info("Keine Video-Daten verfügbar. Bitte laden Sie Videos hoch und starten Sie die Analyse.")
+
+    # Hilfreiche Links oder Aktionen
+    if st.button("📁 Dateien hochladen"):
+        st.rerun()
+
 def main():
     st.set_page_config(page_title="AI Media Analysis", page_icon="🎥", layout="wide")
 
@@ -658,7 +912,7 @@ def main():
                 # Verarbeite Videos
                 if video_files:
                     status_text.text("Verarbeite Videos...")
-                    video_results = asyncio.run(
+                    asyncio.run(
                         st.session_state.upload_manager.process_batch(
                             video_files, UPLOAD_DIR
                         )
@@ -668,7 +922,7 @@ def main():
                 # Verarbeite Bilder
                 if image_files:
                     status_text.text("Verarbeite Bilder...")
-                    image_results = asyncio.run(
+                    asyncio.run(
                         st.session_state.upload_manager.process_batch(
                             image_files, UPLOAD_DIR
                         )

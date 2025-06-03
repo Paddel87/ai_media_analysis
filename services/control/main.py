@@ -3,11 +3,9 @@ Control Service - System Control Interface
 Zentrale Steuerung für das AI Media Analysis System
 """
 
-import asyncio
-import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import redis
 import uvicorn
@@ -104,7 +102,7 @@ async def health_check():
         try:
             redis_client.ping()
             redis_status = True
-        except:
+        except Exception:
             redis_status = False
 
     return {

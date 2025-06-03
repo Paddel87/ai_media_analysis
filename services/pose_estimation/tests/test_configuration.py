@@ -1,5 +1,5 @@
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -107,7 +107,7 @@ def test_environment_variables():
 
 
 # Test für Konfigurations-Änderungen
-def test_configuration_changes():
+def test_configuration_changes(client):
     from config import get_settings
 
     force_reload_settings()
@@ -119,3 +119,9 @@ def test_configuration_changes():
         new_settings = get_settings()
         assert new_settings.max_workers == 8
         assert new_settings.max_workers != original_settings.max_workers
+
+    # Test config endpoint POST
+    client.post(
+        "/config",
+        json={"batch_size_limit": 200, "processing_timeout": 60, "memory_limit": 4096},
+    )

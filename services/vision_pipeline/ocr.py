@@ -1,13 +1,18 @@
-# Erweiterung: OCR für Wasserzeichen und Titel
-print("Running OCR module...")
+"""
+OCR Service für Vision Pipeline
+CPU-optimierter Service für Texterkennung in Bildern
+"""
 
 import logging
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import cv2
 import numpy as np
 import requests
+
+# Erweiterung: OCR für Wasserzeichen und Titel
+print("Running OCR module...")
 
 logger = logging.getLogger(__name__)
 

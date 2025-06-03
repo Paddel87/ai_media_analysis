@@ -1,8 +1,6 @@
 import asyncio
-import json
 import logging
 import os
-import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
@@ -56,22 +54,18 @@ class GPUProvider(ABC):
     @abstractmethod
     async def create_instance(self, batch_id: str) -> GPUInstance:
         """Erstellt eine neue GPU-Instanz"""
-        pass
 
     @abstractmethod
     async def delete_instance(self, instance_id: str):
         """Löscht eine GPU-Instanz"""
-        pass
 
     @abstractmethod
     async def get_instance_status(self, instance_id: str) -> GPUStatus:
         """Gibt den Status einer GPU-Instanz zurück"""
-        pass
 
     @abstractmethod
     async def check_instance_health(self, instance: GPUInstance) -> bool:
         """Überprüft die Gesundheit einer GPU-Instanz"""
-        pass
 
 
 class VastAIProvider(GPUProvider):

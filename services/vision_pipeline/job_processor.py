@@ -8,18 +8,13 @@ import gc
 import json
 import logging
 import os
-import tempfile
-import time
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import aiohttp
-import numpy as np
 import redis
 import torch
-from rq import Queue, Worker
-from rq.job import Job
+from rq import Queue
 from rq.worker import HerokuWorker
 
 from common.logging_config import ServiceLogger

@@ -210,12 +210,12 @@ class VenvChecker:
         if results["python_version"]:
             print(f"  Python:             ✅ {results['python_version']}")
         else:
-            print(f"  Python:             ❌ Nicht verfügbar")
+            print("  Python:             ❌ Nicht verfügbar")
 
         if results["pip_version"]:
             print(f"  pip:                ✅ {results['pip_version']}")
         else:
-            print(f"  pip:                ❌ Nicht verfügbar")
+            print("  pip:                ❌ Nicht verfügbar")
 
         # Erforderliche Pakete
         print("\n📦 Erforderliche Development-Pakete:")
@@ -229,14 +229,14 @@ class VenvChecker:
         print(f"\n  Status: {installed_count}/{total_count} Pakete installiert")
 
         # Paket-Statistiken
-        print(f"\n📈 Paket-Statistiken:")
+        print("\n📈 Paket-Statistiken:")
         print(f"  Installierte Pakete: {results['installed_packages_count']}")
 
         outdated_count = len([pkg for pkg in results["outdated_packages"] if pkg])
         if outdated_count > 0:
             print(f"  Veraltete Pakete:    ⚠️ {outdated_count}")
         else:
-            print(f"  Veraltete Pakete:    ✅ Alle aktuell")
+            print("  Veraltete Pakete:    ✅ Alle aktuell")
 
         # Gesamtstatus
         print("\n🎯 Gesamtstatus:")

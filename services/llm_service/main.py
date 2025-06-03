@@ -4,37 +4,19 @@ Bietet verschiedene LLM-Provider (OpenAI, Claude, Gemini) für Textanalyse
 """
 
 import asyncio
+import gc
 import logging
 import os
-import time
+import pickle
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 import redis
+import torch
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-import gc
-import json
-import pickle
-import uuid
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from functools import lru_cache
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-
-import aiohttp
-import google.generativeai as genai
-import numpy as np
-import openai
-import torch
-from anthropic import Anthropic
-from fastapi import BackgroundTasks, FastAPI, HTTPException
-from langchain.chains import LLMChain
-from langchain.llms import HuggingFacePipeline
-from langchain.prompts import PromptTemplate
-from pydantic import BaseModel, Field
-from tenacity import retry, stop_after_attempt, wait_exponential
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Logger konfigurieren
@@ -61,7 +43,7 @@ class LLMRequest(BaseModel):
     model: str = "gemini-pro"  # gemini-pro, gpt-4, claude-3-opus, mistral-7b, etc.
     temperature: float = 0.7
     max_tokens: int = 1000
-    safety_settings: Optional[Dict] = None
+    safety_settings: Optional[Dict[str, Any]] = None
     system_prompt: Optional[str] = None
     stream: bool = False
 
@@ -70,8 +52,8 @@ class LLMResponse(BaseModel):
     text: str
     provider: str
     model: str
-    usage: Optional[Dict] = None
-    safety_ratings: Optional[Dict] = None
+    usage: Optional[Dict[str, Any]] = None
+    safety_ratings: Optional[Dict[str, Any]] = None
 
 
 class LLMService:
@@ -138,10 +120,8 @@ class LLMService:
                 },
             )
 
-        except Exception as e:
-            logger.error(
-                "Fehler bei der Initialisierung des LLM-Services", exc_info=True
-            )
+        except Exception:
+            logger.error("Fehler bei der Initialisierung des LLM-Services")
             raise
 
     def _load_model(self):
@@ -167,8 +147,8 @@ class LLMService:
 
             logger.info("Modell und Tokenizer geladen")
 
-        except Exception as e:
-            logger.error("Fehler beim Laden des Modells", exc_info=True)
+        except Exception:
+            logger.error("Fehler beim Laden des Modells")
             raise
 
     def _adjust_batch_size(self):
@@ -284,8 +264,8 @@ class LLMService:
 
             return generated_texts
 
-        except Exception as e:
-            logger.error("Fehler bei der Textgenerierung", exc_info=True)
+        except Exception:
+            logger.error("Fehler bei der Textgenerierung")
             raise
 
     async def generate_text_batch(
@@ -343,8 +323,8 @@ class LLMService:
 
             return results
 
-        except Exception as e:
-            logger.error("Fehler bei der Batch-Textgenerierung", exc_info=True)
+        except Exception:
+            logger.error("Fehler bei der Batch-Textgenerierung")
             raise
 
     async def get_embeddings(self, texts: List[str]) -> np.ndarray:
@@ -395,8 +375,8 @@ class LLMService:
 
             return embeddings
 
-        except Exception as e:
-            logger.error("Fehler bei der Embedding-Berechnung", exc_info=True)
+        except Exception:
+            logger.error("Fehler bei der Embedding-Berechnung")
             raise
 
 
@@ -419,8 +399,8 @@ async def generate_text(request: Dict[str, Any]) -> Dict[str, Any]:
             num_return_sequences=request.get("num_return_sequences", 1),
         )
         return {"texts": texts}
-    except Exception as e:
-        logger.error("Fehler bei der Textgenerierung", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Textgenerierung")
         raise
 
 
@@ -439,8 +419,8 @@ async def generate_text_batch(request: Dict[str, Any]) -> Dict[str, Any]:
             num_return_sequences=request.get("num_return_sequences", 1),
         )
         return {"texts": texts}
-    except Exception as e:
-        logger.error("Fehler bei der Batch-Textgenerierung", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Batch-Textgenerierung")
         raise
 
 
@@ -452,8 +432,8 @@ async def get_embeddings(request: Dict[str, Any]) -> Dict[str, Any]:
     try:
         embeddings = await llm_service.get_embeddings(request["texts"])
         return {"embeddings": embeddings.tolist()}
-    except Exception as e:
-        logger.error("Fehler bei der Embedding-Berechnung", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Embedding-Berechnung")
         raise
 
 
@@ -479,8 +459,8 @@ async def health_check():
             "redis": "available" if redis_healthy else "unavailable",
             "available_models": available_models,
         }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+    except Exception:
+        return {"status": "unhealthy", "error": "Health check failed"}
 
 
 if __name__ == "__main__":

@@ -8,29 +8,17 @@
 
 import asyncio
 import gc
-import json
 import logging
 import os
 import pickle
-import tempfile
-import traceback
-import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-import aiofiles
-import aiohttp
-import ffmpeg
-import librosa
-import numpy as np
 import redis
-import soundfile as sf
 import torch
 import whisper
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 # Logger konfigurieren
@@ -140,11 +128,9 @@ class WhisperService:
                 },
             )
 
-        except Exception as e:
-            logger.error(
-                "Fehler bei der Initialisierung des Whisper-Services", exc_info=True
-            )
-            raise
+        except Exception:
+            logger.error("Fehler beim Initialisieren des Models")
+            return {"error": "Model initialization failed"}
 
     def _load_model(self):
         """Lädt das Whisper-Modell."""
@@ -156,8 +142,8 @@ class WhisperService:
 
             logger.info("Whisper-Modell geladen")
 
-        except Exception as e:
-            logger.error("Fehler beim Laden des Whisper-Modells", exc_info=True)
+        except Exception:
+            logger.error("Fehler beim Laden des Whisper-Modells")
             raise
 
     def _adjust_batch_size(self):
@@ -231,9 +217,9 @@ class WhisperService:
 
             return result
 
-        except Exception as e:
-            logger.error("Fehler bei der Audio-Transkription", exc_info=True)
-            raise
+        except Exception:
+            logger.error("Fehler beim Audio-Processing")
+            return {"error": "Audio processing failed"}
 
     async def transcribe_audio_batch(
         self,
@@ -277,8 +263,8 @@ class WhisperService:
 
             return results
 
-        except Exception as e:
-            logger.error("Fehler bei der Batch-Audio-Transkription", exc_info=True)
+        except Exception:
+            logger.error("Fehler bei der Batch-Audio-Transkription")
             raise
 
     async def detect_language(self, audio_path: str) -> str:
@@ -310,9 +296,9 @@ class WhisperService:
 
             return language
 
-        except Exception as e:
-            logger.error("Fehler bei der Spracherkennung", exc_info=True)
-            raise
+        except Exception:
+            logger.error("Fehler bei der Spracherkennung")
+            return {"error": "Speech recognition failed"}
 
 
 # Service-Instanz erstellen
@@ -331,8 +317,8 @@ async def transcribe_audio(request: Dict[str, Any]) -> Dict[str, Any]:
             task=request.get("task", "transcribe"),
         )
         return result
-    except Exception as e:
-        logger.error("Fehler bei der Audio-Transkription", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Audio-Transkription")
         raise
 
 
@@ -348,8 +334,8 @@ async def transcribe_audio_batch(request: Dict[str, Any]) -> Dict[str, Any]:
             task=request.get("task", "transcribe"),
         )
         return {"results": results}
-    except Exception as e:
-        logger.error("Fehler bei der Batch-Audio-Transkription", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Batch-Audio-Transkription")
         raise
 
 
@@ -361,8 +347,8 @@ async def detect_language(request: Dict[str, Any]) -> Dict[str, Any]:
     try:
         language = await whisper_service.detect_language(request["audio_path"])
         return {"language": language}
-    except Exception as e:
-        logger.error("Fehler bei der Spracherkennung", exc_info=True)
+    except Exception:
+        logger.error("Fehler bei der Spracherkennung")
         raise
 
 
@@ -391,11 +377,15 @@ async def health_check():
             "model_loaded": model_loaded,
             "redis": "available" if redis_healthy else "unavailable",
         }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+    except Exception:
+        logger.error("Fehler beim Health Check")
+        return {"status": "unhealthy", "error": "Health check failed"}
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    try:
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    except Exception:
+        logger.error("Fehler in main")

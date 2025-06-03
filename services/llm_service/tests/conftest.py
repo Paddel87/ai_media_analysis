@@ -58,8 +58,6 @@ def mock_requests():
     """
     from unittest.mock import patch
 
-    import requests
-
     with (
         patch("requests.get") as mock_get,
         patch("requests.post") as mock_post,

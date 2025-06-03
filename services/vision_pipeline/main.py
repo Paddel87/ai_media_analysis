@@ -9,8 +9,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import lru_cache
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import aiohttp
 import cv2
@@ -172,7 +171,7 @@ class VisionPipeline:
                     try:
                         if torch.is_tensor(obj) and obj.device.type == "cuda":
                             del obj
-                    except:
+                    except Exception:
                         pass
 
                 # Speichernutzung nach dem Cleanup
@@ -287,21 +286,60 @@ class VisionPipeline:
                 extra={"video_path": video_path, "job_id": job_id},
             )
 
-            # Video öffnen
-            cap = cv2.VideoCapture(video_path)
-            if not cap.isOpened():
-                raise ValueError(f"Konnte Video nicht öffnen: {video_path}")
+            # Initialisierung und Validierung
+            video_metadata = await self._initialize_video_processing(video_path)
 
-            # Video-Metadaten
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            duration = frame_count / fps
+            # Frame-Extraktion und Sampling
+            frames_data = await self._extract_and_sample_frames(video_path, video_metadata)
 
-            # Frames sammeln
-            frames = []
-            frame_numbers = []
-            frame_idx = 0
+            # Batch-Verarbeitung mit Memory-Management
+            results = await self._process_frames_in_batches(frames_data)
 
+            # Ergebnisse speichern und finalisieren
+            output_info = await self._finalize_video_processing(
+                video_path, job_id, video_metadata, results
+            )
+
+            logger.log_info(
+                "Video-Verarbeitung abgeschlossen",
+                extra={
+                    "video_path": video_path,
+                    "job_id": job_id,
+                    "output_path": output_info["output_path"],
+                },
+            )
+
+            return output_info
+
+        except Exception as e:
+            logger.log_error("Fehler bei der Video-Verarbeitung", error=e)
+            raise
+
+    async def _initialize_video_processing(self, video_path: str) -> Dict[str, Any]:
+        """Initialisiert die Video-Verarbeitung und extrahiert Metadaten."""
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise ValueError(f"Konnte Video nicht öffnen: {video_path}")
+
+        metadata = {
+            "fps": cap.get(cv2.CAP_PROP_FPS),
+            "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
+            "cap": cap
+        }
+        metadata["duration"] = metadata["frame_count"] / metadata["fps"]
+
+        return metadata
+
+    async def _extract_and_sample_frames(
+        self, video_path: str, metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Extrahiert und sampelt Frames aus dem Video."""
+        cap = metadata["cap"]
+        frames = []
+        frame_numbers = []
+        frame_idx = 0
+
+        try:
             while True:
                 ret, frame = cap.read()
                 if not ret:
@@ -313,89 +351,113 @@ class VisionPipeline:
 
                 frame_idx += 1
 
-                # Batch-Größe anpassen
+                # Batch-Größe anpassen basierend auf Memory
                 if len(frames) >= self.batch_size:
                     self._adjust_batch_size()
 
+            return {
+                "frames": frames,
+                "frame_numbers": frame_numbers,
+                "total_frames_processed": len(frames)
+            }
+        finally:
             cap.release()
 
-            # Frames in Batches aufteilen
-            batches = []
-            current_batch = []
+    async def _process_frames_in_batches(self, frames_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Verarbeitet Frames in optimierten Batches."""
+        frames = frames_data["frames"]
+        frame_numbers = frames_data["frame_numbers"]
 
-            for frame, frame_number in zip(frames, frame_numbers):
-                current_batch.append((frame, frame_number))
-                self.frame_counter += 1
+        # Frames in Batches aufteilen
+        batches = self._create_frame_batches(frames, frame_numbers)
 
-                # Regelmäßige GPU-Überwachung
-                if self.frame_counter % 10 == 0:  # Alle 10 Frames
-                    self._adjust_batch_size()
+        # Asynchrone Batch-Verarbeitung mit Memory-Management
+        results = []
+        for batch_idx, batch in enumerate(batches):
+            try:
+                batch_results = await self._process_single_batch(batch)
+                results.extend(batch_results)
 
-                if len(current_batch) >= self.batch_size:
-                    batches.append(current_batch)
-                    current_batch = []
+                # Regelmäßiger GPU-Cleanup
+                if batch_idx % 5 == 0:
+                    self._cleanup_gpu_memory()
 
-            if current_batch:
+            except Exception as e:
+                logger.log_error(f"Fehler bei Batch {batch_idx}", error=e)
+                await self._handle_batch_error(batch_idx)
+                continue
+
+        return results
+
+    def _create_frame_batches(
+        self, frames: List[np.ndarray], frame_numbers: List[int]
+    ) -> List[List[tuple]]:
+        """Erstellt optimierte Frame-Batches."""
+        batches = []
+        current_batch = []
+
+        for frame, frame_number in zip(frames, frame_numbers):
+            current_batch.append((frame, frame_number))
+            self.frame_counter += 1
+
+            # Regelmäßige GPU-Überwachung
+            if self.frame_counter % 10 == 0:
+                self._adjust_batch_size()
+
+            if len(current_batch) >= self.batch_size:
                 batches.append(current_batch)
+                current_batch = []
 
-            # Asynchrone Batch-Verarbeitung mit verbessertem Memory-Management
-            results = []
-            for batch_idx, batch in enumerate(batches):
-                try:
-                    batch_results = await asyncio.gather(
-                        *[self._analyze_frame_internal(frame) for frame, _ in batch]
-                    )
-                    results.extend(batch_results)
+        if current_batch:
+            batches.append(current_batch)
 
-                    # Regelmäßiger GPU-Cleanup
-                    if batch_idx % 5 == 0:  # Alle 5 Batches
-                        self._cleanup_gpu_memory()
+        return batches
 
-                except Exception as e:
-                    logger.log_error(f"Fehler bei Batch {batch_idx}", error=e)
-                    # Bei Fehler: Cleanup und reduzierte Batch-Größe
-                    self._cleanup_gpu_memory(force=True)
-                    self.batch_size = max(1, self.batch_size // 2)
-                    continue
+    async def _process_single_batch(self, batch: List[tuple]) -> List[Dict[str, Any]]:
+        """Verarbeitet einen einzelnen Batch von Frames."""
+        return await asyncio.gather(
+            *[self._analyze_frame_internal(frame) for frame, _ in batch]
+        )
 
-            # Ergebnisse speichern
-            output_path = os.path.join(
-                self.output_dir,
-                f"{job_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            )
+    async def _handle_batch_error(self, batch_idx: int) -> None:
+        """Behandelt Fehler bei der Batch-Verarbeitung."""
+        self._cleanup_gpu_memory(force=True)
+        self.batch_size = max(1, self.batch_size // 2)
+        logger.log_warning(
+            f"Batch {batch_idx} fehler behandelt",
+            extra={"new_batch_size": self.batch_size}
+        )
 
-            with open(output_path, "w") as f:
-                json.dump(
-                    {
-                        "video_path": video_path,
-                        "fps": fps,
-                        "frame_count": frame_count,
-                        "duration": duration,
-                        "results": results,
-                    },
-                    f,
-                    indent=2,
-                )
+    async def _finalize_video_processing(
+        self,
+        video_path: str,
+        job_id: str,
+        metadata: Dict[str, Any],
+        results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Finalisiert die Video-Verarbeitung und speichert Ergebnisse."""
+        output_path = os.path.join(
+            self.output_dir,
+            f"{job_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        )
 
-            logger.log_info(
-                "Video-Verarbeitung abgeschlossen",
-                extra={
-                    "video_path": video_path,
-                    "job_id": job_id,
-                    "output_path": output_path,
-                },
-            )
+        output_data = {
+            "video_path": video_path,
+            "fps": metadata["fps"],
+            "frame_count": metadata["frame_count"],
+            "duration": metadata["duration"],
+            "results": results,
+        }
 
-            return {
-                "status": "completed",
-                "output_path": output_path,
-                "frame_count": frame_count,
-                "processed_frames": len(results),
-            }
+        with open(output_path, "w") as f:
+            json.dump(output_data, f, indent=2)
 
-        except Exception as e:
-            logger.log_error("Fehler bei der Video-Verarbeitung", error=e)
-            raise
+        return {
+            "status": "completed",
+            "output_path": output_path,
+            "frame_count": metadata["frame_count"],
+            "processed_frames": len(results),
+        }
 
     async def process_image(self, image_path: str, job_id: str) -> Dict[str, Any]:
         """

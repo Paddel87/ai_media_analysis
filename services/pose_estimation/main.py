@@ -12,8 +12,6 @@ from typing import Any, Dict, List, Optional, cast
 
 import aiofiles
 import cv2
-import mmcv
-import numpy as np
 import psutil
 import redis.asyncio as redis
 import torch
@@ -314,35 +312,54 @@ async def check_system_health() -> Optional[Dict[str, Any]]:
 
 @app.post("/analyze", response_model=PoseResponse)
 async def analyze_pose(file: UploadFile = File(...)):
-    if not all(
-        [
-            memory_manager,
-            concurrency_manager,
-            cache_manager,
-            resource_monitor,
-            degradation_manager,
-            worker_manager,
-        ]
-    ):
+    """
+    Analysiert Pose in einem Bild mit strukturierter Pipeline.
+    """
+    # Phase 1: Service-Verfügbarkeit prüfen
+    await _validate_service_availability()
+
+    # Phase 2: Resource-Management
+    await _perform_resource_management()
+
+    # Phase 3: Concurrency-Control
+    async with _manage_concurrency():
+        # Phase 4: Request-Verarbeitung
+        return await _process_pose_request(file)
+
+async def _validate_service_availability() -> None:
+    """Validiert Service-Verfügbarkeit."""
+    if not all([
+        memory_manager,
+        concurrency_manager,
+        cache_manager,
+        resource_monitor,
+        degradation_manager,
+        worker_manager,
+    ]):
         raise HTTPException(
-            status_code=503, detail="Service nicht vollständig initialisiert"
+            status_code=503,
+            detail="Service nicht vollständig initialisiert"
         )
 
-    try:
-        # Resource Monitoring
-        metrics = await resource_monitor.monitor_resources()
+async def _perform_resource_management() -> None:
+    """Führt Resource-Management aus."""
+    # Resource Monitoring
+    await resource_monitor.monitor_resources()
 
-        # Graceful Degradation prüfen
-        service_level = await degradation_manager.adjust_service_level()
+    # Service-Level anpassen basierend auf aktueller Auslastung
+    await degradation_manager.adjust_service_level()
 
-        # Memory Check
-        if await memory_manager.check_memory():
-            logger.warning("Memory-Limit erreicht - Cleanup durchgeführt")
+    # Memory Check
+    if await memory_manager.check_memory():
+        logger.warning("Memory-Limit erreicht - Cleanup durchgeführt")
 
-        # Concurrency-Limit prüfen
+class _ConcurrencyManager:
+    """Context Manager für Concurrency-Control."""
+
+    async def __aenter__(self):
         acquired = await concurrency_manager.semaphore.acquire()
         if not acquired:
-            return JSONResponse(
+            raise HTTPException(
                 status_code=503,
                 content={
                     "error": "Zu viele gleichzeitige Anfragen. Bitte später erneut versuchen.",
@@ -350,46 +367,87 @@ async def analyze_pose(file: UploadFile = File(...)):
                     "reason": "concurrency_limit",
                 },
             )
+        return self
 
-        try:
-            # Validiere Dateityp
-            if file.content_type and not file.content_type.startswith("image/"):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Ungültiges Dateiformat. Nur Bilder werden akzeptiert.",
-                )
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        concurrency_manager.semaphore.release()
 
-            # Cache-Check
-            cache_key = f"pose_{file.filename}"
-            cached_result = await redis_client.get(cache_key)
-            if cached_result:
-                return PoseResponse(**json.loads(cached_result))
+def _manage_concurrency() -> _ConcurrencyManager:
+    """Erstellt Concurrency-Manager."""
+    return _ConcurrencyManager()
 
-            # Speichere temporäre Datei
-            temp_file = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.jpg")
-            try:
-                async with aiofiles.open(temp_file, "wb") as out_file:
-                    content = await file.read()
-                    await out_file.write(content)
+async def _process_pose_request(file: UploadFile) -> PoseResponse:
+    """Verarbeitet Pose-Request."""
+    try:
+        # Validierung
+        await _validate_file_type(file)
 
-                # Verarbeite Bild
-                result = await process_single_image(temp_file)
+        # Cache-Check
+        cached_result = await _check_cache(file)
+        if cached_result:
+            return cached_result
 
-                # Cache Result
-                await cache_manager.cache_result(cache_key, result)
+        # Datei-Verarbeitung
+        return await _process_image_file(file)
 
-                return PoseResponse(**result)
-            finally:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
-        finally:
-            concurrency_manager.semaphore.release()
     except ValueError as e:
         logger.error(f"Fehler bei der Pose Estimation: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Unerwarteter Fehler: {e}")
         raise HTTPException(status_code=500, detail="Interner Server-Fehler")
+
+async def _validate_file_type(file: UploadFile) -> None:
+    """Validiert Dateityp."""
+    if file.content_type and not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail="Ungültiges Dateiformat. Nur Bilder werden akzeptiert.",
+        )
+
+async def _check_cache(file: UploadFile) -> Optional[PoseResponse]:
+    """Prüft Cache für bereits verarbeitete Dateien."""
+    cache_key = f"pose_{file.filename}"
+    cached_result = await redis_client.get(cache_key)
+
+    if cached_result:
+        return PoseResponse(**json.loads(cached_result))
+
+    return None
+
+async def _process_image_file(file: UploadFile) -> PoseResponse:
+    """Verarbeitet Bild-Datei."""
+    temp_file = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.jpg")
+
+    try:
+        # Datei speichern
+        await _save_temp_file(file, temp_file)
+
+        # Verarbeitung
+        result = await process_single_image(temp_file)
+
+        # Cache speichern
+        await _cache_result(file, result)
+
+        return PoseResponse(**result)
+    finally:
+        _cleanup_temp_file(temp_file)
+
+async def _save_temp_file(file: UploadFile, temp_file: str) -> None:
+    """Speichert temporäre Datei."""
+    async with aiofiles.open(temp_file, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+
+async def _cache_result(file: UploadFile, result: Dict[str, Any]) -> None:
+    """Speichert Ergebnis im Cache."""
+    cache_key = f"pose_{file.filename}"
+    await cache_manager.cache_result(cache_key, result)
+
+def _cleanup_temp_file(temp_file: str) -> None:
+    """Bereinigt temporäre Datei."""
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
 
 
 @app.post("/analyze/batch")

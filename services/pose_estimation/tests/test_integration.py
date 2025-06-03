@@ -218,10 +218,7 @@ async def test_docker_optimizations(client):
         )
 
     tasks = [make_request() for _ in range(150)]
-    responses = await asyncio.gather(*tasks)
-    status_codes = [r.status_code for r in responses]
-    # Achtung: Diese Assertion schlägt im TestClient fehl, da keine echte Parallelität entsteht.
-    # assert 503 in status_codes or 500 in status_codes  # Erlaube beide Status Codes
+    await asyncio.gather(*tasks)
 
     # Teste Health Check
     response = client.get("/health")
