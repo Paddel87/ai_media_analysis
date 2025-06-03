@@ -1,11 +1,44 @@
 # AI Media Analysis System - Dokumentations-Regelwerk
-# Status: Alpha 0.4.3 - Development-Ready
+# Status: Alpha 0.4.4 - Development-Ready mit iterativer Entwicklung
 
 ## Dokumentations-Philosophie
 - **Living Documentation**: Dokumentation als integraler Teil des Codes
 - **Single Source of Truth**: Keine redundanten Informationen
 - **Automation First**: Automatische Updates wo möglich
 - **Review-Required**: Dokumentation im Code-Review prüfen
+- **Iterative Updates**: Dokumentation folgt dem 4-Iterations-Modell
+
+## Cursor Rules Integration
+
+### Aktive Regelwerke
+- `.cursorrules/rules/formatting.md`: Code-Formatierung
+- `.cursorrules/rules/iterative_development.md`: **Iterative Entwicklung (PROJEKTREGEL)**
+- `.cursorrules.docs`: Dokumentations-Standards
+- `.cursorrules.vps`: VPS-Deployment
+- `.cursorrules.cloud`: Cloud-Integration
+
+### Iterative Dokumentation (NEUE REGEL)
+**Alle Dokumentations-Updates folgen dem 4-Iterations-Modell:**
+
+#### Iteration 1: Core-Dokumentation
+- `PROJECT_STATE.md`: Service-Status aktualisieren
+- `docker-compose.yml`: Service-Konfigurationen
+- Health-Check-Dokumentation
+
+#### Iteration 2: Integration-Dokumentation
+- `API.md`: Neue Service-Endpoints
+- Service-spezifische READMEs
+- Inter-Service-Communication
+
+#### Iteration 3: Feature-Dokumentation
+- Advanced-Feature-Guides
+- Configuration-Templates
+- Performance-Optimierungen
+
+#### Iteration 4: User-Dokumentation
+- Production-Deployment-Guides
+- User-Interface-Dokumentation
+- Export-Funktionen
 
 ## Dokumentations-Standards
 - **Docstring-Format**: Google Style mit Type Hints
