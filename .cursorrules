@@ -1,0 +1,284 @@
+# AI MEDIA ANALYSIS SYSTEM - MASTER CURSOR RULES
+# Version: 1.0.0 - Permanente Aktivierung aller Projektregeln
+# Status: PRODUKTIONSREIF - Vollständige Integration
+
+Du arbeitest an einem **hochmodernen AI Media Analysis System**. Befolge ALLE folgenden Regeln:
+
+## 🚀 KERN-PROJEKTREGELN
+
+### Deutscher Sprachstandard
+- **ALLE Antworten auf Deutsch** (User-spezifische Regel)
+- Code-Kommentare auf Deutsch
+- Dokumentation auf Deutsch
+- Nur Variablen/Funktionen auf Englisch
+
+### Iterative Entwicklung (4-Stufen-Modell)
+1. **Iteration 1**: Core-Funktionalität, Basis-Services, Docker-Setup
+2. **Iteration 2**: Service-Integration, API-Endpoints, Health-Checks
+3. **Iteration 3**: Advanced Features, Optimierungen, Monitoring
+4. **Iteration 4**: Production-Ready, UI-Polish, Export-Features
+
+---
+
+## 📋 AKTIVE REGELWERKE (DETAILLIERT)
+
+### 🎨 Code-Formatierung (OBLIGATORISCH)
+**Quelle**: `.cursorrules.formatting` + `.cursorrules-backup/rules/black_standard.md`
+
+**Black-Standard (STRENG):**
+- Line Length: 88 Zeichen
+- Python 3.11+ Target
+- Doppelte Anführungszeichen
+- Import Sorting: isort mit Black-Profil
+
+**Sofortige Formatierung:**
+```bash
+make format      # Auto-Format
+make check-all   # Vollständige Prüfung
+```
+
+### 🔍 Linter-Compliance (VOLLSTÄNDIG)
+**Quelle**: `.cursorrules-backup/rules/linter_compliance.md`
+
+**Pflicht-Tools:**
+- flake8: Code-Stil und Komplexität
+- mypy: Type-Checking (>90% Coverage)
+- bandit: Sicherheits-Checks
+- safety: Dependency-Vulnerabilities
+
+**Null-Toleranz für:**
+- F401: Unused imports
+- F841: Unused variables
+- E501: Line too long
+- Type-Hint-Fehler
+
+### 🧪 Testing Standards (STRENG)
+**Quelle**: `.cursorrules-backup/rules/feature_testing.md`
+
+**Qualitätsstandards:**
+- Test Coverage: >80%
+- Unit Tests: Vollständige Abdeckung
+- Integration Tests: API-Endpoints
+- End-to-End Tests: Core-Workflows
+
+### ⚙️ Konfigurations-Validierung
+**Quelle**: `.cursorrules-backup/rules/config_validation.md`
+
+**Validierung für:**
+- docker-compose.yml
+- pyproject.toml
+- .env-Dateien
+- YAML/JSON-Configs
+
+---
+
+## 🏗️ ARCHITEKTUR-PRINZIPIEN
+
+### Microservice-Architektur
+- **Services**: Unabhängige Docker-Container
+- **API-Gateway**: FastAPI mit nginx
+- **Persistence**: Redis + SQLite
+- **Monitoring**: Health-Checks + Logging
+
+### Service-Standards
+```python
+# Jeder Service MUSS haben:
+class ServiceBase:
+    """Basis für alle Services."""
+
+    async def health_check(self) -> dict:
+        """Health-Check-Endpoint."""
+        return {"status": "healthy", "service": self.__class__.__name__}
+
+    async def process(self, data: dict) -> dict:
+        """Hauptverarbeitungs-Methode."""
+        pass
+```
+
+### Container-Standards
+```yaml
+# Jeder Service MUSS haben:
+version: '3.8'
+services:
+  service_name:
+    build: .
+    environment:
+      - SERVICE_NAME=service_name
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+---
+
+## 🌐 CLOUD & VPS OPTIMIERUNG
+
+### Cloud AI Integration (Cost-Aware)
+**Quelle**: `.cursorrules.cloud`
+
+**Pflicht-Features:**
+- Async-First: Alle AI-Calls asynchron
+- Retry-Logic: Exponential Backoff
+- Cost-Tracking: Real-time Monitoring
+- Fallback-Chains: CPU-basierte Fallbacks
+
+### VPS Resource Management
+**Quelle**: `.cursorrules.vps`
+
+**Resource-Limits:**
+- Memory: 8GB-16GB optimiert
+- CPU: Multi-threading, kein GPU
+- Storage: Efficient Caching
+- Auto-Scaling: Load-based
+
+---
+
+## 📚 DOKUMENTATIONS-STANDARDS
+
+### Living Documentation
+**Quelle**: `.cursorrules.docs`
+
+**Pflicht-Updates:**
+- README.md: Immer aktuell
+- CHANGELOG.md: Automatische Updates
+- PROJECT_STATE.md: Service-Status
+- API.md: Endpoint-Dokumentation
+
+### Docstring-Standard
+```python
+def process_video(
+    video_path: str,
+    config: Optional[VideoConfig] = None,
+    *,
+    output_format: str = "mp4",
+) -> ProcessingResult:
+    """
+    Verarbeitet Video-Datei mit KI-Analyse.
+
+    Args:
+        video_path: Absoluter Pfad zur Videodatei
+        config: Optionale Verarbeitungs-Konfiguration
+        output_format: Ausgabeformat (mp4, avi, mov)
+
+    Returns:
+        ProcessingResult mit Status, Metadaten und Pfaden
+
+    Raises:
+        FileNotFoundError: Videodatei nicht gefunden
+        ProcessingError: Fehler bei der Verarbeitung
+        ValidationError: Ungültige Konfiguration
+    """
+```
+
+---
+
+## 🚨 QUALITY GATES & ENFORCEMENT
+
+### GitHub Actions (BLOCKIEREND)
+- **Black Standard**: Automatische Format-Checks
+- **Linter Compliance**: Vollständige Linter-Prüfung
+- **Feature Testing**: Test-Coverage-Validierung
+- **Config Validation**: Konfigurations-Checks
+
+### Pre-Commit Hooks (AUTOMATISCH)
+```bash
+# Installiert für alle Entwickler
+make pre-commit-install
+
+# Läuft automatisch bei jedem Commit:
+# 1. Black-Formatierung
+# 2. isort Import-Sortierung
+# 3. flake8 Linting
+# 4. mypy Type-Checking
+```
+
+### Make-Targets (ENTWICKLUNG)
+```bash
+make format        # Black + isort automatisch
+make lint          # Vollständige Linter-Prüfung
+make test          # Test-Suite ausführen
+make check-all     # Alle Quality-Checks
+make docker-up     # Development-Environment
+make docker-logs   # Service-Logs anzeigen
+```
+
+---
+
+## 🔧 ENTWICKLUNGSWORKFLOW
+
+### 1. Feature-Entwicklung
+```bash
+# Neues Feature entwickeln
+git checkout -b feature/video-analysis
+make docker-up
+# Code entwickeln...
+make format
+make test
+make check-all
+```
+
+### 2. Code-Integration
+```bash
+# Vor Commit
+make format          # Auto-Format
+make check-all       # Quality-Gates
+git add .
+git commit -m "feat: video analysis service"
+# Pre-commit hooks laufen automatisch
+```
+
+### 3. Pull Request
+- Alle GitHub Actions müssen ✅ grün sein
+- Code-Review erforderlich
+- Dokumentation aktuell
+- Tests erfolgreich
+
+---
+
+## 🎯 SOFORT-ANWEISUNGEN
+
+### Bei Code-Änderungen
+1. **IMMER** Black-formatiert schreiben
+2. **IMMER** Type-Hints verwenden
+3. **IMMER** Docstrings schreiben
+4. **IMMER** Tests aktualisieren
+
+### Bei Service-Entwicklung
+1. **IMMER** Health-Check implementieren
+2. **IMMER** Async-Patterns verwenden
+3. **IMMER** Error-Handling einbauen
+4. **IMMER** Logging konfigurieren
+
+### Bei Fehlern
+1. **NIEMALS** Quality-Gates umgehen
+2. **IMMER** Root-Cause beheben
+3. **IMMER** Tests erweitern
+4. **IMMER** Dokumentation aktualisieren
+
+---
+
+## 🏆 ERFOLGSKRITERIEN
+
+### Code Quality
+- ✅ 100% Black-konform
+- ✅ 0 Linter-Fehler
+- ✅ >90% Type-Coverage
+- ✅ >80% Test-Coverage
+
+### Service Quality
+- ✅ Alle Health-Checks grün
+- ✅ <2s Response-Time
+- ✅ 99.9% Uptime
+- ✅ Vollständige Logs
+
+### Dokumentation
+- ✅ Aktuelle README
+- ✅ Vollständige API-Docs
+- ✅ Service-Dokumentation
+- ✅ Deployment-Guides
+
+---
+
+**WICHTIG**: Diese Regeln sind PERMANENT AKTIV. Befolge sie bei JEDER Code-Änderung ohne Ausnahme.

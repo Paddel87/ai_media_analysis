@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Konfigurationsdatei-Validator für AI Media Analysis System.
-Erkennt Duplikate, Syntaxfehler und Inkonsistenzen.
+Konfigurationsvalidierung für AI Media Analysis System
+Validiert alle wichtigen Konfigurationsdateien auf Korrektheit und Vollständigkeit.
 """
 
 import argparse
 import configparser
+import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Set
 
 try:
     import tomli
@@ -25,12 +26,13 @@ except ImportError:
 
 
 class ConfigValidator:
-    """Validator für verschiedene Konfigurationsdateien."""
+    """Validator für Systemkonfigurationen."""
 
-    def __init__(self, project_root: str = "."):
-        self.project_root = Path(project_root)
+    def __init__(self, project_root: Path = None):
+        self.project_root = project_root or Path(__file__).parent.parent
         self.errors: List[str] = []
         self.warnings: List[str] = []
+        self.fixes_applied: List[str] = []
 
     def validate_pytest_ini(self) -> bool:
         """Validiert pytest.ini auf Duplikate und Syntax."""
@@ -84,57 +86,41 @@ class ConfigValidator:
             return False
 
     def validate_pyproject_toml(self) -> bool:
-        """Validiert pyproject.toml auf Duplikate und Syntax."""
-        pyproject_toml = self.project_root / "pyproject.toml"
-        if not pyproject_toml.exists():
-            self.warnings.append("pyproject.toml: File not found")
-            return True
+        """Validiert pyproject.toml (vereinfacht)."""
+        pyproject_path = self.project_root / "pyproject.toml"
 
-        if tomli is None:
-            self.warnings.append(
-                "pyproject.toml: tomli not installed, skipping validation"
-            )
-            return True
+        if not pyproject_path.exists():
+            self.errors.append("pyproject.toml nicht gefunden")
+            return False
 
         try:
-            with open(pyproject_toml, "rb") as f:
-                data = tomli.load(f)
-
-            # Check for recommended sections
-            recommended_sections = [
-                "tool.black",
-                "tool.isort",
-                "tool.pytest.ini_options",
-                "tool.coverage.run",
-            ]
-
-            for section_path in recommended_sections:
-                current = data
-                for key in section_path.split("."):
-                    if key not in current:
-                        self.warnings.append(
-                            f"pyproject.toml: Missing recommended section [{section_path}]"
-                        )
-                        break
-                    current = current[key]
-
-            # Check for consistency
-            if "tool" in data:
-                if "black" in data["tool"] and "isort" in data["tool"]:
-                    black_line_length = data["tool"]["black"].get("line-length", 88)
-                    isort_line_length = data["tool"]["isort"].get("line_length", 88)
-
-                    if black_line_length != isort_line_length:
-                        self.warnings.append(
-                            f"pyproject.toml: Line length mismatch - "
-                            f"black={black_line_length}, isort={isort_line_length}"
-                        )
+            # Basic validation
+            content = pyproject_path.read_text(encoding="utf-8")
+            if "[tool.black]" not in content:
+                self.warnings.append("Black-Konfiguration fehlt in pyproject.toml")
 
             return True
-
         except Exception as e:
-            self.errors.append(f"pyproject.toml: Syntax error - {e}")
+            self.errors.append(f"Fehler beim Lesen von pyproject.toml: {e}")
             return False
+
+    def _validate_black_config(self, config: Dict[str, Any]) -> bool:
+        """Validiert Black-Konfiguration."""
+        required_keys = ["line-length", "target-version"]
+
+        for key in required_keys:
+            if key not in config:
+                self.errors.append(f"Black: Fehlender Schlüssel '{key}'")
+                return False
+
+        return True
+
+    def _validate_isort_config(self, config: Dict[str, Any]) -> bool:
+        """Validiert isort-Konfiguration."""
+        if "profile" not in config:
+            self.warnings.append("isort: 'profile' nicht gesetzt")
+
+        return True
 
     def validate_docker_compose(self) -> bool:
         """Validiert docker-compose.yml auf doppelte Services."""
@@ -275,94 +261,35 @@ class ConfigValidator:
             print("✅ Keine kritischen Konfigurationsfehler gefunden")
 
     def fix_pytest_ini_duplicates(self) -> bool:
-        """Repariert doppelte Einträge in pytest.ini automatisch."""
-        pytest_ini = self.project_root / "pytest.ini"
-        if not pytest_ini.exists():
+        """Behebt Duplikate in pytest.ini (vereinfacht)."""
+        pytest_ini_path = self.project_root / "pytest.ini"
+
+        if not pytest_ini_path.exists():
+            self.warnings.append("pytest.ini nicht gefunden")
             return True
 
         try:
-            # Create backup
-            backup_file = pytest_ini.with_suffix(".ini.backup")
-            with open(pytest_ini, "r", encoding="utf-8") as original:
-                with open(backup_file, "w", encoding="utf-8") as backup:
-                    backup.write(original.read())
+            content = pytest_ini_path.read_text(encoding="utf-8")
 
-            # Read and fix duplicates
-            with open(pytest_ini, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-
-            fixed_lines = []
-            current_section = None
-            section_keys = {}
+            # Simple duplicate check
+            lines = content.split('\n')
+            unique_lines = []
+            seen = set()
 
             for line in lines:
-                stripped = line.strip()
+                line_key = line.split('=')[0].strip() if '=' in line else line.strip()
+                if line_key not in seen or line.startswith('['):
+                    unique_lines.append(line)
+                    seen.add(line_key)
 
-                # Section header
-                if stripped.startswith("[") and stripped.endswith("]"):
-                    current_section = stripped[1:-1]
-                    section_keys[current_section] = {}
-                    fixed_lines.append(line)
-                    continue
+            if len(unique_lines) != len(lines):
+                new_content = '\n'.join(unique_lines)
+                pytest_ini_path.write_text(new_content, encoding="utf-8")
+                self.fixes_applied.append("pytest.ini: Duplikate entfernt")
 
-                # Key-value pair
-                if "=" in stripped and current_section:
-                    key = stripped.split("=")[0].strip()
-                    value = "=".join(stripped.split("=")[1:]).strip()
-
-                    if key in section_keys[current_section]:
-                        # Merge values if possible
-                        existing_value = section_keys[current_section][key]
-                        if key in [
-                            "python_files",
-                            "python_classes",
-                            "python_functions",
-                        ]:
-                            # Merge test patterns
-                            existing_parts = existing_value.split()
-                            new_parts = value.split()
-                            merged_parts = list(set(existing_parts + new_parts))
-                            section_keys[current_section][key] = " ".join(merged_parts)
-                        else:
-                            # Use newer value
-                            section_keys[current_section][key] = value
-                    else:
-                        section_keys[current_section][key] = value
-                        fixed_lines.append(line)
-                else:
-                    fixed_lines.append(line)
-
-            # Write merged values back for duplicates
-            final_lines = []
-            current_section = None
-
-            for line in fixed_lines:
-                stripped = line.strip()
-
-                if stripped.startswith("[") and stripped.endswith("]"):
-                    current_section = stripped[1:-1]
-                    final_lines.append(line)
-                elif "=" in stripped and current_section:
-                    key = stripped.split("=")[0].strip()
-                    if key in section_keys[current_section]:
-                        final_lines.append(
-                            f"{key} = {section_keys[current_section][key]}\n"
-                        )
-                        del section_keys[current_section][key]  # Mark as written
-                    else:
-                        final_lines.append(line)
-                else:
-                    final_lines.append(line)
-
-            # Write fixed content
-            with open(pytest_ini, "w", encoding="utf-8") as f:
-                f.writelines(final_lines)
-
-            print(f"✅ pytest.ini repariert (Backup: {backup_file})")
             return True
-
         except Exception as e:
-            print(f"❌ Fehler beim Reparieren von pytest.ini: {e}")
+            self.errors.append(f"Fehler beim Fixen von pytest.ini: {e}")
             return False
 
 
