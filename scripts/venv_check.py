@@ -6,11 +6,11 @@ venv Check Script für AI Media Analysis System
 """
 
 import json
-import sys
 import platform
 import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 
 class VenvChecker:
@@ -31,8 +31,8 @@ class VenvChecker:
 
     def is_venv_active(self) -> bool:
         """Prüft ob venv aktiviert ist."""
-        return hasattr(sys, 'real_prefix') or (
-            hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
+        return hasattr(sys, "real_prefix") or (
+            hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
         )
 
     def venv_exists(self) -> bool:
@@ -45,9 +45,12 @@ class VenvChecker:
             return None
 
         try:
-            result = subprocess.run([
-                str(self.venv_python), "--version"
-            ], check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                [str(self.venv_python), "--version"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             return result.stdout.strip()
         except subprocess.CalledProcessError:
             return None
@@ -58,9 +61,12 @@ class VenvChecker:
             return None
 
         try:
-            result = subprocess.run([
-                str(self.venv_python), "-m", "pip", "--version"
-            ], check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                [str(self.venv_python), "-m", "pip", "--version"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             return result.stdout.strip()
         except subprocess.CalledProcessError:
             return None
@@ -68,8 +74,14 @@ class VenvChecker:
     def check_required_packages(self) -> Dict[str, bool]:
         """Überprüft Installation erforderlicher Pakete."""
         required_packages = [
-            "black", "isort", "flake8", "mypy",
-            "pytest", "pytest-cov", "bandit", "safety"
+            "black",
+            "isort",
+            "flake8",
+            "mypy",
+            "pytest",
+            "pytest-cov",
+            "bandit",
+            "safety",
         ]
 
         package_status = {}
@@ -79,9 +91,12 @@ class VenvChecker:
 
         for package in required_packages:
             try:
-                subprocess.run([
-                    str(self.venv_python), "-c", f"import {package}"
-                ], check=True, capture_output=True, text=True)
+                subprocess.run(
+                    [str(self.venv_python), "-c", f"import {package}"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
                 package_status[package] = True
             except subprocess.CalledProcessError:
                 package_status[package] = False
@@ -125,10 +140,13 @@ class VenvChecker:
             return []
 
         try:
-            result = subprocess.run([
-                str(self.venv_python), "-m", "pip", "list", "--format=freeze"
-            ], check=True, capture_output=True, text=True)
-            return result.stdout.strip().split('\n')
+            result = subprocess.run(
+                [str(self.venv_python), "-m", "pip", "list", "--format=freeze"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout.strip().split("\n")
         except subprocess.CalledProcessError:
             return []
 
@@ -138,10 +156,20 @@ class VenvChecker:
             return []
 
         try:
-            result = subprocess.run([
-                str(self.venv_python), "-m", "pip", "list", "--outdated", "--format=freeze"
-            ], check=True, capture_output=True, text=True)
-            return result.stdout.strip().split('\n') if result.stdout.strip() else []
+            result = subprocess.run(
+                [
+                    str(self.venv_python),
+                    "-m",
+                    "pip",
+                    "list",
+                    "--outdated",
+                    "--format=freeze",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout.strip().split("\n") if result.stdout.strip() else []
         except subprocess.CalledProcessError:
             return []
 
@@ -158,7 +186,7 @@ class VenvChecker:
             "vscode_configured": self.check_vscode_settings(),
             "gitignore_configured": self.check_gitignore(),
             "installed_packages_count": len(self.get_installed_packages()),
-            "outdated_packages": self.check_outdated_packages()
+            "outdated_packages": self.check_outdated_packages(),
         }
 
         return results
@@ -172,24 +200,26 @@ class VenvChecker:
         print("\n🏗️ Grundkonfiguration:")
         print(f"  venv existiert:     {'✅' if results['venv_exists'] else '❌'}")
         print(f"  venv aktiviert:     {'✅' if results['venv_active'] else '❌'}")
-        print(f"  .gitignore:         {'✅' if results['gitignore_configured'] else '❌'}")
+        print(
+            f"  .gitignore:         {'✅' if results['gitignore_configured'] else '❌'}"
+        )
         print(f"  VS Code Settings:   {'✅' if results['vscode_configured'] else '❌'}")
 
         # Python & pip
         print("\n🐍 Python & pip:")
-        if results['python_version']:
+        if results["python_version"]:
             print(f"  Python:             ✅ {results['python_version']}")
         else:
             print(f"  Python:             ❌ Nicht verfügbar")
 
-        if results['pip_version']:
+        if results["pip_version"]:
             print(f"  pip:                ✅ {results['pip_version']}")
         else:
             print(f"  pip:                ❌ Nicht verfügbar")
 
         # Erforderliche Pakete
         print("\n📦 Erforderliche Development-Pakete:")
-        required_packages = results['required_packages']
+        required_packages = results["required_packages"]
         for package, installed in required_packages.items():
             status = "✅" if installed else "❌"
             print(f"  {package:15} {status}")
@@ -202,7 +232,7 @@ class VenvChecker:
         print(f"\n📈 Paket-Statistiken:")
         print(f"  Installierte Pakete: {results['installed_packages_count']}")
 
-        outdated_count = len([pkg for pkg in results['outdated_packages'] if pkg])
+        outdated_count = len([pkg for pkg in results["outdated_packages"] if pkg])
         if outdated_count > 0:
             print(f"  Veraltete Pakete:    ⚠️ {outdated_count}")
         else:
@@ -222,29 +252,29 @@ class VenvChecker:
         score = 0
 
         # Grundkonfiguration (40 Punkte)
-        if results['venv_exists']:
+        if results["venv_exists"]:
             score += 15
-        if results['venv_active']:
+        if results["venv_active"]:
             score += 10
-        if results['gitignore_configured']:
+        if results["gitignore_configured"]:
             score += 5
-        if results['vscode_configured']:
+        if results["vscode_configured"]:
             score += 10
 
         # Python & pip (20 Punkte)
-        if results['python_version']:
+        if results["python_version"]:
             score += 10
-        if results['pip_version']:
+        if results["pip_version"]:
             score += 10
 
         # Erforderliche Pakete (30 Punkte)
-        required_packages = results['required_packages']
+        required_packages = results["required_packages"]
         if required_packages:
             installed_ratio = sum(required_packages.values()) / len(required_packages)
             score += int(30 * installed_ratio)
 
         # Veraltete Pakete (10 Punkte Abzug)
-        outdated_count = len([pkg for pkg in results['outdated_packages'] if pkg])
+        outdated_count = len([pkg for pkg in results["outdated_packages"] if pkg])
         if outdated_count == 0:
             score += 10
 
@@ -254,32 +284,44 @@ class VenvChecker:
         """Schlägt Reparatur-Maßnahmen vor."""
         suggestions = []
 
-        if not results['venv_exists']:
-            suggestions.append("🔧 venv erstellen: python scripts/venv_setup.py --setup")
+        if not results["venv_exists"]:
+            suggestions.append(
+                "🔧 venv erstellen: python scripts/venv_setup.py --setup"
+            )
 
-        if not results['venv_active']:
+        if not results["venv_active"]:
             if self.system_platform == "windows":
                 suggestions.append("🔧 venv aktivieren: .venv\\Scripts\\activate")
             else:
                 suggestions.append("🔧 venv aktivieren: source .venv/bin/activate")
 
-        if not results['gitignore_configured']:
-            suggestions.append("🔧 .gitignore konfigurieren: echo '.venv/' >> .gitignore")
+        if not results["gitignore_configured"]:
+            suggestions.append(
+                "🔧 .gitignore konfigurieren: echo '.venv/' >> .gitignore"
+            )
 
-        if not results['vscode_configured']:
-            suggestions.append("🔧 VS Code Settings: python scripts/venv_setup.py --setup")
+        if not results["vscode_configured"]:
+            suggestions.append(
+                "🔧 VS Code Settings: python scripts/venv_setup.py --setup"
+            )
 
         # Fehlende Pakete
-        required_packages = results['required_packages']
-        missing_packages = [pkg for pkg, installed in required_packages.items() if not installed]
+        required_packages = results["required_packages"]
+        missing_packages = [
+            pkg for pkg, installed in required_packages.items() if not installed
+        ]
         if missing_packages:
             missing_str = " ".join(missing_packages)
-            suggestions.append(f"🔧 Fehlende Pakete installieren: pip install {missing_str}")
+            suggestions.append(
+                f"🔧 Fehlende Pakete installieren: pip install {missing_str}"
+            )
 
         # Veraltete Pakete
-        outdated_count = len([pkg for pkg in results['outdated_packages'] if pkg])
+        outdated_count = len([pkg for pkg in results["outdated_packages"] if pkg])
         if outdated_count > 0:
-            suggestions.append("🔧 Pakete aktualisieren: pip install --upgrade -r requirements/development.txt")
+            suggestions.append(
+                "🔧 Pakete aktualisieren: pip install --upgrade -r requirements/development.txt"
+            )
 
         return suggestions
 

@@ -1,8 +1,10 @@
 """
 Security Tests für AI Media Analysis System
 """
-import pytest
+
 from typing import Dict, List, Union
+
+import pytest
 
 
 @pytest.mark.security
@@ -13,8 +15,13 @@ class TestSecurityChecks:
         """Test auf hardcoded secrets in Environment-Variablen."""
         # Test Environment-Variable Checks
         sensitive_keys: List[str] = [
-            "password", "secret", "key", "token",
-            "api_key", "private_key", "access_token"
+            "password",
+            "secret",
+            "key",
+            "token",
+            "api_key",
+            "private_key",
+            "access_token",
         ]
 
         # Simuliere Environment Check
@@ -27,7 +34,9 @@ class TestSecurityChecks:
 
         for key, value in test_env.items():
             if any(sensitive in key.lower() for sensitive in sensitive_keys):
-                assert "***" in value or len(value) < 10, f"Possible hardcoded secret in {key}"
+                assert (
+                    "***" in value or len(value) < 10
+                ), f"Possible hardcoded secret in {key}"
 
     def test_secure_defaults(self):
         """Test auf sichere Standard-Konfigurationen."""
@@ -36,7 +45,7 @@ class TestSecurityChecks:
             "cors_allow_all": False,
             "ssl_enabled": True,
             "bind_all_interfaces": False,  # Sollte False sein für Produktion
-            "timeout_configured": True
+            "timeout_configured": True,
         }
 
         assert security_config["debug_mode"] is False
@@ -77,7 +86,7 @@ class TestSecurityChecks:
             "validate_certificates": True,
             "timeout_seconds": 30,  # Sollte gesetzt sein
             "max_redirects": 3,
-            "disable_insecure_protocols": True
+            "disable_insecure_protocols": True,
         }
 
         timeout_seconds = network_config["timeout_seconds"]

@@ -56,7 +56,13 @@ class LinterComplianceChecker:
         """Prüft Black-Formatierung (KRITISCH)."""
         print("🎨 Checking Black formatting...")
 
-        cmd = ["venv/Scripts/python.exe", "-m", "black", "--check", "--diff"] + self.check_dirs
+        cmd = [
+            "venv/Scripts/python.exe",
+            "-m",
+            "black",
+            "--check",
+            "--diff",
+        ] + self.check_dirs
         returncode, stdout, stderr = self.run_command(cmd)
 
         self.results["critical_checks"]["black"] = {
@@ -141,7 +147,11 @@ class LinterComplianceChecker:
         """Prüft Konfigurationsdatei-Validierung (KRITISCH)."""
         print("🏗️ Checking configuration validation...")
 
-        cmd = ["venv/Scripts/python.exe", "scripts/validate_config.py", "--comprehensive"]
+        cmd = [
+            "venv/Scripts/python.exe",
+            "scripts/validate_config.py",
+            "--comprehensive",
+        ]
         returncode, stdout, stderr = self.run_command(cmd)
 
         self.results["critical_checks"]["config_validation"] = {
@@ -262,7 +272,13 @@ class LinterComplianceChecker:
         """Prüft Type-Checking mit mypy (WARNUNG)."""
         print("🏷️ Running type checking (mypy)...")
 
-        cmd = ["venv/Scripts/python.exe", "-m", "mypy", "services/", "--ignore-missing-imports"]
+        cmd = [
+            "venv/Scripts/python.exe",
+            "-m",
+            "mypy",
+            "services/",
+            "--ignore-missing-imports",
+        ]
         returncode, stdout, stderr = self.run_command(cmd)
 
         self.results["warning_checks"]["mypy"] = {
@@ -453,7 +469,13 @@ class LinterComplianceChecker:
 
         # Import sorting
         print("🔧 Auto-fixing import sorting...")
-        cmd = ["venv/Scripts/python.exe", "-m", "isort", "--profile", "black"] + self.check_dirs
+        cmd = [
+            "venv/Scripts/python.exe",
+            "-m",
+            "isort",
+            "--profile",
+            "black",
+        ] + self.check_dirs
         returncode, stdout, stderr = self.run_command(cmd)
         if returncode == 0:
             print("  ✅ Import sorting applied")

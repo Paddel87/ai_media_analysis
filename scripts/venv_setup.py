@@ -45,8 +45,8 @@ class VenvManager:
 
     def is_venv_active(self) -> bool:
         """Prüft ob venv aktiviert ist."""
-        return hasattr(sys, 'real_prefix') or (
-            hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
+        return hasattr(sys, "real_prefix") or (
+            hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
         )
 
     def create_venv(self) -> bool:
@@ -54,9 +54,12 @@ class VenvManager:
         print(f"🐍 Erstelle venv in {self.venv_path}")
 
         try:
-            subprocess.run([
-                sys.executable, "-m", "venv", str(self.venv_path)
-            ], check=True, capture_output=True, text=True)
+            subprocess.run(
+                [sys.executable, "-m", "venv", str(self.venv_path)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print("✅ venv erfolgreich erstellt")
             return True
         except subprocess.CalledProcessError as e:
@@ -68,9 +71,12 @@ class VenvManager:
         print("📦 Aktualisiere pip...")
 
         try:
-            subprocess.run([
-                str(self.venv_python), "-m", "pip", "install", "--upgrade", "pip"
-            ], check=True, capture_output=True, text=True)
+            subprocess.run(
+                [str(self.venv_python), "-m", "pip", "install", "--upgrade", "pip"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print("✅ pip erfolgreich aktualisiert")
             return True
         except subprocess.CalledProcessError as e:
@@ -88,9 +94,12 @@ class VenvManager:
         print(f"📦 Installiere Dependencies aus {requirements_file}...")
 
         try:
-            subprocess.run([
-                str(self.venv_python), "-m", "pip", "install", "-r", str(req_path)
-            ], check=True, capture_output=True, text=True)
+            subprocess.run(
+                [str(self.venv_python), "-m", "pip", "install", "-r", str(req_path)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print(f"✅ Dependencies aus {requirements_file} installiert")
             return True
         except subprocess.CalledProcessError as e:
@@ -100,16 +109,25 @@ class VenvManager:
     def install_development_tools(self) -> bool:
         """Installiert Standard-Development-Tools."""
         tools = [
-            "black", "isort", "flake8", "mypy",
-            "pytest", "pytest-cov", "bandit", "safety"
+            "black",
+            "isort",
+            "flake8",
+            "mypy",
+            "pytest",
+            "pytest-cov",
+            "bandit",
+            "safety",
         ]
 
         print("🛠️ Installiere Development-Tools...")
 
         try:
-            subprocess.run([
-                str(self.venv_python), "-m", "pip", "install"
-            ] + tools, check=True, capture_output=True, text=True)
+            subprocess.run(
+                [str(self.venv_python), "-m", "pip", "install"] + tools,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print("✅ Development-Tools installiert")
             return True
         except subprocess.CalledProcessError as e:
@@ -160,10 +178,11 @@ class VenvManager:
             "python.testing.pytestEnabled": True,
             "python.testing.pytestPath": pytest_path,
             "python.testing.unittestEnabled": False,
-            "python.linting.banditEnabled": True
+            "python.linting.banditEnabled": True,
         }
 
         import json
+
         with open(settings_path, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=4)
 
@@ -207,8 +226,9 @@ Für Fish Shell:
         if self.venv_exists():
             print("⚠️ venv existiert bereits")
             response = input("Möchten Sie es neu erstellen? (j/N): ")
-            if response.lower() in ['j', 'ja', 'y', 'yes']:
+            if response.lower() in ["j", "ja", "y", "yes"]:
                 import shutil
+
                 shutil.rmtree(self.venv_path)
                 print("🗑️ Alte venv gelöscht")
             else:
@@ -227,7 +247,7 @@ Für Fish Shell:
         requirements_files = [
             "requirements.txt",
             "requirements/development.txt",
-            "requirements/testing.txt"
+            "requirements/testing.txt",
         ]
 
         for req_file in requirements_files:
@@ -254,9 +274,12 @@ Für Fish Shell:
 
         # Python verfügbar?
         try:
-            result = subprocess.run([
-                str(self.venv_python), "--version"
-            ], check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                [str(self.venv_python), "--version"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print(f"✅ Python: {result.stdout.strip()}")
         except subprocess.CalledProcessError:
             print("❌ venv Python nicht funktionsfähig")
@@ -264,9 +287,12 @@ Für Fish Shell:
 
         # pip verfügbar?
         try:
-            result = subprocess.run([
-                str(self.venv_python), "-m", "pip", "--version"
-            ], check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                [str(self.venv_python), "-m", "pip", "--version"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             print(f"✅ pip: {result.stdout.strip()}")
         except subprocess.CalledProcessError:
             print("❌ venv pip nicht funktionsfähig")
@@ -276,9 +302,12 @@ Für Fish Shell:
         important_packages = ["black", "pytest", "flake8"]
         for package in important_packages:
             try:
-                subprocess.run([
-                    str(self.venv_python), "-c", f"import {package}"
-                ], check=True, capture_output=True, text=True)
+                subprocess.run(
+                    [str(self.venv_python), "-c", f"import {package}"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
                 print(f"✅ {package} verfügbar")
             except subprocess.CalledProcessError:
                 print(f"⚠️ {package} nicht installiert")
@@ -294,6 +323,7 @@ Für Fish Shell:
 
         print("🗑️ Lösche venv...")
         import shutil
+
         try:
             shutil.rmtree(self.venv_path)
             print("✅ venv erfolgreich gelöscht")
@@ -308,7 +338,11 @@ def main():
     parser.add_argument("--setup", action="store_true", help="Vollständiges venv-Setup")
     parser.add_argument("--check", action="store_true", help="venv-Gesundheitscheck")
     parser.add_argument("--clean", action="store_true", help="venv löschen")
-    parser.add_argument("--no-dev-tools", action="store_true", help="Keine Development-Tools installieren")
+    parser.add_argument(
+        "--no-dev-tools",
+        action="store_true",
+        help="Keine Development-Tools installieren",
+    )
 
     args = parser.parse_args()
 

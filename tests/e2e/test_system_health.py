@@ -1,9 +1,11 @@
 """
 E2E Health Check Tests für AI Media Analysis System
 """
-import pytest
+
 import time
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import pytest
 
 
 @pytest.mark.e2e
@@ -17,13 +19,13 @@ class TestSystemHealth:
         services_dict: Dict[str, str] = {
             "control": "healthy",
             "vision_pipeline": "healthy",
-            "llm_service": "healthy"
+            "llm_service": "healthy",
         }
 
         health_status: Dict[str, Any] = {
             "status": "healthy",
             "services": services_dict,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
         assert health_status["status"] == "healthy"
@@ -38,7 +40,7 @@ class TestSystemHealth:
             "environment": "test",
             "debug": False,
             "services_count": 15,
-            "test_mode": True
+            "test_mode": True,
         }
 
         assert config["environment"] == "test"
@@ -52,7 +54,7 @@ class TestSystemHealth:
             "/status",
             "/api/v1/analyze",
             "/api/v1/upload",
-            "/api/v1/results"
+            "/api/v1/results",
         ]
 
         # Simuliere API-Verfügbarkeit
@@ -61,7 +63,7 @@ class TestSystemHealth:
             "/status",
             "/api/v1/analyze",
             "/api/v1/upload",
-            "/api/v1/results"
+            "/api/v1/results",
         ]
 
         assert len(available_endpoints) == len(expected_endpoints)
