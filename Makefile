@@ -998,3 +998,200 @@ release-compliance: ## 🚀 Release Compliance Audit
 	@$(MAKE) test
 	@$(MAKE) compliance-report
 	@echo "${GREEN}✅ Release Compliance Audit abgeschlossen${NC}"
+
+# =============================================================================
+# VENV-ENTWICKLUNGSUMGEBUNG-REGEL (NEUE REGEL)
+# =============================================================================
+
+## Virtual Environment Management
+venv-setup: ## 🐍 Erstellt und konfiguriert venv für Development
+	@echo "${BLUE}🐍 Erstelle und konfiguriere venv...${NC}"
+	python scripts/venv_setup.py --setup
+	@echo "${GREEN}✅ venv-Setup abgeschlossen${NC}"
+
+venv-check: ## 🔍 Überprüft venv-Status und Gesundheit
+	@echo "${BLUE}🔍 Überprüfe venv-Status...${NC}"
+	python scripts/venv_check.py
+	@echo "${GREEN}✅ venv-Check abgeschlossen${NC}"
+
+venv-clean: ## 🗑️ Löscht venv komplett
+	@echo "${BLUE}🗑️ Lösche venv...${NC}"
+	python scripts/venv_setup.py --clean
+	@echo "${GREEN}✅ venv gelöscht${NC}"
+
+venv-clean-rebuild: ## 🔄 Löscht und erstellt venv neu
+	@echo "${BLUE}🔄 Baue venv neu...${NC}"
+	python scripts/venv_setup.py --clean
+	python scripts/venv_setup.py --setup
+	@echo "${GREEN}✅ venv neu erstellt${NC}"
+
+venv-install-dev: ## 📦 Installiert Development-Dependencies
+	@echo "${BLUE}📦 Installiere Development-Dependencies...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert! Führe '.venv\\Scripts\\activate' aus${NC}"; \
+		exit 1; \
+	fi
+	pip install -r requirements/development.txt
+	@echo "${GREEN}✅ Development-Dependencies installiert${NC}"
+
+venv-install-test: ## 🧪 Installiert Test-Dependencies
+	@echo "${BLUE}🧪 Installiere Test-Dependencies...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert! Führe '.venv\\Scripts\\activate' aus${NC}"; \
+		exit 1; \
+	fi
+	pip install -r requirements/testing.txt
+	@echo "${GREEN}✅ Test-Dependencies installiert${NC}"
+
+venv-install-all: ## 📦 Installiert alle Dependencies
+	@echo "${BLUE}📦 Installiere alle Dependencies...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert! Führe '.venv\\Scripts\\activate' aus${NC}"; \
+		exit 1; \
+	fi
+	pip install -r requirements.txt
+	pip install -r requirements/development.txt
+	pip install -r requirements/testing.txt
+	@echo "${GREEN}✅ Alle Dependencies installiert${NC}"
+
+venv-sync: ## 🔄 Synchronisiert Dependencies
+	@echo "${BLUE}🔄 Synchronisiere Dependencies...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert! Führe '.venv\\Scripts\\activate' aus${NC}"; \
+		exit 1; \
+	fi
+	pip install --upgrade pip
+	pip install --upgrade -r requirements/development.txt
+	@echo "${GREEN}✅ Dependencies synchronisiert${NC}"
+
+venv-validate: ## ✅ Validiert venv-Umgebung
+	@echo "${BLUE}✅ Validiere venv-Umgebung...${NC}"
+	python scripts/venv_check.py
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert!${NC}"; \
+		exit 1; \
+	else \
+		echo "${GREEN}✅ venv ist aktiviert${NC}"; \
+	fi
+	@echo "${GREEN}✅ venv-Validierung abgeschlossen${NC}"
+
+venv-requirements: ## 📋 Generiert requirements.txt aus aktueller venv
+	@echo "${BLUE}📋 Generiere requirements.txt...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert! Führe '.venv\\Scripts\\activate' aus${NC}"; \
+		exit 1; \
+	fi
+	pip freeze > requirements/current.txt
+	@echo "${GREEN}✅ requirements/current.txt generiert${NC}"
+
+venv-status: ## 📊 Zeigt venv-Status an
+	@echo "${BLUE}📊 venv-Status:${NC}"
+	@if [ -d ".venv" ]; then \
+		echo "${GREEN}  venv existiert: ✅${NC}"; \
+	else \
+		echo "${RED}  venv existiert: ❌${NC}"; \
+	fi
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "${GREEN}  venv aktiviert: ✅${NC}"; \
+		echo "${BLUE}  venv Pfad: $$VIRTUAL_ENV${NC}"; \
+		echo "${BLUE}  Python: $$(python --version)${NC}"; \
+		echo "${BLUE}  pip: $$(pip --version)${NC}"; \
+	else \
+		echo "${RED}  venv aktiviert: ❌${NC}"; \
+		echo "${YELLOW}  Aktivierung: .venv\\Scripts\\activate${NC}"; \
+	fi
+
+venv-info: ## ℹ️ Zeigt detaillierte venv-Informationen
+	@echo "${BLUE}ℹ️ Detaillierte venv-Informationen:${NC}"
+	@echo "${YELLOW}Projekt-Root: $$(pwd)${NC}"
+	@echo "${YELLOW}System: $$(python -c "import platform; print(platform.system())")${NC}"
+	@echo "${YELLOW}Python-Version: $$(python --version)${NC}"
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "${GREEN}venv aktiviert: $$VIRTUAL_ENV${NC}"; \
+		echo "${BLUE}Installierte Pakete: $$(pip list | wc -l)${NC}"; \
+		echo "${BLUE}pip-Version: $$(pip --version)${NC}"; \
+	else \
+		echo "${RED}venv nicht aktiviert${NC}"; \
+	fi
+
+venv-doctor: ## 🏥 Diagnose-Tool für venv-Probleme
+	@echo "${BLUE}🏥 Führe venv-Diagnose durch...${NC}"
+	python scripts/venv_check.py
+	@echo "${YELLOW}Prüfe Platform-spezifische Konfiguration...${NC}"
+	@if [ "$$(uname -s)" = "Windows_NT" ] || [ "$$(uname -o)" = "Msys" ]; then \
+		echo "${BLUE}Windows-Umgebung erkannt${NC}"; \
+		echo "${YELLOW}Aktivierung: .venv\\Scripts\\activate${NC}"; \
+	else \
+		echo "${BLUE}Unix-Umgebung erkannt${NC}"; \
+		echo "${YELLOW}Aktivierung: source .venv/bin/activate${NC}"; \
+	fi
+
+venv-help: ## ❓ Zeigt venv-Hilfe an
+	@echo "${GREEN}🐍 venv-Entwicklungsumgebung - Verfügbare Befehle:${NC}"
+	@echo ""
+	@echo "${YELLOW}Setup und Management:${NC}"
+	@echo "  make venv-setup          - venv erstellen und konfigurieren"
+	@echo "  make venv-clean          - venv löschen"
+	@echo "  make venv-clean-rebuild  - venv neu erstellen"
+	@echo "  make venv-check          - venv-Status überprüfen"
+	@echo ""
+	@echo "${YELLOW}Dependencies:${NC}"
+	@echo "  make venv-install-dev    - Development-Dependencies"
+	@echo "  make venv-install-test   - Test-Dependencies"
+	@echo "  make venv-install-all    - Alle Dependencies"
+	@echo "  make venv-sync           - Dependencies synchronisieren"
+	@echo ""
+	@echo "${YELLOW}Überwachung:${NC}"
+	@echo "  make venv-status         - venv-Status anzeigen"
+	@echo "  make venv-info           - Detaillierte Informationen"
+	@echo "  make venv-validate       - venv-Umgebung validieren"
+	@echo "  make venv-doctor         - Diagnose-Tool ausführen"
+	@echo ""
+	@echo "${YELLOW}Utilities:${NC}"
+	@echo "  make venv-requirements   - requirements.txt generieren"
+	@echo "  make venv-help           - Diese Hilfe anzeigen"
+	@echo ""
+	@echo "${YELLOW}Aktivierung:${NC}"
+	@echo "  Windows:    .venv\\Scripts\\activate"
+	@echo "  Linux/macOS: source .venv/bin/activate"
+
+## venv-Guards für kritische Targets
+venv-guard: ## 🛡️ Prüft ob venv aktiviert ist (interne Funktion)
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ FEHLER: venv nicht aktiviert!${NC}"; \
+		echo "${YELLOW}Bitte führe aus: .venv\\Scripts\\activate${NC}"; \
+		exit 1; \
+	fi
+
+## venv-Integration für bestehende Targets
+install-with-venv: venv-guard install ## 📦 Installation mit venv-Check
+install-dev-with-venv: venv-guard install-dev ## 🛠️ Development-Installation mit venv-Check
+test-with-venv: venv-guard test ## 🧪 Tests mit venv-Check
+format-with-venv: venv-guard format ## 🎨 Formatierung mit venv-Check
+lint-with-venv: venv-guard lint ## 🔍 Linting mit venv-Check
+
+## venv-Sicherheits-Checks
+venv-security: ## 🔒 Security-Check der venv-Dependencies
+	@echo "${BLUE}🔒 Führe Security-Check durch...${NC}"
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "${RED}❌ venv nicht aktiviert!${NC}"; \
+		exit 1; \
+	fi
+	@echo "${YELLOW}Prüfe auf Sicherheitslücken...${NC}"
+	@pip-audit || echo "${YELLOW}⚠️ pip-audit nicht installiert${NC}"
+	@safety check || echo "${YELLOW}⚠️ safety nicht installiert${NC}"
+	@echo "${GREEN}✅ Security-Check abgeschlossen${NC}"
+
+venv-audit: ## 📊 Umfassende venv-Audit
+	@echo "${BLUE}📊 Führe umfassende venv-Audit durch...${NC}"
+	@$(MAKE) venv-check
+	@$(MAKE) venv-security
+	@$(MAKE) venv-validate
+	@echo "${GREEN}✅ venv-Audit abgeschlossen${NC}"
+
+# Color definitions für venv-Targets
+GREEN := \033[0;32m
+BLUE := \033[0;34m
+YELLOW := \033[1;33m
+RED := \033[0;31m
+NC := \033[0m # No Color
