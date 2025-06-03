@@ -7,19 +7,19 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import redis
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
 import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from loguru import logger
+from pydantic import BaseModel
 
 # FastAPI App
 app = FastAPI(
     title="Control Service",
     description="System Control Interface für AI Media Analysis",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Environment Configuration
@@ -32,6 +32,7 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # Global Variables
 redis_client = None
 
+
 class SystemStatus(BaseModel):
     status: str
     mode: str
@@ -39,15 +40,18 @@ class SystemStatus(BaseModel):
     services: Dict[str, str]
     redis_connected: bool
 
+
 class ControlCommand(BaseModel):
     command: str
     target: Optional[str] = None
     parameters: Optional[Dict[str, Any]] = None
 
+
 class ControlResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Dict[str, Any]] = None
+
 
 async def init_redis():
     """Initialisiert Redis-Verbindung"""
@@ -59,7 +63,7 @@ async def init_redis():
             db=REDIS_DB,
             decode_responses=True,
             socket_connect_timeout=5,
-            socket_timeout=5
+            socket_timeout=5,
         )
         # Test connection
         redis_client.ping()
@@ -69,6 +73,7 @@ async def init_redis():
         logger.error(f"Redis Verbindungsfehler: {e}")
         redis_client = None
         return False
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -84,11 +89,12 @@ async def startup_event():
             "service": "control",
             "status": "running",
             "mode": SYSTEM_MODE,
-            "started_at": datetime.now().isoformat()
+            "started_at": datetime.now().isoformat(),
         }
         redis_client.hset("system:control", mapping=system_info)
 
     logger.info("Control Service bereit")
+
 
 @app.get("/health")
 async def health_check():
@@ -105,8 +111,9 @@ async def health_check():
         "status": "healthy" if redis_status else "degraded",
         "service": "control",
         "redis_connected": redis_status,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.get("/status", response_model=SystemStatus)
 async def get_system_status():
@@ -135,12 +142,13 @@ async def get_system_status():
             mode=SYSTEM_MODE,
             timestamp=datetime.now().isoformat(),
             services=services,
-            redis_connected=redis_connected
+            redis_connected=redis_connected,
         )
 
     except Exception as e:
         logger.error(f"Status-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/command", response_model=ControlResponse)
 async def execute_command(command: ControlCommand, background_tasks: BackgroundTasks):
@@ -149,25 +157,20 @@ async def execute_command(command: ControlCommand, background_tasks: BackgroundT
         logger.info(f"Befehl empfangen: {command.command}")
 
         if not redis_client:
-            return ControlResponse(
-                success=False,
-                message="Redis nicht verfügbar"
-            )
+            return ControlResponse(success=False, message="Redis nicht verfügbar")
 
         # Befehl verarbeiten
         if command.command == "ping":
             return ControlResponse(
                 success=True,
                 message="pong",
-                data={"timestamp": datetime.now().isoformat()}
+                data={"timestamp": datetime.now().isoformat()},
             )
 
         elif command.command == "system_info":
             system_data = redis_client.hgetall("system:control")
             return ControlResponse(
-                success=True,
-                message="System-Info abgerufen",
-                data=system_data
+                success=True, message="System-Info abgerufen", data=system_data
             )
 
         elif command.command == "restart_service" and command.target:
@@ -175,27 +178,25 @@ async def execute_command(command: ControlCommand, background_tasks: BackgroundT
             restart_data = {
                 "target": command.target,
                 "timestamp": datetime.now().isoformat(),
-                "parameters": command.parameters or {}
+                "parameters": command.parameters or {},
             }
             redis_client.lpush("control:restart_queue", str(restart_data))
 
             return ControlResponse(
-                success=True,
-                message=f"Restart-Befehl für {command.target} eingereicht"
+                success=True, message=f"Restart-Befehl für {command.target} eingereicht"
             )
 
         else:
             return ControlResponse(
-                success=False,
-                message=f"Unbekannter Befehl: {command.command}"
+                success=False, message=f"Unbekannter Befehl: {command.command}"
             )
 
     except Exception as e:
         logger.error(f"Befehl-Fehler: {e}")
         return ControlResponse(
-            success=False,
-            message=f"Fehler bei Befehlsausführung: {str(e)}"
+            success=False, message=f"Fehler bei Befehlsausführung: {str(e)}"
         )
+
 
 @app.get("/services")
 async def list_services():
@@ -210,27 +211,21 @@ async def list_services():
         for key in service_keys:
             service_name = key.split(":")[1]
             service_data = redis_client.hgetall(key)
-            services.append({
-                "name": service_name,
-                "status": service_data.get("status", "unknown"),
-                "mode": service_data.get("mode", "unknown"),
-                "started_at": service_data.get("started_at", "unknown")
-            })
+            services.append(
+                {
+                    "name": service_name,
+                    "status": service_data.get("status", "unknown"),
+                    "mode": service_data.get("mode", "unknown"),
+                    "started_at": service_data.get("started_at", "unknown"),
+                }
+            )
 
-        return {
-            "services": services,
-            "count": len(services),
-            "redis_connected": True
-        }
+        return {"services": services, "count": len(services), "redis_connected": True}
 
     except Exception as e:
         logger.error(f"Service-Listen-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        log_level=LOG_LEVEL.lower()
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level=LOG_LEVEL.lower())

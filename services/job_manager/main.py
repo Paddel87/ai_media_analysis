@@ -9,18 +9,18 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import redis
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
 import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 # FastAPI App
 app = FastAPI(
     title="Job Manager",
     description="Task Orchestration Service für AI Media Analysis",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Environment Configuration
@@ -40,17 +40,20 @@ active_jobs = {}
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper()))
 logger = logging.getLogger("job_manager")
 
+
 class JobRequest(BaseModel):
     job_type: str
     input_data: Dict[str, Any]
     priority: int = 1
     timeout: Optional[int] = None
 
+
 class JobResponse(BaseModel):
     job_id: str
     status: str
     created_at: str
     estimated_duration: Optional[int] = None
+
 
 class JobStatus(BaseModel):
     job_id: str
@@ -60,6 +63,7 @@ class JobStatus(BaseModel):
     error: Optional[str] = None
     created_at: str
     updated_at: str
+
 
 async def init_redis():
     """Initialisiert Redis-Verbindung"""
@@ -71,7 +75,7 @@ async def init_redis():
             db=REDIS_DB,
             decode_responses=True,
             socket_connect_timeout=5,
-            socket_timeout=5
+            socket_timeout=5,
         )
         # Test connection
         redis_client.ping()
@@ -81,6 +85,7 @@ async def init_redis():
         logger.error(f"Redis Verbindungsfehler: {e}")
         redis_client = None
         return False
+
 
 async def process_job_queue():
     """Background Task für Job-Queue-Processing"""
@@ -96,14 +101,17 @@ async def process_job_queue():
                     # Job als aktiv markieren
                     active_jobs[job_id] = {
                         "started_at": datetime.now().isoformat(),
-                        "status": "processing"
+                        "status": "processing",
                     }
 
                     # Job-Status in Redis aktualisieren
-                    redis_client.hset(f"job:{job_id}", mapping={
-                        "status": "processing",
-                        "updated_at": datetime.now().isoformat()
-                    })
+                    redis_client.hset(
+                        f"job:{job_id}",
+                        mapping={
+                            "status": "processing",
+                            "updated_at": datetime.now().isoformat(),
+                        },
+                    )
 
                     logger.info(f"Job {job_id} gestartet")
 
@@ -113,12 +121,17 @@ async def process_job_queue():
 
                     # Job als abgeschlossen markieren
                     active_jobs.pop(job_id, None)
-                    redis_client.hset(f"job:{job_id}", mapping={
-                        "status": "completed",
-                        "progress": 100,
-                        "updated_at": datetime.now().isoformat(),
-                        "result": json.dumps({"processed": True, "batch_id": BATCH_ID})
-                    })
+                    redis_client.hset(
+                        f"job:{job_id}",
+                        mapping={
+                            "status": "completed",
+                            "progress": 100,
+                            "updated_at": datetime.now().isoformat(),
+                            "result": json.dumps(
+                                {"processed": True, "batch_id": BATCH_ID}
+                            ),
+                        },
+                    )
 
                     logger.info(f"Job {job_id} abgeschlossen")
 
@@ -127,6 +140,7 @@ async def process_job_queue():
         except Exception as e:
             logger.error(f"Job-Queue-Fehler: {e}")
             await asyncio.sleep(1)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -143,7 +157,7 @@ async def startup_event():
             "status": "running",
             "batch_id": BATCH_ID,
             "max_concurrent_jobs": MAX_CONCURRENT_JOBS,
-            "started_at": datetime.now().isoformat()
+            "started_at": datetime.now().isoformat(),
         }
         redis_client.hset("system:job_manager", mapping=service_info)
 
@@ -151,6 +165,7 @@ async def startup_event():
     asyncio.create_task(process_job_queue())
 
     logger.info("Job Manager bereit")
+
 
 @app.get("/health")
 async def health_check():
@@ -170,8 +185,9 @@ async def health_check():
         "active_jobs": len(active_jobs),
         "max_concurrent_jobs": MAX_CONCURRENT_JOBS,
         "batch_id": BATCH_ID,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.post("/jobs", response_model=JobResponse)
 async def create_job(job_request: JobRequest):
@@ -194,14 +210,17 @@ async def create_job(job_request: JobRequest):
             "progress": 0,
             "created_at": created_at,
             "updated_at": created_at,
-            "batch_id": BATCH_ID
+            "batch_id": BATCH_ID,
         }
 
         # Job in Redis speichern
-        redis_client.hset(f"job:{job_id}", mapping={
-            k: json.dumps(v) if isinstance(v, (dict, list)) else str(v)
-            for k, v in job_data.items()
-        })
+        redis_client.hset(
+            f"job:{job_id}",
+            mapping={
+                k: json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+                for k, v in job_data.items()
+            },
+        )
 
         # Job in Queue einreihen
         redis_client.lpush("job_queue", json.dumps(job_data))
@@ -212,12 +231,13 @@ async def create_job(job_request: JobRequest):
             job_id=job_id,
             status="queued",
             created_at=created_at,
-            estimated_duration=job_request.timeout
+            estimated_duration=job_request.timeout,
         )
 
     except Exception as e:
         logger.error(f"Job-Erstellungs-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/jobs/{job_id}", response_model=JobStatus)
 async def get_job_status(job_id: str):
@@ -245,7 +265,7 @@ async def get_job_status(job_id: str):
             result=result,
             error=job_data.get("error"),
             created_at=job_data["created_at"],
-            updated_at=job_data["updated_at"]
+            updated_at=job_data["updated_at"],
         )
 
     except HTTPException:
@@ -253,6 +273,7 @@ async def get_job_status(job_id: str):
     except Exception as e:
         logger.error(f"Job-Status-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/jobs")
 async def list_jobs(status: Optional[str] = None, limit: int = 100):
@@ -270,24 +291,23 @@ async def list_jobs(status: Optional[str] = None, limit: int = 100):
             if status and job_data.get("status") != status:
                 continue
 
-            jobs.append({
-                "job_id": key.split(":")[1],
-                "job_type": job_data.get("job_type", "unknown"),
-                "status": job_data.get("status", "unknown"),
-                "progress": float(job_data.get("progress", 0)),
-                "created_at": job_data.get("created_at"),
-                "updated_at": job_data.get("updated_at")
-            })
+            jobs.append(
+                {
+                    "job_id": key.split(":")[1],
+                    "job_type": job_data.get("job_type", "unknown"),
+                    "status": job_data.get("status", "unknown"),
+                    "progress": float(job_data.get("progress", 0)),
+                    "created_at": job_data.get("created_at"),
+                    "updated_at": job_data.get("updated_at"),
+                }
+            )
 
-        return {
-            "jobs": jobs,
-            "count": len(jobs),
-            "total_keys": len(job_keys)
-        }
+        return {"jobs": jobs, "count": len(jobs), "total_keys": len(job_keys)}
 
     except Exception as e:
         logger.error(f"Job-Listen-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/stats")
 async def get_stats():
@@ -304,17 +324,13 @@ async def get_stats():
             "max_concurrent_jobs": MAX_CONCURRENT_JOBS,
             "queue_length": queue_length,
             "redis_connected": redis_client is not None,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Stats-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        log_level=LOG_LEVEL.lower()
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level=LOG_LEVEL.lower())

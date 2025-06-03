@@ -9,11 +9,11 @@ Es wird als pre-commit Hook ausgeführt und blockiert Commits, wenn Tests fehlen
 Regel: Jede neue Service-Datei muss einen entsprechenden Test haben.
 """
 
-import sys
 import os
+import re
+import sys
 from pathlib import Path
 from typing import List, Tuple
-import re
 
 
 def get_test_file_path(service_file: str) -> str:
@@ -83,21 +83,21 @@ def check_test_quality(test_file: str) -> List[str]:
         return ["Test-Datei existiert nicht"]
 
     try:
-        with open(test_file, 'r', encoding='utf-8') as f:
+        with open(test_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Prüfe auf Basis-Test-Strukturen
-        if not re.search(r'def test_.*\(', content):
+        if not re.search(r"def test_.*\(", content):
             issues.append("Keine Test-Funktionen gefunden")
 
-        if not re.search(r'import pytest|from pytest', content):
+        if not re.search(r"import pytest|from pytest", content):
             issues.append("pytest Import fehlt")
 
         if not re.search(r'""".*"""', content, re.DOTALL):
             issues.append("Docstrings fehlen")
 
         # Prüfe auf Assert-Statements
-        if not re.search(r'assert ', content):
+        if not re.search(r"assert ", content):
             issues.append("Keine Assert-Statements gefunden")
 
     except Exception as e:
@@ -179,7 +179,9 @@ def validate_test_coverage() -> bool:
     if not quality_issues:
         print("   Alle Service-Dateien haben entsprechende Tests mit guter Qualität.")
     else:
-        print(f"   {len(quality_issues)} Test-Dateien haben Qualitätsprobleme (Warnungen).")
+        print(
+            f"   {len(quality_issues)} Test-Dateien haben Qualitätsprobleme (Warnungen)."
+        )
 
     return True
 
@@ -194,7 +196,9 @@ def main() -> None:
         service_files = [f for f in sys.argv[1:] if f.startswith("services/")]
 
         if not service_files:
-            print("ℹ️  Keine Service-Dateien in diesem Commit - Validierung übersprungen")
+            print(
+                "ℹ️  Keine Service-Dateien in diesem Commit - Validierung übersprungen"
+            )
             sys.exit(0)
 
         missing_tests = find_missing_tests(service_files)

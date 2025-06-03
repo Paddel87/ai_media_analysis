@@ -4,24 +4,24 @@ CPU-optimierter Embedding-Service für Text- und Medien-Embeddings
 """
 
 import asyncio
+import hashlib
 import logging
 import os
-import hashlib
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-import redis
 import numpy as np
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
+import redis
 import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 # FastAPI App
 app = FastAPI(
     title="Embedding Server",
     description="Vector Management Service für AI Media Analysis",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Environment Configuration
@@ -41,10 +41,12 @@ redis_client = None
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper()))
 logger = logging.getLogger("embedding_server")
 
+
 class EmbeddingRequest(BaseModel):
     text: Union[str, List[str]]
     model: Optional[str] = "sentence-transformers"
     normalize: bool = True
+
 
 class EmbeddingResponse(BaseModel):
     embeddings: List[List[float]]
@@ -52,15 +54,18 @@ class EmbeddingResponse(BaseModel):
     dimensions: int
     count: int
 
+
 class VectorSearchRequest(BaseModel):
     query_embedding: List[float]
     top_k: int = 10
     threshold: Optional[float] = None
 
+
 class VectorSearchResponse(BaseModel):
     results: List[Dict[str, Any]]
     count: int
     query_time_ms: float
+
 
 async def init_redis():
     """Initialisiert Redis-Verbindung"""
@@ -72,7 +77,7 @@ async def init_redis():
             db=REDIS_DB,
             decode_responses=True,
             socket_connect_timeout=5,
-            socket_timeout=5
+            socket_timeout=5,
         )
         # Test connection
         redis_client.ping()
@@ -83,6 +88,7 @@ async def init_redis():
         redis_client = None
         return False
 
+
 def generate_dummy_embedding(text: str, dimensions: int = 384) -> List[float]:
     """Generiert ein Dummy-Embedding basierend auf Text-Hash (für CPU-only Deployment)"""
     # Hash des Textes für reproduzierbare Embeddings
@@ -91,9 +97,9 @@ def generate_dummy_embedding(text: str, dimensions: int = 384) -> List[float]:
     # Konvertiere Hash zu Embedding
     embedding = []
     for i in range(0, dimensions * 8, 8):
-        hex_chunk = text_hash[i % len(text_hash):(i % len(text_hash)) + 8]
+        hex_chunk = text_hash[i % len(text_hash) : (i % len(text_hash)) + 8]
         if len(hex_chunk) < 8:
-            hex_chunk += text_hash[:8 - len(hex_chunk)]
+            hex_chunk += text_hash[: 8 - len(hex_chunk)]
 
         # Konvertiere zu Float zwischen -1 und 1
         int_val = int(hex_chunk, 16)
@@ -106,6 +112,7 @@ def generate_dummy_embedding(text: str, dimensions: int = 384) -> List[float]:
         embedding = [x / norm for x in embedding]
 
     return embedding[:dimensions]
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -122,11 +129,12 @@ async def startup_event():
             "status": "running",
             "model_type": MODEL_TYPE,
             "batch_size": BATCH_SIZE,
-            "started_at": datetime.now().isoformat()
+            "started_at": datetime.now().isoformat(),
         }
         redis_client.hset("system:embedding_server", mapping=service_info)
 
     logger.info("Embedding Server bereit")
+
 
 @app.get("/health")
 async def health_check():
@@ -145,8 +153,9 @@ async def health_check():
         "redis_connected": redis_status,
         "model_type": MODEL_TYPE,
         "batch_size": BATCH_SIZE,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.post("/embeddings", response_model=EmbeddingResponse)
 async def create_embeddings(request: EmbeddingRequest):
@@ -172,12 +181,13 @@ async def create_embeddings(request: EmbeddingRequest):
             embeddings=embeddings,
             model=request.model or "dummy-cpu-model",
             dimensions=len(embeddings[0]) if embeddings else 0,
-            count=len(embeddings)
+            count=len(embeddings),
         )
 
     except Exception as e:
         logger.error(f"Embedding-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/embeddings/cached/{text_hash}")
 async def get_cached_embedding(text_hash: str):
@@ -193,7 +203,7 @@ async def get_cached_embedding(text_hash: str):
             return {
                 "embedding": eval(cached_embedding),  # TODO: Sicherer JSON-Parse
                 "cached": True,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
         else:
             raise HTTPException(status_code=404, detail="Embedding nicht im Cache")
@@ -201,6 +211,7 @@ async def get_cached_embedding(text_hash: str):
     except Exception as e:
         logger.error(f"Cache-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/search", response_model=VectorSearchResponse)
 async def vector_search(request: VectorSearchRequest):
@@ -214,7 +225,7 @@ async def vector_search(request: VectorSearchRequest):
             {
                 "id": f"doc_{i}",
                 "score": 0.95 - (i * 0.1),
-                "metadata": {"type": "text", "source": f"document_{i}"}
+                "metadata": {"type": "text", "source": f"document_{i}"},
             }
             for i in range(min(request.top_k, 5))
         ]
@@ -222,14 +233,13 @@ async def vector_search(request: VectorSearchRequest):
         query_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return VectorSearchResponse(
-            results=dummy_results,
-            count=len(dummy_results),
-            query_time_ms=query_time
+            results=dummy_results, count=len(dummy_results), query_time_ms=query_time
         )
 
     except Exception as e:
         logger.error(f"Suche-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/stats")
 async def get_stats():
@@ -243,7 +253,7 @@ async def get_stats():
             "uptime_seconds": 0,  # TODO: Implementieren
             "processed_requests": 0,  # TODO: Counter implementieren
             "cache_hits": 0,  # TODO: Redis Stats
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         if redis_client:
@@ -252,7 +262,7 @@ async def get_stats():
                 redis_info = redis_client.info()
                 stats["redis_info"] = {
                     "connected_clients": redis_info.get("connected_clients", 0),
-                    "used_memory_human": redis_info.get("used_memory_human", "0B")
+                    "used_memory_human": redis_info.get("used_memory_human", "0B"),
                 }
             except:
                 pass
@@ -263,11 +273,7 @@ async def get_stats():
         logger.error(f"Stats-Fehler: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 if __name__ == "__main__":
     print("Starting embedding server...")
-    uvicorn.run(
-        "serve:app",
-        host="0.0.0.0",
-        port=8000,
-        log_level=LOG_LEVEL.lower()
-    )
+    uvicorn.run("serve:app", host="0.0.0.0", port=8000, log_level=LOG_LEVEL.lower())
