@@ -1,24 +1,18 @@
 # AI Media Analysis System - Black Code Standard Regel
-# Version: 1.0.0
+# Version: 2.0.0 - Fokussiert auf Black-Details
 # Status: Aktiv - OBLIGATORISCH für alle Python-Dateien
+# Verweis: Master-Formatierungsregel siehe `.cursorrules.formatting`
 
 ## Black-Standard-Philosophie
 - **Einheitlichkeit über Persönlichkeit**: Konsistente Formatierung im gesamten Codebase
 - **Zero-Configuration**: Black-Standardeinstellungen ohne Anpassungen
 - **Automatisierung**: Formatierung erfolgt automatisch vor jedem Commit
 - **Strict Compliance**: Keine Abweichungen vom Black-Standard erlaubt
-- **Developer Experience**: Weniger Zeit für Formatierung, mehr für Features
 
-## Obligatorische Black-Standard-Anforderungen
+## Detaillierte Black-Konfiguration
 
-### 1. Black-Konfiguration (PFLICHT)
-- **Line Length**: Maximum 88 Zeichen (Black-Standard)
-- **Target Version**: Python 3.11+
-- **String Normalization**: Doppelte Anführungszeichen bevorzugt
-- **No Custom Options**: Standard Black-Konfiguration ohne Modifikationen
-
+### pyproject.toml - Black Setup
 ```toml
-# pyproject.toml - Black Konfiguration
 [tool.black]
 line-length = 88
 target-version = ['py311']
@@ -28,30 +22,18 @@ extend-exclude = '''
   # Verzeichnisse die ausgeschlossen werden
   \.eggs
   | \.git
-  | \.hg
   | \.mypy_cache
   | \.pytest_cache
   | \.tox
   | \.venv
   | venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  # Spezifische Dateien
   | migrations/
 )/
 '''
 ```
 
-### 2. Import-Sortierung mit isort (PFLICHT)
-- **Black-Kompatibilität**: isort mit Black-Profil
-- **Multi-Line-Output**: Mode 3 (Vertical Hanging Indent)
-- **Line Length**: 88 Zeichen (matching Black)
-- **Force Grid Wrap**: False für bessere Lesbarkeit
-
+### isort - Black-Kompatible Konfiguration
 ```toml
-# pyproject.toml - isort Konfiguration
 [tool.isort]
 profile = "black"
 multi_line_output = 3
@@ -62,109 +44,116 @@ use_parentheses = true
 ensure_newline_before_comments = true
 ```
 
-### 3. Code-Beispiele
+## Black-spezifische Code-Beispiele
 
-#### ✅ Korrekt - Black-konform
+### String-Formatierung
 ```python
-"""Modul-Docstring mit doppelten Anführungszeichen."""
+# ✅ Black-Standard: Doppelte Anführungszeichen
+message = "Hallo Welt"
+f_string = f"Ergebnis: {result}"
 
-import os
-import sys
-from typing import Dict, List, Optional
+# ❌ Nicht Black-konform
+message = 'Hallo Welt'
+old_format = "Ergebnis: %s" % result
+```
 
-import redis
-import uvicorn
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
-
-class ServiceConfig(BaseModel):
-    """Service-Konfiguration mit klarer Typisierung."""
-
-    name: str
-    port: int = 8000
-    debug: bool = False
-    features: List[str] = []
-
-
-def process_video(
+### Komplexe Funktionsparameter
+```python
+# ✅ Black-konforme Formatierung
+async def complex_video_processing(
     video_path: str,
-    output_dir: str,
-    config: Optional[ServiceConfig] = None,
+    output_directory: str,
+    analysis_config: Dict[str, Any],
     *,
-    batch_size: int = 1,
-) -> Dict[str, any]:
-    """
-    Verarbeitet Video mit konfigurierbaren Parametern.
+    batch_size: int = 32,
+    parallel_workers: int = 4,
+    enable_gpu: bool = False,
+    callback: Optional[Callable[[str], None]] = None,
+) -> ProcessingResult:
+    """Black formatiert automatisch komplexe Signaturen."""
+    pass
+```
 
-    Args:
-        video_path: Pfad zur Videodatei
-        output_dir: Ausgabeverzeichnis
-        config: Optionale Service-Konfiguration
-        batch_size: Batch-Größe für Verarbeitung
-
-    Returns:
-        Verarbeitungsresultat als Dictionary
-    """
-    if not os.path.exists(video_path):
-        raise FileNotFoundError(f"Video nicht gefunden: {video_path}")
-
-    result = {
-        "status": "success",
-        "processed_frames": 0,
-        "output_path": output_dir,
-        "metadata": {"batch_size": batch_size},
-    }
-
-    # Komplexe Liste wird automatisch formatiert
-    processing_steps = [
+### Dictionary und Listen
+```python
+# ✅ Black-Standard: Trailing Commas
+config = {
+    "video_settings": {
+        "resolution": "1920x1080",
+        "fps": 30,
+        "codec": "h264",
+    },
+    "audio_settings": {
+        "bitrate": 128,
+        "channels": 2,
+        "sample_rate": 44100,
+    },
+    "processing_options": [
         "frame_extraction",
         "object_detection",
         "face_recognition",
         "nsfw_detection",
-        "result_aggregation",
-    ]
-
-    for step in processing_steps:
-        # Black formatiert automatisch
-        if step == "frame_extraction" and config and config.debug:
-            print(f"Debug: Ausführung von {step}")
-
-    return result
+    ],
+}
 ```
 
-#### ❌ Inkorrekt - Nicht Black-konform
+### Comprehensions und Lambda
 ```python
-# Single quotes, inconsistent spacing
-import os,sys
-from typing import Dict,List,Optional
-import redis,uvicorn
-from fastapi import FastAPI,HTTPException
+# ✅ Black-Standard: Automatische Formatierung
+filtered_results = [
+    result.data
+    for result in processing_results
+    if result.confidence > 0.8 and result.status == "success"
+]
 
-class ServiceConfig( BaseModel ):
-    name:str
-    port:int=8000
-    debug:bool=False
-
-def process_video(video_path:str,output_dir:str,config:Optional[ServiceConfig]=None,*,batch_size:int=1)->Dict[str,any]:
-    if not os.path.exists( video_path ):
-        raise FileNotFoundError( f'Video nicht gefunden: {video_path}' )
-
-    result={'status':'success','processed_frames':0,'output_path':output_dir,'metadata':{'batch_size':batch_size}}
-
-    processing_steps=['frame_extraction','object_detection','face_recognition','nsfw_detection','result_aggregation']
-
-    for step in processing_steps:
-        if step=='frame_extraction' and config and config.debug:print(f'Debug: Ausführung von {step}')
-
-    return result
+# Lambda in komplexen Strukturen
+sorted_videos = sorted(
+    video_list,
+    key=lambda x: (x.priority, x.created_at),
+    reverse=True,
+)
 ```
 
-## Automatisierung und Enforcement
+## Advanced Black Features
 
-### Pre-commit Hooks (OBLIGATORISCH)
+### Magic Comments
+```python
+# Temporäre Deaktivierung (selten verwenden!)
+# fmt: off
+manually_formatted_data = [
+    [1,  2,  3,  4],
+    [5,  6,  7,  8],
+    [9, 10, 11, 12]
+]
+# fmt: on
+
+# Einzelne Zeile überspringen
+matrix = [[1, 2], [3, 4]]  # fmt: skip
+```
+
+### String-Handling
+```python
+# ✅ Black automatische String-Formatierung
+long_message = (
+    "Dies ist eine sehr lange Nachricht, die automatisch "
+    "von Black in mehrere Zeilen aufgeteilt wird, um die "
+    "88-Zeichen-Grenze einzuhalten."
+)
+
+# Multiline Strings bleiben unverändert
+sql_query = """
+    SELECT video_id, analysis_result, confidence
+    FROM video_analysis
+    WHERE confidence > 0.8
+    AND status = 'completed'
+    ORDER BY created_at DESC
+"""
+```
+
+## Pre-commit Hook Details
+
+### .pre-commit-config.yaml - Black Section
 ```yaml
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
     rev: 24.2.0
@@ -172,58 +161,71 @@ repos:
       - id: black
         language_version: python3.11
         args: [--target-version=py311]
+        exclude: ^(migrations/|legacy_code/)
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
         args: ["--profile", "black"]
+        exclude: ^(migrations/|legacy_code/)
 ```
 
-### Makefile-Targets
-```makefile
-# Automatische Formatierung
-format: ## Formatiert Code mit Black und isort
-	@echo "🎨 Formatiere Python-Code mit Black..."
-	python -m black services/ tests/ scripts/
-	@echo "🔧 Sortiere Imports mit isort..."
-	python -m isort services/ tests/ scripts/ --profile black
-	@echo "✅ Code-Formatierung abgeschlossen"
+### Installation und Setup
+```bash
+# Einmalige Installation
+pip install pre-commit black isort
+pre-commit install
 
-check-format: ## Prüft Code-Formatierung ohne Änderungen
+# Manuelle Ausführung auf allen Dateien
+pre-commit run black --all-files
+pre-commit run isort --all-files
+```
+
+## Makefile Integration
+
+### Black-spezifische Targets
+```makefile
+.PHONY: black isort format-black check-black
+
+black: ## Formatiert Code mit Black
+	@echo "🎨 Formatiere mit Black..."
+	python -m black services/ tests/ scripts/
+
+isort: ## Sortiert Imports mit isort
+	@echo "🔧 Sortiere Imports..."
+	python -m isort services/ tests/ scripts/ --profile black
+
+check-black: ## Prüft Black-Formatierung ohne Änderungen
 	@echo "🔍 Prüfe Black-Formatierung..."
 	python -m black --check --diff services/ tests/ scripts/
-	@echo "🔍 Prüfe isort-Formatierung..."
 	python -m isort --check-only --diff services/ tests/ scripts/
-	@echo "✅ Formatierungs-Check abgeschlossen"
 
-format-check-strict: ## Strenger Formatierungs-Check für CI/CD
-	@echo "🚨 Strenger Black-Standard-Check..."
-	python -m black --check services/ tests/ scripts/ || (echo "❌ Black-Formatierung fehlgeschlagen" && exit 1)
-	python -m isort --check-only services/ tests/ scripts/ || (echo "❌ Import-Sortierung fehlgeschlagen" && exit 1)
-	@echo "✅ Strenger Formatierungs-Check erfolgreich"
+format-black: black isort ## Vollständige Black-Formatierung
+	@echo "✅ Black-Formatierung abgeschlossen"
 ```
 
-### GitHub Actions Integration
+## CI/CD - Black-spezifische Pipeline
+
+### GitHub Actions - Black Only
 ```yaml
-# .github/workflows/black-standard.yml
-name: Black Code Standard Check
+name: Black Standard Check
 on: [push, pull_request]
 
 jobs:
-  black-standard:
+  black-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install formatting tools
+      - name: Install Black and isort
         run: |
-          pip install black isort
+          pip install black==24.2.0 isort==5.13.2
 
       - name: Check Black formatting
         run: |
@@ -231,229 +233,114 @@ jobs:
 
       - name: Check import sorting
         run: |
-          isort --check-only --diff services/ tests/ scripts/
+          isort --check-only --diff services/ tests/ scripts/ --profile black
 
-      - name: Fail if formatting issues found
-        run: |
-          echo "❌ Code-Formatierung entspricht nicht dem Black-Standard!"
-          echo "🔧 Führe 'make format' aus, um Probleme zu beheben"
-          exit 1
+      - name: Format report on failure
         if: failure()
+        run: |
+          echo "❌ Black-Standard-Verstoß gefunden!"
+          echo "🔧 Führe 'make format-black' aus, um zu beheben"
 ```
 
-## Entwickler-Workflow
+## IDE-spezifische Black-Integration
 
-### 1. Initiales Setup
-```bash
-# Black-Standard-Umgebung einrichten
-make install-dev
-pre-commit install
-
-# Bestehenden Code formatieren
-make format
-```
-
-### 2. Täglicher Workflow
-```bash
-# Vor dem Commit automatisch formatieren
-git add .
-# Pre-commit Hook formatiert automatisch
-git commit -m "Feature implemented"
-
-# Oder manuell formatieren
-make format
-git add .
-git commit -m "Feature implemented"
-```
-
-### 3. CI/CD Integration
-- **Pull Request**: Automatischer Black-Check
-- **Merge**: Nur bei erfolgreicher Formatierung
-- **Deploy**: Black-Standard ist Voraussetzung
-
-## IDE Integration
-
-### VS Code Settings
+### VS Code - Detaillierte Settings
 ```json
-// .vscode/settings.json
 {
     "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--target-version", "py311"],
-    "python.sortImports.args": ["--profile", "black"],
+    "python.formatting.blackArgs": [
+        "--target-version", "py311",
+        "--line-length", "88"
+    ],
+    "python.formatting.blackPath": "./venv/bin/black",
     "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-    },
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": ["--max-line-length=88", "--ignore=E203,W503"]
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    }
 }
 ```
 
-### PyCharm Settings
-- **File → Settings → Tools → External Tools**
-- **Black**: Add external tool with `black $FilePath$`
-- **isort**: Add external tool with `isort $FilePath$ --profile black`
+### PyCharm - Black Tool Configuration
+```
+File → Settings → Tools → External Tools
 
-## Enforcement-Mechanismen
+Name: Black Format
+Program: $ProjectFileDir$/venv/bin/black
+Arguments: $FilePath$ --target-version py311
+Working Directory: $ProjectFileDir$
+```
 
-### 1. Pre-commit Prevention
+## Monitoring und Compliance
+
+### Black-Compliance-Metriken
 ```bash
-# Commit wird blockiert bei Formatierungsfehlern
-$ git commit -m "New feature"
-black................................................................Failed
-- hook id: black
-- files were modified by this hook
+# Black-spezifische Reports
+black --check services/ tests/ scripts/ 2>&1 | grep "files" || echo "Alle Dateien Black-konform"
 
-isort................................................................Failed
-- hook id: isort
-- files were modified by this hook
+# Detaillierter Diff-Report
+black --check --diff services/ > black_violations.diff
 
-# Automatic fix and retry
-Files reformatted. Please add and commit again.
+# Line-Length-Violations
+grep -r "# noqa: E501\|# pylint: disable=line-too-long" services/ || echo "Keine Line-Length-Exceptions"
 ```
 
-### 2. CI/CD Pipeline Failure
-```yaml
-❌ Build failed - Black standard violated
-- services/new_service/main.py: Line too long (92 > 88 characters)
-- tests/test_feature.py: Import sorting incorrect
-```
-
-### 3. Code Review Requirements
-- **Automated Check**: GitHub Status Check muss erfolgreich sein
-- **Review Blocker**: PR kann nicht gemerged werden bei Formatierungsfehlern
-- **Bot Comments**: Automatische Kommentare bei Formatierungsproblemen
-
-## Ausnahmen und Edge Cases
-
-### Temporäre Deaktivierung (NUR in Ausnahmefällen)
-```python
-# fmt: off
-manually_formatted_matrix = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-]
-# fmt: on
-
-# Für spezielle Formatierung die lesbarere ist
-```
-
-### Legacy Code Migration
-```python
-# Legacy-Code schrittweise migrieren
-# 1. Datei-weise Black-Formatierung
-# 2. Kommit pro formatierte Datei
-# 3. Keine funktionalen Änderungen mit Formatierung mischen
-```
-
-## Monitoring und Metriken
-
-### Code-Qualitäts-Dashboard
-- **Formatierungs-Compliance**: 100% für neue Dateien
-- **Pre-commit-Erfolgsrate**: > 95%
-- **CI/CD-Failure-Rate**: < 5% durch Formatierung
-- **Developer-Productivity**: Weniger Zeit für Code-Review-Formatierungs-Diskussionen
-
-### Automatisierte Reports
+### Automatisierte Black-Updates
 ```bash
-# Weekly formatting compliance report
-make format-report
-
-# Black-Standard Violations Report
-make black-violations-report
-```
-
-## Integration mit anderen Regeln
-
-### Verbindung zu Feature Testing
-- **Test-Code**: Unterliegt denselben Black-Standards
-- **Test-Fixtures**: Müssen Black-konform sein
-- **Mock-Daten**: Automatische Formatierung
-
-### Verbindung zu Dokumentation
-- **Code-Beispiele**: Müssen Black-formatiert sein
-- **README-Code-Blöcke**: Black-Standard in Dokumentation
-- **API-Dokumentation**: Konsistente Code-Beispiele
-
-### Verbindung zu Iterative Development
-- **Iteration Commits**: Formatierung vor jedem Iterations-Commit
-- **Service Integration**: Neuer Service-Code muss Black-konform sein
-- **Legacy Refactoring**: Schrittweise Formatierung bei Code-Updates
-
-## Schulung und Adoption
-
-### Developer Onboarding
-1. **Black-Standard-Workshop**: Einführung in Philosophie und Tools
-2. **IDE-Setup-Session**: Konfiguration der Entwicklungsumgebung
-3. **Hands-on-Training**: Praktische Übungen mit Black-Formatierung
-4. **Code-Review-Training**: Black-Standard in Reviews berücksichtigen
-
-### Best Practices Guide
-- **Commit-Hygiene**: Formatierungs-Commits vs. Feature-Commits trennen
-- **Branch-Management**: Feature-Branches vor Merge formatieren
-- **Code-Review**: Fokus auf Logic, nicht auf Formatierung
-- **Legacy-Migration**: Strategien für bestehenden Code
-
-## Troubleshooting
-
-### Häufige Probleme
-
-#### "Line too long" Fehler
-```python
-# ❌ Problem
-very_long_function_call(parameter1, parameter2, parameter3, parameter4, parameter5, parameter6)
-
-# ✅ Lösung - Black formatiert automatisch
-very_long_function_call(
-    parameter1,
-    parameter2,
-    parameter3,
-    parameter4,
-    parameter5,
-    parameter6
+# Black-Version-Update-Workflow
+pip install --upgrade black
+black --check services/ tests/ scripts/ || (
+    echo "Black-Update erfordert Reformatierung"
+    black services/ tests/ scripts/
+    git add -A
+    git commit -m "style: update to new Black version"
 )
 ```
 
-#### Import-Konflikte zwischen Black und isort
+## Legacy-Code Migration Strategy
+
+### Schritt-für-Schritt Black-Migration
 ```bash
-# Lösung: isort mit Black-Profil verwenden
-isort --profile black file.py
+# 1. Service-spezifische Migration
+black services/llm_service/
+git add services/llm_service/
+git commit -m "style: format llm_service with Black"
+
+# 2. Test-Migration
+black tests/unit/test_llm_service/
+git add tests/unit/test_llm_service/
+git commit -m "style: format llm_service tests with Black"
+
+# 3. Integration-Migration
+black tests/integration/
+git add tests/integration/
+git commit -m "style: format integration tests with Black"
 ```
 
-#### Pre-commit Hook schlägt fehl
+### Konflikt-Resolution bei Black-Updates
 ```bash
-# Diagnose
-pre-commit run --all-files
-
-# Fix
-make format
-git add .
-git commit --no-verify  # NUR in Notfällen
+# Merge-Konflikte durch Black-Formatierung lösen
+git checkout feature-branch
+make format-black
+git add -A
+git commit -m "style: resolve Black formatting conflicts"
+git rebase main
 ```
-
-## Version und Updates
-
-### Black-Version-Management
-- **Locked Version**: Spezifische Black-Version in requirements.txt
-- **Update-Strategie**: Koordinierte Updates über alle Entwickler
-- **Regression-Testing**: Tests nach Black-Updates
-
-### Konfiguration-Evolution
-- **Backwards Compatibility**: Vorsichtige Konfigurationsänderungen
-- **Team Communication**: Änderungen werden kommuniziert
-- **Migration Guide**: Schritt-für-Schritt Updates
 
 ---
 
-## 🎯 Status: AKTIV - Obligatorisch für alle Python-Dateien
+## 🔗 Integration mit Master-Regelwerk
 
-Diese Regel ist **sofort wirksam** und gilt für:
-- ✅ Alle neuen Python-Dateien
-- ✅ Alle geänderten Python-Dateien
-- ✅ Alle Commits und Pull Requests
-- ✅ CI/CD Pipeline-Validierung
-- ✅ Code Review Requirements
+Diese detaillierte Black-Standard-Regel ist Teil des **Master-Formatierungsregelwerks** (`.cursorrules.formatting`).
 
-**Kein Python-Code ohne Black-Standard-Compliance!** 🎨✨
+**Für allgemeine Formatierung siehe**: `.cursorrules.formatting`
+**Für umfassende Regeln siehe**: `.cursorrules/README.md`
+
+**Verwandte Regeln:**
+- **Linter-Compliance**: `.cursorrules/rules/linter_compliance.md`
+- **Feature-Testing**: `.cursorrules/rules/feature_testing.md`
+- **Config-Validation**: `.cursorrules/rules/config_validation.md`
