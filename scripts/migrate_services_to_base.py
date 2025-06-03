@@ -7,7 +7,7 @@ Migriert alle Services zur neuen ServiceBase-Klasse aus .cursorrules.
 
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class ServiceMigrator:

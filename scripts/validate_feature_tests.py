@@ -13,7 +13,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
 
 def get_test_file_path(service_file: str) -> str:
@@ -139,7 +139,7 @@ def _collect_coverage_data() -> Dict[str, Any]:
         "line_coverage": {},
         "branch_coverage": {},
         "function_coverage": {},
-        "module_coverage": {}
+        "module_coverage": {},
     }
 
     try:
@@ -210,31 +210,39 @@ def _calculate_coverage_metrics(coverage_data: Dict[str, Any]) -> Dict[str, Any]
         "module_coverages": {},
         "critical_modules": {},
         "uncovered_lines": [],
-        "uncovered_functions": []
+        "uncovered_functions": [],
     }
 
     # Line Coverage berechnen
     line_data = coverage_data.get("line_coverage", {})
     if line_data:
-        metrics["overall_line_coverage"] = _calculate_line_coverage_percentage(line_data)
+        metrics["overall_line_coverage"] = _calculate_line_coverage_percentage(
+            line_data
+        )
         metrics["uncovered_lines"] = _find_uncovered_lines(line_data)
 
     # Branch Coverage berechnen
     branch_data = coverage_data.get("branch_coverage", {})
     if branch_data:
-        metrics["overall_branch_coverage"] = _calculate_branch_coverage_percentage(branch_data)
+        metrics["overall_branch_coverage"] = _calculate_branch_coverage_percentage(
+            branch_data
+        )
 
     # Function Coverage berechnen
     function_data = coverage_data.get("function_coverage", {})
     if function_data:
-        metrics["overall_function_coverage"] = _calculate_function_coverage_percentage(function_data)
+        metrics["overall_function_coverage"] = _calculate_function_coverage_percentage(
+            function_data
+        )
         metrics["uncovered_functions"] = _find_uncovered_functions(function_data)
 
     # Module-spezifische Coverage
     module_data = coverage_data.get("module_coverage", {})
     if module_data:
         metrics["module_coverages"] = _calculate_module_coverages(module_data)
-        metrics["critical_modules"] = _identify_critical_modules(metrics["module_coverages"])
+        metrics["critical_modules"] = _identify_critical_modules(
+            metrics["module_coverages"]
+        )
 
     return metrics
 
@@ -245,7 +253,7 @@ def _validate_coverage_requirements(metrics: Dict[str, Any]) -> Dict[str, Any]:
         "min_line_coverage": 80.0,
         "min_branch_coverage": 70.0,
         "min_function_coverage": 85.0,
-        "critical_module_min": 90.0
+        "critical_module_min": 90.0,
     }
 
     results = {
@@ -254,49 +262,65 @@ def _validate_coverage_requirements(metrics: Dict[str, Any]) -> Dict[str, Any]:
         "function_coverage_passed": False,
         "critical_modules_passed": False,
         "overall_passed": False,
-        "failures": []
+        "failures": [],
     }
 
     # Line Coverage validieren
     line_coverage = metrics.get("overall_line_coverage", 0.0)
     results["line_coverage_passed"] = line_coverage >= requirements["min_line_coverage"]
     if not results["line_coverage_passed"]:
-        results["failures"].append(f"Line Coverage zu niedrig: {line_coverage:.1f}% < {requirements['min_line_coverage']}%")
+        results["failures"].append(
+            f"Line Coverage zu niedrig: {line_coverage:.1f}% < {requirements['min_line_coverage']}%"
+        )
 
     # Branch Coverage validieren
     branch_coverage = metrics.get("overall_branch_coverage", 0.0)
-    results["branch_coverage_passed"] = branch_coverage >= requirements["min_branch_coverage"]
+    results["branch_coverage_passed"] = (
+        branch_coverage >= requirements["min_branch_coverage"]
+    )
     if not results["branch_coverage_passed"]:
-        results["failures"].append(f"Branch Coverage zu niedrig: {branch_coverage:.1f}% < {requirements['min_branch_coverage']}%")
+        results["failures"].append(
+            f"Branch Coverage zu niedrig: {branch_coverage:.1f}% < {requirements['min_branch_coverage']}%"
+        )
 
     # Function Coverage validieren
     function_coverage = metrics.get("overall_function_coverage", 0.0)
-    results["function_coverage_passed"] = function_coverage >= requirements["min_function_coverage"]
+    results["function_coverage_passed"] = (
+        function_coverage >= requirements["min_function_coverage"]
+    )
     if not results["function_coverage_passed"]:
-        results["failures"].append(f"Function Coverage zu niedrig: {function_coverage:.1f}% < {requirements['min_function_coverage']}%")
+        results["failures"].append(
+            f"Function Coverage zu niedrig: {function_coverage:.1f}% < {requirements['min_function_coverage']}%"
+        )
 
     # Critical Modules validieren
     critical_modules = metrics.get("critical_modules", {})
-    results["critical_modules_passed"] = _validate_critical_module_coverage(critical_modules, requirements["critical_module_min"])
+    results["critical_modules_passed"] = _validate_critical_module_coverage(
+        critical_modules, requirements["critical_module_min"]
+    )
     if not results["critical_modules_passed"]:
         results["failures"].append("Kritische Module haben unzureichende Coverage")
 
     # Overall Pass/Fail bestimmen
-    results["overall_passed"] = all([
-        results["line_coverage_passed"],
-        results["branch_coverage_passed"],
-        results["function_coverage_passed"],
-        results["critical_modules_passed"]
-    ])
+    results["overall_passed"] = all(
+        [
+            results["line_coverage_passed"],
+            results["branch_coverage_passed"],
+            results["function_coverage_passed"],
+            results["critical_modules_passed"],
+        ]
+    )
 
     return results
 
 
-def _generate_coverage_report(metrics: Dict[str, Any], validation_results: Dict[str, Any]) -> None:
+def _generate_coverage_report(
+    metrics: Dict[str, Any], validation_results: Dict[str, Any]
+) -> None:
     """Generiert Coverage-Report."""
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("COVERAGE VALIDATION REPORT")
-    print("="*50)
+    print("=" * 50)
 
     # Metriken anzeigen
     print(f"Line Coverage:     {metrics.get('overall_line_coverage', 0):.1f}%")
@@ -304,7 +328,9 @@ def _generate_coverage_report(metrics: Dict[str, Any], validation_results: Dict[
     print(f"Function Coverage: {metrics.get('overall_function_coverage', 0):.1f}%")
 
     # Validierungsergebnisse
-    print(f"\nValidierung: {'PASSED' if validation_results['overall_passed'] else 'FAILED'}")
+    print(
+        f"\nValidierung: {'PASSED' if validation_results['overall_passed'] else 'FAILED'}"
+    )
 
     if validation_results["failures"]:
         print("\nFehlgeschlagene Anforderungen:")
@@ -331,7 +357,7 @@ def _parse_module_coverage() -> Dict[str, Any]:
     """Parst Module Coverage."""
     return {
         "services/": {"lines": 500, "covered": 425},
-        "tests/": {"lines": 300, "covered": 270}
+        "tests/": {"lines": 300, "covered": 270},
     }
 
 
@@ -385,7 +411,9 @@ def _identify_critical_modules(module_coverages: Dict[str, float]) -> Dict[str, 
     return critical_modules
 
 
-def _validate_critical_module_coverage(critical_modules: Dict[str, float], min_coverage: float) -> bool:
+def _validate_critical_module_coverage(
+    critical_modules: Dict[str, float], min_coverage: float
+) -> bool:
     """Validiert Coverage für kritische Module."""
     for module, coverage in critical_modules.items():
         if coverage < min_coverage:

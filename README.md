@@ -157,6 +157,8 @@ make compliance-help   # Compliance-Level-Übersicht
 - **⚠️ RECOMMENDED:** + mypy, bandit, safety (Development Standard)
 - **🎉 EXCELLENCE:** Alle Checks + 100% Test Coverage (Production Ready)
 
+# HINWEIS: DSGVO, BSI, EU-Compliance, Audit, Datenschutz oder Behördenvorgaben sind für dieses Projekt nicht bindend und werden nicht geprüft. Alle gegenteiligen Aussagen sind ungültig.
+
 ### 🔍 venv-Environment-Management
 
 #### venv-Gesundheitsüberwachung
@@ -387,3 +389,50 @@ make monitor           # Service-Monitoring
 **Entwicklung:** Enterprise-Grade Framework mit 5 Hauptentwicklungsregeln
 **Status:** Production-Ready Development Environment
 **Next:** Production Deployment auf VPS mit Cloud AI-Integration
+
+## Systemvoraussetzungen
+
+- **Python-Version:** 3.11 oder höher (empfohlen und getestet)
+- Alle Kernabhängigkeiten und Services sind für Python 3.11+ validiert.
+- Für Windows, Linux und macOS geeignet.
+
+**Hinweis:**
+Bitte stelle sicher, dass du ein aktuelles Python 3.11.x verwendest. Ältere Versionen (<3.11) werden nicht offiziell unterstützt und können zu Kompatibilitätsproblemen führen.
+
+## Dependency-Management
+
+Alle Abhängigkeiten werden modular in `requirements/` verwaltet:
+
+- **Basis:** `requirements/base.txt`
+- **Entwicklung:** `requirements/development.txt`
+- **Testing:** `requirements/testing.txt`
+- **Service-spezifisch:** z.B. `requirements/services/vision.txt`, `requirements/services/llm.txt`, ...
+
+**Installation (Beispiele):**
+
+```bash
+# Entwicklung
+pip install -r requirements/development.txt
+
+# Testing
+pip install -r requirements/testing.txt
+
+# Service-spezifisch (z.B. Vision)
+pip install -r requirements/services/vision.txt
+```
+
+**Security-Check:**
+
+```bash
+safety check
+pip-audit
+```
+
+Alle Pakete sind für Python 3.11+ getestet und abgestimmt.
+
+**Hinweis:**
+Nach Änderungen an den requirements bitte immer ausführen:
+
+```bash
+pip install -U pydantic pydantic-settings
+```

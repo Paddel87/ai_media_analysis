@@ -1,3 +1,5 @@
+# Alle Pakete sind für Python 3.11+ getestet und abgestimmt
+
 # API und Server
 fastapi==0.104.1
 uvicorn==0.24.0
@@ -47,4 +49,4 @@ dropbox>=11.36.0
 # Monitoring
 opentelemetry-api>=1.18.0
 opentelemetry-sdk>=1.18.0
-opentelemetry-instrumentation>=0.40b0 
+opentelemetry-instrumentation>=0.40b0

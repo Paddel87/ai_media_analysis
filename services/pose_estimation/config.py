@@ -1,3 +1,4 @@
+# Für diese Datei wird pydantic-settings>=2.0.0 benötigt
 from typing import Dict, Optional
 
 from pydantic_settings import BaseSettings
@@ -39,6 +40,9 @@ class Settings(BaseSettings):
         "reduced": {"batch_size": 25, "concurrency": 5},
         "minimal": {"batch_size": 10, "concurrency": 2},
     }
+
+    batch_expiry: int = 3600  # Sekunden (z.B. 1 Stunde)
+    temp_dir: str = "/tmp/pose_estimation"
 
     class Config:
         env_prefix = ""

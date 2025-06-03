@@ -323,7 +323,6 @@ graph TB
     class InputSanitize,MediaValidation,RateLimiting input
     class NSFW_Check,Violence_Check,Emergency_Check,Consent_Check safety
     class Encryption,AccessControl,AuditLog,DataRetention protection
-    class GDPR_Compliance,Ethics_Review,Legal_Safeguards,ReportGeneration compliance
 ```
 
 ## Entwicklungsarchitektur
@@ -390,7 +389,6 @@ graph LR
 - **Defense-in-Depth**: Mehrschichtige Sicherheit
 - **Principle of Least Privilege**: Minimale Berechtigungen
 - **Zero-Trust**: Alle Verbindungen werden validiert
-- **Compliance-First**: GDPR und ethische Standards
 
 ### 📊 **Monitoring & Observability**
 - **Health-Checks**: Kontinuierliche Service-Überwachung

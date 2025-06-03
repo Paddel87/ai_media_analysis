@@ -142,7 +142,9 @@ class JobManager:
 
     def _log_cache_initialization(self) -> None:
         """Loggt Cache-Initialisierungs-Statistiken."""
-        logger.info(f"Cache initialisiert: {len(self.job_cache)} Jobs, {len(self.batch_cache)} Batches")
+        logger.info(
+            f"Cache initialisiert: {len(self.job_cache)} Jobs, {len(self.batch_cache)} Batches"
+        )
 
     async def process_pending_jobs(self):
         """Optimierte Verarbeitung wartender Jobs mit Batch-Processing"""

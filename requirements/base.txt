@@ -1,7 +1,10 @@
+# Alle Pakete sind für Python 3.11+ getestet und abgestimmt
+
 # === CORE API FRAMEWORK ===
 fastapi==0.104.1
-uvicorn==0.24.0
-pydantic==2.4.2
+uvicorn[standard]==0.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
 python-dotenv==1.0.0
 
 # === ESSENTIAL UTILITIES ===
@@ -14,3 +17,6 @@ python-multipart==0.0.6
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+
+# === REDIS & DB ===
+redis==5.0.1

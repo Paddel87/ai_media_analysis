@@ -4,7 +4,25 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
-from main import app, force_reload_settings
+
+from services.pose_estimation.config import get_settings
+from services.pose_estimation.main import app, force_reload_settings
+
+
+# Test-Setup: Notwendige Umgebungsvariablen setzen
+@pytest.fixture(autouse=True)
+def set_env_vars():
+    with patch.dict(
+        os.environ,
+        {
+            "MODEL_TYPE": "cpu",
+            "MAX_WORKERS": "8",
+            "MEMORY_LIMIT": "1024",
+            "BATCH_SIZE_LIMIT": "100",
+            "PROCESSING_TIMEOUT": "300",
+        },
+    ):
+        yield
 
 
 # Test Client Setup
@@ -15,8 +33,6 @@ def client():
 
 # Test für Konfigurationsvalidierung
 def test_configuration_validation():
-    from config import get_settings
-
     settings = get_settings()
     assert settings.model_type == "cpu"
     assert settings.max_workers > 0
@@ -28,8 +44,6 @@ def test_configuration_validation():
 # Test für Resource-Limits
 @pytest.mark.asyncio
 async def test_resource_limits(client):
-    from config import get_settings
-
     # Simuliere hohe Last
     test_images = [
         np.zeros((100, 100, 3), dtype=np.uint8).tobytes()
@@ -57,8 +71,6 @@ async def test_resource_limits(client):
 # Test für Memory-Limits
 @pytest.mark.asyncio
 async def test_memory_limits(client):
-    from config import get_settings
-
     # Erstelle ein großes Test-Bild
     large_image = np.zeros((2000, 2000, 3), dtype=np.uint8).tobytes()
 
@@ -78,7 +90,7 @@ async def test_memory_limits(client):
 @pytest.mark.asyncio
 async def test_graceful_degradation(client):
     # Simuliere System-Überlast
-    with patch("main.get_system_metrics") as mock_metrics:
+    with patch("services.pose_estimation.main.get_system_metrics") as mock_metrics:
         mock_metrics.return_value = {"cpu_usage": 95.0, "memory_usage": 90.0}
 
         test_image = np.zeros((100, 100, 3), dtype=np.uint8).tobytes()
@@ -108,8 +120,6 @@ def test_environment_variables():
 
 # Test für Konfigurations-Änderungen
 def test_configuration_changes(client):
-    from config import get_settings
-
     force_reload_settings()
     original_settings = get_settings()
 

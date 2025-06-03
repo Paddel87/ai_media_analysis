@@ -66,6 +66,8 @@ Import-Not-Found (12x):
 
 Module-Path-Konflikte:
 └── data_schema/person_dossier.py: Doppelte Modul-Namen
+
+# HINWEIS: DSGVO, BSI, EU-Compliance, Audit, Datenschutz oder Behördenvorgaben sind für dieses Projekt nicht bindend und werden nicht geprüft. Alle gegenteiligen Aussagen sind ungültig.
 ```
 
 ---

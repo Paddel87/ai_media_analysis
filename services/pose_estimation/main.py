@@ -16,14 +16,17 @@ import psutil
 import redis.asyncio as redis
 import torch
 import uvicorn
-from config import get_settings
 from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from mmengine.model import BaseModel as MMBaseModel
 from mmpose.apis import inference_topdown as real_inference_topdown
 from mmpose.apis import init_model
 from mmpose.structures import PoseDataSample, merge_data_samples
-from optimization import (
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from services.pose_estimation.config import get_settings
+from services.pose_estimation.optimization import (
     CacheManager,
     ConcurrencyManager,
     DegradationManager,
@@ -31,8 +34,6 @@ from optimization import (
     ResourceMonitor,
     WorkerManager,
 )
-from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Logging Konfiguration
 logging.basicConfig(level=logging.INFO)
@@ -275,7 +276,9 @@ async def update_batch_status(
     )
 
     await redis_client.setex(
-        f"batch:{batch_id}", BATCH_EXPIRY, json.dumps(batch_status.dict(), default=str)
+        f"batch:{batch_id}",
+        BATCH_EXPIRY,
+        json.dumps(batch_status.model_dump(), default=str),
     )
 
 
@@ -326,20 +329,23 @@ async def analyze_pose(file: UploadFile = File(...)):
         # Phase 4: Request-Verarbeitung
         return await _process_pose_request(file)
 
+
 async def _validate_service_availability() -> None:
     """Validiert Service-Verfügbarkeit."""
-    if not all([
-        memory_manager,
-        concurrency_manager,
-        cache_manager,
-        resource_monitor,
-        degradation_manager,
-        worker_manager,
-    ]):
+    if not all(
+        [
+            memory_manager,
+            concurrency_manager,
+            cache_manager,
+            resource_monitor,
+            degradation_manager,
+            worker_manager,
+        ]
+    ):
         raise HTTPException(
-            status_code=503,
-            detail="Service nicht vollständig initialisiert"
+            status_code=503, detail="Service nicht vollständig initialisiert"
         )
+
 
 async def _perform_resource_management() -> None:
     """Führt Resource-Management aus."""
@@ -352,6 +358,7 @@ async def _perform_resource_management() -> None:
     # Memory Check
     if await memory_manager.check_memory():
         logger.warning("Memory-Limit erreicht - Cleanup durchgeführt")
+
 
 class _ConcurrencyManager:
     """Context Manager für Concurrency-Control."""
@@ -372,9 +379,11 @@ class _ConcurrencyManager:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         concurrency_manager.semaphore.release()
 
+
 def _manage_concurrency() -> _ConcurrencyManager:
     """Erstellt Concurrency-Manager."""
     return _ConcurrencyManager()
+
 
 async def _process_pose_request(file: UploadFile) -> PoseResponse:
     """Verarbeitet Pose-Request."""
@@ -397,6 +406,7 @@ async def _process_pose_request(file: UploadFile) -> PoseResponse:
         logger.error(f"Unerwarteter Fehler: {e}")
         raise HTTPException(status_code=500, detail="Interner Server-Fehler")
 
+
 async def _validate_file_type(file: UploadFile) -> None:
     """Validiert Dateityp."""
     if file.content_type and not file.content_type.startswith("image/"):
@@ -404,6 +414,7 @@ async def _validate_file_type(file: UploadFile) -> None:
             status_code=400,
             detail="Ungültiges Dateiformat. Nur Bilder werden akzeptiert.",
         )
+
 
 async def _check_cache(file: UploadFile) -> Optional[PoseResponse]:
     """Prüft Cache für bereits verarbeitete Dateien."""
@@ -414,6 +425,7 @@ async def _check_cache(file: UploadFile) -> Optional[PoseResponse]:
         return PoseResponse(**json.loads(cached_result))
 
     return None
+
 
 async def _process_image_file(file: UploadFile) -> PoseResponse:
     """Verarbeitet Bild-Datei."""
@@ -433,16 +445,19 @@ async def _process_image_file(file: UploadFile) -> PoseResponse:
     finally:
         _cleanup_temp_file(temp_file)
 
+
 async def _save_temp_file(file: UploadFile, temp_file: str) -> None:
     """Speichert temporäre Datei."""
     async with aiofiles.open(temp_file, "wb") as out_file:
         content = await file.read()
         await out_file.write(content)
 
+
 async def _cache_result(file: UploadFile, result: Dict[str, Any]) -> None:
     """Speichert Ergebnis im Cache."""
     cache_key = f"pose_{file.filename}"
     await cache_manager.cache_result(cache_key, result)
+
 
 def _cleanup_temp_file(temp_file: str) -> None:
     """Bereinigt temporäre Datei."""

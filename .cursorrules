@@ -2,6 +2,12 @@
 # Version: 1.0.0 - Permanente Aktivierung aller Projektregeln
 # Status: PRODUKTIONSREIF - Vollständige Integration
 
+# ---
+# HINWEIS: Diese Software wird aus regulatorischen Gründen NIEMALS innerhalb der EU eingesetzt.
+# Jegliche EU-spezifischen, DSGVO-, BSI- oder deutsche Behörden-/Compliance-Vorgaben sind für dieses Projekt NICHT bindend und finden KEINE Anwendung.
+# Alle gegenteiligen Aussagen in diesem Dokument sind ungültig.
+# ---
+
 Du arbeitest an einem **hochmodernen AI Media Analysis System**. Befolge ALLE folgenden Regeln:
 
 ## 🚀 KERN-PROJEKTREGELN
@@ -17,6 +23,36 @@ Du arbeitest an einem **hochmodernen AI Media Analysis System**. Befolge ALLE fo
 2. **Iteration 2**: Service-Integration, API-Endpoints, Health-Checks
 3. **Iteration 3**: Advanced Features, Optimierungen, Monitoring
 4. **Iteration 4**: Production-Ready, UI-Polish, Export-Features
+
+## 🎯 UC-001 HAUPTFEATURE (ALPHA 0.6.0)
+
+### UC-001: Enhanced Manual Analysis (AKTIV)
+**Quelle**: `docs/UC-001-ENHANCED-MANUAL-ANALYSIS.md` + `.cursorrules-backup/rules/uc001_integration.md`
+
+**PRIORITÄT 1 - OBLIGATORISCH:**
+- **Personen-Dossier-System** als Kern-Funktionalität
+- **Video-Kontext-Analyse** mit LLM-Integration
+- **Erweiterte Kleidungsanalyse** (200+ Kategorien)
+- **Benutzer-Korrektur-Interface** für Machine Learning
+
+**UC-001 Service-Standards:**
+```python
+# PFLICHT für alle UC-001 Services:
+class UC001ServiceBase(ServiceBase):
+    async def create_job_history_entry(self, person_id: str, data: dict) -> JobHistoryEntry:
+        """UC-001 Standard: Job-Historie-Eintrag erstellen."""
+        pass
+
+    async def handle_user_correction(self, correction: dict) -> CorrectionResult:
+        """UC-001 Standard: Benutzer-Korrekturen verarbeiten."""
+        pass
+```
+
+**UC-001 Quality Gates (BLOCKING):**
+- Dossier-Update: <10 Sekunden
+- Re-Identifikation: >90% Genauigkeit
+- Kleidungsklassifikation: >85% bei 200+ Kategorien
+- Video-Analyse: 1080p in <5 Minuten
 
 ---
 

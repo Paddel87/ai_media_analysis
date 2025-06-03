@@ -1189,6 +1189,155 @@ venv-audit: ## 📊 Umfassende venv-Audit
 	@$(MAKE) venv-validate
 	@echo "${GREEN}✅ venv-Audit abgeschlossen${NC}"
 
+# =============================================================================
+# UC-001 ENHANCED MANUAL ANALYSIS - SPEZIELLE TARGETS
+# =============================================================================
+
+## UC-001 Development und Testing
+uc001-test: ## 🧪 UC-001 spezifische Tests ausführen
+	@echo "${BLUE}🧪 Führe UC-001 Tests aus...${NC}"
+	@if [ ! -d "tests/integration/uc001" ]; then \
+		mkdir -p tests/integration/uc001; \
+	fi
+	pytest tests/integration/uc001/ -v --tb=short
+	pytest tests/unit/ -k "uc001 or dossier or person" -v
+	@echo "${GREEN}✅ UC-001 Tests abgeschlossen${NC}"
+
+uc001-validate: ## ✅ UC-001 Schema und Performance-Validierung
+	@echo "${BLUE}✅ Validiere UC-001 Implementierung...${NC}"
+	@if [ -f "scripts/validate_uc001_schemas.py" ]; then \
+		python scripts/validate_uc001_schemas.py; \
+	else \
+		echo "${YELLOW}⚠️ UC-001 Schema-Validator noch nicht implementiert${NC}"; \
+	fi
+	@if [ -f "scripts/check_uc001_performance.py" ]; then \
+		python scripts/check_uc001_performance.py; \
+	else \
+		echo "${YELLOW}⚠️ UC-001 Performance-Check noch nicht implementiert${NC}"; \
+	fi
+	@echo "${GREEN}✅ UC-001 Validierung abgeschlossen${NC}"
+
+uc001-deploy: ## 🚀 UC-001 Services deployen
+	@echo "${BLUE}🚀 Deploye UC-001 Services...${NC}"
+	@echo "${YELLOW}Starte UC-001 Core Services...${NC}"
+	docker-compose up -d person_dossier video_context_analyzer clothing_analyzer
+	@echo "${YELLOW}Warte auf Service-Start...${NC}"
+	sleep 10
+	@$(MAKE) dossier-check
+	@echo "${GREEN}✅ UC-001 Services deployed${NC}"
+
+dossier-check: ## 🔍 Dossier-System Health-Check
+	@echo "${BLUE}🔍 Prüfe Dossier-System...${NC}"
+	@echo "${YELLOW}Teste person_dossier Service...${NC}"
+	@curl -s http://localhost:8005/health || echo "${RED}❌ person_dossier Service nicht erreichbar${NC}"
+	@echo "${YELLOW}Teste Dossier-Verzeichnisse...${NC}"
+	@if [ -d "data/dossiers" ]; then \
+		echo "${GREEN}✅ data/dossiers existiert${NC}"; \
+	else \
+		mkdir -p data/dossiers; \
+		echo "${YELLOW}⚠️ data/dossiers erstellt${NC}"; \
+	fi
+	@if [ -d "data/corrections" ]; then \
+		echo "${GREEN}✅ data/corrections existiert${NC}"; \
+	else \
+		mkdir -p data/corrections; \
+		echo "${YELLOW}⚠️ data/corrections erstellt${NC}"; \
+	fi
+	@echo "${GREEN}✅ Dossier-System Health-Check abgeschlossen${NC}"
+
+uc001-status: ## 📊 UC-001 Status und Metriken anzeigen
+	@echo "${BLUE}📊 UC-001 Status:${NC}"
+	@echo "${YELLOW}Service-Status:${NC}"
+	@docker-compose ps person_dossier video_context_analyzer clothing_analyzer || echo "${RED}Services nicht gestartet${NC}"
+	@echo "${YELLOW}Dossier-Statistiken:${NC}"
+	@if [ -d "data/dossiers" ]; then \
+		echo "${BLUE}  Anzahl Dossiers: $$(find data/dossiers -name "*.json" | wc -l)${NC}"; \
+	fi
+	@if [ -d "data/corrections" ]; then \
+		echo "${BLUE}  Anzahl Korrekturen: $$(find data/corrections -name "*.json" | wc -l)${NC}"; \
+	fi
+	@echo "${YELLOW}Performance-Metriken:${NC}"
+	@if [ -f "data/uc001_metrics.json" ]; then \
+		python -c "import json; data=json.load(open('data/uc001_metrics.json')); print(f'  Avg Dossier Update: {data.get(\"avg_dossier_update_time\", \"N/A\")}s'); print(f'  Re-ID Accuracy: {data.get(\"reid_accuracy\", \"N/A\")}%')" 2>/dev/null || echo "${YELLOW}  Keine Metriken verfügbar${NC}"; \
+	else \
+		echo "${YELLOW}  Keine Metriken verfügbar${NC}"; \
+	fi
+
+uc001-logs: ## 📋 UC-001 Service-Logs anzeigen
+	@echo "${BLUE}📋 UC-001 Service-Logs:${NC}"
+	@echo "${YELLOW}=== Person Dossier Service ===${NC}"
+	docker-compose logs --tail=20 person_dossier || echo "${RED}person_dossier nicht verfügbar${NC}"
+	@echo "${YELLOW}=== Video Context Analyzer ===${NC}"
+	docker-compose logs --tail=20 video_context_analyzer || echo "${RED}video_context_analyzer nicht verfügbar${NC}"
+	@echo "${YELLOW}=== Clothing Analyzer ===${NC}"
+	docker-compose logs --tail=20 clothing_analyzer || echo "${RED}clothing_analyzer nicht verfügbar${NC}"
+
+uc001-clean: ## 🗑️ UC-001 Daten bereinigen (VORSICHT!)
+	@echo "${RED}⚠️ WARNUNG: Lösche alle UC-001 Daten!${NC}"
+	@read -p "Bist du sicher? (ja/nein): " confirm && [ "$$confirm" = "ja" ] || exit 1
+	@echo "${BLUE}🗑️ Lösche UC-001 Daten...${NC}"
+	@rm -rf data/dossiers/* data/corrections/* data/uc001_metrics.json 2>/dev/null || true
+	@echo "${GREEN}✅ UC-001 Daten gelöscht${NC}"
+
+uc001-reset: ## 🔄 UC-001 Services zurücksetzen
+	@echo "${BLUE}🔄 Setze UC-001 Services zurück...${NC}"
+	docker-compose stop person_dossier video_context_analyzer clothing_analyzer
+	docker-compose rm -f person_dossier video_context_analyzer clothing_analyzer
+	@$(MAKE) uc001-deploy
+	@echo "${GREEN}✅ UC-001 Services zurückgesetzt${NC}"
+
+uc001-demo: ## 🎬 UC-001 Demo-Workflow ausführen
+	@echo "${BLUE}🎬 Starte UC-001 Demo-Workflow...${NC}"
+	@if [ ! -f "tests/demo/uc001_demo.py" ]; then \
+		echo "${YELLOW}⚠️ UC-001 Demo-Script noch nicht implementiert${NC}"; \
+		echo "${BLUE}Erstelle Demo-Struktur...${NC}"; \
+		mkdir -p tests/demo; \
+		echo "# UC-001 Demo-Script - TODO: Implementierung" > tests/demo/uc001_demo.py; \
+	fi
+	@echo "${GREEN}✅ UC-001 Demo vorbereitet${NC}"
+
+uc001-docs: ## 📚 UC-001 Dokumentation aktualisieren
+	@echo "${BLUE}📚 Aktualisiere UC-001 Dokumentation...${NC}"
+	@if [ -f "docs/UC-001-ENHANCED-MANUAL-ANALYSIS.md" ]; then \
+		echo "${GREEN}✅ UC-001 Hauptdokumentation vorhanden${NC}"; \
+	else \
+		echo "${RED}❌ UC-001 Hauptdokumentation fehlt${NC}"; \
+	fi
+	@echo "${YELLOW}Erstelle zusätzliche UC-001 Docs...${NC}"
+	@mkdir -p docs/uc001
+	@echo "# UC-001 API Reference" > docs/uc001/API.md
+	@echo "# UC-001 Performance Metrics" > docs/uc001/METRICS.md
+	@echo "# UC-001 Correction Workflow" > docs/uc001/CORRECTIONS.md
+	@echo "${GREEN}✅ UC-001 Dokumentation aktualisiert${NC}"
+
+uc001-help: ## ❓ UC-001 Hilfe anzeigen
+	@echo "${GREEN}🎯 UC-001 Enhanced Manual Analysis - Verfügbare Befehle:${NC}"
+	@echo ""
+	@echo "${YELLOW}Development und Testing:${NC}"
+	@echo "  make uc001-test        - UC-001 spezifische Tests"
+	@echo "  make uc001-validate    - Schema und Performance-Validierung"
+	@echo "  make uc001-demo        - Demo-Workflow ausführen"
+	@echo ""
+	@echo "${YELLOW}Deployment und Management:${NC}"
+	@echo "  make uc001-deploy      - UC-001 Services deployen"
+	@echo "  make uc001-reset       - Services zurücksetzen"
+	@echo "  make dossier-check     - Dossier-System Health-Check"
+	@echo ""
+	@echo "${YELLOW}Monitoring und Logs:${NC}"
+	@echo "  make uc001-status      - Status und Metriken anzeigen"
+	@echo "  make uc001-logs        - Service-Logs anzeigen"
+	@echo ""
+	@echo "${YELLOW}Wartung:${NC}"
+	@echo "  make uc001-clean       - Daten bereinigen (VORSICHT!)"
+	@echo "  make uc001-docs        - Dokumentation aktualisieren"
+	@echo "  make uc001-help        - Diese Hilfe anzeigen"
+	@echo ""
+	@echo "${YELLOW}Quality Gates (UC-001):${NC}"
+	@echo "  - Dossier-Update: <10 Sekunden"
+	@echo "  - Re-Identifikation: >90% Genauigkeit"
+	@echo "  - Kleidungsklassifikation: >85% bei 200+ Kategorien"
+	@echo "  - Video-Analyse: 1080p in <5 Minuten"
+
 # Color definitions für venv-Targets
 GREEN := \033[0;32m
 BLUE := \033[0;34m

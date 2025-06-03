@@ -9,8 +9,10 @@ import pytest
 import pytest_asyncio
 import redis.asyncio as redis
 from fastapi.testclient import TestClient
-from main import app
-from optimization import (
+
+from services.pose_estimation.config import get_settings
+from services.pose_estimation.main import app
+from services.pose_estimation.optimization import (
     CacheManager,
     ConcurrencyManager,
     DegradationManager,
@@ -188,8 +190,7 @@ async def test_resource_monitoring(client):
 # Test für Docker-Optimierungen
 @pytest.mark.asyncio
 async def test_docker_optimizations(client):
-    from config import get_settings
-    from main import force_reload_settings
+    from services.pose_estimation.main import force_reload_settings
 
     force_reload_settings()
     # Teste Memory-Limit
@@ -251,8 +252,6 @@ async def test_graceful_degradation(client):
 
 # Test für Konfigurations-Überprüfung
 def test_configuration_validation(client):
-    from config import get_settings
-
     response = client.get("/config")
     assert response.status_code == 200
     data = response.json()

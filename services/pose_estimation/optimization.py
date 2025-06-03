@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import psutil
 import redis.asyncio as redis
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 

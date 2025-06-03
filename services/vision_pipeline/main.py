@@ -290,7 +290,9 @@ class VisionPipeline:
             video_metadata = await self._initialize_video_processing(video_path)
 
             # Frame-Extraktion und Sampling
-            frames_data = await self._extract_and_sample_frames(video_path, video_metadata)
+            frames_data = await self._extract_and_sample_frames(
+                video_path, video_metadata
+            )
 
             # Batch-Verarbeitung mit Memory-Management
             results = await self._process_frames_in_batches(frames_data)
@@ -324,7 +326,7 @@ class VisionPipeline:
         metadata = {
             "fps": cap.get(cv2.CAP_PROP_FPS),
             "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
-            "cap": cap
+            "cap": cap,
         }
         metadata["duration"] = metadata["frame_count"] / metadata["fps"]
 
@@ -358,12 +360,14 @@ class VisionPipeline:
             return {
                 "frames": frames,
                 "frame_numbers": frame_numbers,
-                "total_frames_processed": len(frames)
+                "total_frames_processed": len(frames),
             }
         finally:
             cap.release()
 
-    async def _process_frames_in_batches(self, frames_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _process_frames_in_batches(
+        self, frames_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Verarbeitet Frames in optimierten Batches."""
         frames = frames_data["frames"]
         frame_numbers = frames_data["frame_numbers"]
@@ -425,7 +429,7 @@ class VisionPipeline:
         self.batch_size = max(1, self.batch_size // 2)
         logger.log_warning(
             f"Batch {batch_idx} fehler behandelt",
-            extra={"new_batch_size": self.batch_size}
+            extra={"new_batch_size": self.batch_size},
         )
 
     async def _finalize_video_processing(
@@ -433,7 +437,7 @@ class VisionPipeline:
         video_path: str,
         job_id: str,
         metadata: Dict[str, Any],
-        results: List[Dict[str, Any]]
+        results: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Finalisiert die Video-Verarbeitung und speichert Ergebnisse."""
         output_path = os.path.join(

@@ -1,11 +1,14 @@
 # Inherit base requirements
 -r base.txt
 
-# === CODE QUALITY ===
+# === CODE QUALITY & DEV TOOLS ===
 black>=23.7.0
 flake8>=6.0.0
 mypy>=1.5.1
 isort>=5.12.0
-
-# === DEVELOPMENT UTILITIES ===
 httpx==0.25.1
+pre-commit>=3.4.0
+
+# === SECURITY ===
+safety>=2.3.5
+pip-audit>=2.6.1

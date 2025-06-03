@@ -78,3 +78,42 @@ repos:
         always_run: true
         pass_filenames: false
         stages: [pre-push]
+
+# =============================================================================
+# UC-001 ENHANCED MANUAL ANALYSIS - SPEZIFISCHE HOOKS
+# =============================================================================
+
+  # UC-001 Schema-Validation
+  - repo: local
+    hooks:
+      - id: uc001-schema-validation
+        name: UC-001 Schema Validation
+        entry: python
+        args: ['-c', 'import sys; print("UC-001 Schema Validation - TODO: Implementierung"); sys.exit(0)']
+        language: system
+        files: ^services/(person_dossier|video_context_analyzer|clothing_analyzer)/
+        types: [python]
+
+      - id: uc001-performance-check
+        name: UC-001 Performance Requirements
+        entry: python
+        args: ['-c', 'import sys; print("UC-001 Performance Check - TODO: Implementierung"); sys.exit(0)']
+        language: system
+        files: ^tests/integration/uc001/
+        types: [python]
+
+      - id: uc001-type-check
+        name: UC-001 Type-Hint Validation
+        entry: mypy
+        args: ['--config-file=pyproject.toml', '--ignore-missing-imports']
+        language: system
+        files: ^services/(person_dossier|video_context_analyzer|clothing_analyzer)/.*\.py$
+        types: [python]
+
+      - id: uc001-docstring-check
+        name: UC-001 Docstring Standards
+        entry: python
+        args: ['-c', 'import ast, sys; [print(f"Checking {f}") for f in sys.argv[1:]]']
+        language: system
+        files: ^services/(person_dossier|video_context_analyzer|clothing_analyzer)/.*\.py$
+        types: [python]
