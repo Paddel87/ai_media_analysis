@@ -912,3 +912,40 @@ test-help: ## ❓ Hilfe zu Test-Befehlen anzeigen
 	@echo "${YELLOW}Reporting:${NC}"
 	@echo "  make test-report       - Umfassender Test-Report"
 	@echo "  make test-ci           - CI/CD Pipeline simulieren"
+
+# =============================================================================
+# KONFIGURATIONSDATEI-VALIDIERUNG (NEUE REGEL)
+# =============================================================================
+
+validate-config: ## Validiert alle Konfigurationsdateien
+	@echo "🔍 Validiere Konfigurationsdateien..."
+	python scripts/validate_config.py
+	@echo "✅ Konfigurationsvalidierung abgeschlossen"
+
+check-pytest-ini: ## Spezielle pytest.ini Validierung
+	@echo "🧪 Validiere pytest.ini..."
+	python -c "import configparser; c=configparser.ConfigParser(); c.read('pytest.ini'); print('✅ pytest.ini syntax OK')" || (echo "❌ pytest.ini Syntax-Fehler" && exit 1)
+	python scripts/validate_config.py --file pytest
+
+check-pyproject: ## Validiert pyproject.toml
+	@echo "📦 Validiere pyproject.toml..."
+	python -c "import tomli; tomli.load(open('pyproject.toml', 'rb')); print('✅ pyproject.toml syntax OK')" || (echo "❌ pyproject.toml Syntax-Fehler" && exit 1)
+	python scripts/validate_config.py --file pyproject
+
+check-docker-compose: ## Validiert docker-compose.yml
+	@echo "🐳 Validiere docker-compose.yml..."
+	docker-compose config --quiet && echo "✅ docker-compose.yml syntax OK" || (echo "❌ docker-compose.yml Syntax-Fehler" && exit 1)
+	python scripts/validate_config.py --file docker-compose
+
+fix-config: ## Automatische Konfigurationsreparatur (wo möglich)
+	@echo "🔧 Repariere Konfigurationsdateien..."
+	python scripts/validate_config.py --fix
+	@echo "✅ Konfigurationsreparatur abgeschlossen"
+
+config-health-check: ## Umfassende Konfigurationsprüfung
+	@echo "🏥 Konfiguration Health Check..."
+	python scripts/validate_config.py --comprehensive
+	@echo "📊 Config Health Report generiert"
+
+validate-all-config: validate-config check-pytest-ini check-pyproject check-docker-compose ## Vollständige Konfigurationsvalidierung
+	@echo "✅ Vollständige Konfigurationsvalidierung abgeschlossen"
