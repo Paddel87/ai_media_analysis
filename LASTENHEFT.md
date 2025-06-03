@@ -4,18 +4,39 @@
 **Version:** Alpha 0.4.3
 **Datum:** 06.02.2025
 **Status:** VPS-Ready Development mit Professional Standards
+**🎯 Zielgruppe:** Self-Service VPS Content-Moderation für Unternehmen (weltweiter Zugriff)
 
 ## 1. PROJEKTÜBERBLICK
 
 ### 1.1 Vision
-VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud AI-Integration für professionelle Anwendungen. Führend in Standard-Server AI-Deployment ohne teure GPU-Hardware.
+**VPS-native Self-Service Content-Moderation-Platform** für Unternehmen zur automatisierten Analyse von internen Video-Inhalten. **Zielgruppe:** Content-Moderatoren in HR/Security-Teams, die VPS ohne IT-Support einrichten und weltweit darauf zugreifen können.
 
-### 1.2 Scope
-- **VPS-First Architecture:** Standard-Server-optimiert (€20-100/Monat)
-- **Cloud AI-Integration:** Vast.ai für GPU-intensive Tasks (Pay-per-use)
-- **Content Analysis:** NSFW, Pose Estimation, Face Recognition, OCR, Audio-Transkription
-- **Professional Development:** Enterprise-Grade Development-Standards
-- **Cost-Efficiency:** Professional AI ohne teure Hardware-Investitionen
+### 1.2 Scope & Zielgruppen-Spezifikation
+
+#### **Primäre Zielgruppe:**
+- **Content-Moderatoren in Unternehmen** (HR-Teams, Security-Personal)
+- **Nicht-Technische Benutzer:** Müssen VPS-System selbständig einrichten können
+- **Arbeitskontext:** Unternehmen mit internen Video-Inhalten (Überwachung, HR-Fälle)
+- **Remote-Access-Requirement:** Weltweiter Zugriff über Internet (nicht nur lokales Netzwerk)
+- **Geografisch:** Internationale Nutzung außerhalb EU (keine DSGVO-Anforderungen)
+
+#### **Sekundäre Zielgruppe (Zukunft):**
+- **Strafverfolgungsbehörden** (optional, mit Enterprise-Features)
+- **Forensik-Teams** (mit speziellen Compliance-Features)
+
+#### **NICHT die Zielgruppe:**
+- End-User einer Videoplattform
+- Netzwerk-Administratoren (die haben andere Tools)
+- Consumer-Anwendungen oder Social-Media-Plattformen
+
+#### **VPS-First Self-Service-Requirements:**
+- **One-Click VPS-Setup:** Content-Prüfer kann VPS ohne IT-Support einrichten
+- **Weltweiter Zugriff:** Internet-zugänglich mit SSL, Domain-Management
+- **Team-Collaboration:** Mehrere Content-Moderatoren können remote zusammenarbeiten
+- **Vollspektrum-Content-Analyse:** Alle problematischen Inhalte (NSFW, Gewalt, etc.)
+
+#### **Optional (spätere Branch):**
+- **Desktop-App-Installation:** Lokale Installation für Einzelnutzer (Version 1.0+)
 
 ### 1.3 Aktueller Status - Alpha 0.4.3
 - **Phase:** Alpha 0.4.3 - Development-Stabilität-Revolution abgeschlossen
@@ -31,122 +52,119 @@ VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud
 - **🌐 VPS-Optimierte Architecture:** GPU-Dependencies entfernt
 - **🔄 Cross-Platform:** Windows/Linux/macOS Support
 
-## 2. VPS-FIRST ARCHITECTURE STRATEGIE
+## 2. VPS-FIRST SELF-SERVICE CONTENT-MODERATION STRATEGIE
 
-### 2.1 VPS-Native AI-Platform
-**Primäres Deployment-Ziel:** Standard VPS ohne GPU-Hardware
+### 2.1 VPS-Native Self-Service Content-Moderation-Platform
+**Primäres Ziel:** Content-Moderatoren können VPS ohne IT-Support einrichten und weltweit darauf zugreifen
 
-**Vorteile:**
-- **Cost-Efficiency:** €20-100/Monat statt €500-2000/Monat für GPU-Server
-- **Wartungsfreiheit:** Keine GPU-Treiber/Hardware-Konfiguration
-- **Provider-Flexibilität:** Läuft auf jedem Standard-VPS (Hetzner, DO, AWS)
-- **Skalierbarkeit:** Von Einzelentwickler bis Enterprise-Deployment
+**VPS-Deployment-Optionen:**
+1. **Standard-VPS:** Hetzner, DigitalOcean, AWS mit One-Click-Setup
+2. **Dedicated Server:** Für größere Teams mit höheren Performance-Anforderungen
+3. **Multi-VPS:** Load-Distribution für Enterprise-Kunden (Version 1.0+)
 
-**Cloud AI-Integration:**
-- **GPU-Tasks:** Vast.ai Pay-per-use für AI-Processing
-- **Hybrid-Architecture:** VPS-Orchestrierung + Cloud GPU Computing
-- **Cost-Optimization:** Dynamische Resource-Allocation je nach Bedarf
+**Vorteile der VPS-First-Architektur:**
+- **Weltweiter Zugriff:** Teams können von überall auf das System zugreifen
+- **Team-Collaboration:** Mehrere Content-Moderatoren arbeiten gleichzeitig
+- **Cost-Efficiency:** €20-100/Monat VPS statt teurer Enterprise-Security-Lösungen
+- **Skalierbarkeit:** Von Einzelnutzer bis zu internationalen Teams
+- **Datenschutz:** Videos bleiben unter Kontrolle des Unternehmens
+- **Internationale Nutzung:** Keine EU-DSGVO-Beschränkungen
 
-### 2.2 VPS-Requirements Spezifikation
+### 2.2 VPS-Deployment-Strategien nach Zielgruppe
 
-#### Minimale Production-VPS
-- **CPU:** 4 Cores Intel/AMD x64
-- **RAM:** 8GB (16GB empfohlen)
-- **Storage:** 50GB SSD
-- **Network:** 1Gbps für Cloud AI-Communication
-- **OS:** Ubuntu 20.04+ / Debian 11+
-- **Cost:** €20-40/Monat (Hetzner, DigitalOcean)
+#### **Single-VPS (Primär)**
+- **Zielnutzer:** HR/Security-Teams (1-20 Personen)
+- **Hardware:** Standard-VPS (8GB-32GB RAM, 4-8 CPU Cores)
+- **Installation:** `make vps-deploy` - One-Click-Setup mit SSL
+- **AI-Processing:** VPS-CPU + Optional Cloud AI für intensive Tasks
+- **Cost:** €20-100/Monat
+- **Access:** Weltweiter HTTPS-Zugriff über Domain
 
-#### Enterprise-VPS
-- **CPU:** 8+ Cores
-- **RAM:** 16-32GB
-- **Storage:** 100GB+ SSD
-- **Network:** 1Gbps+ mit niedrigen Latenzen
-- **Backup:** Automatisierte Snapshots
-- **Cost:** €60-150/Monat
+#### **Multi-VPS (Enterprise)**
+- **Zielnutzer:** Große Organisationen, Strafverfolgungsbehörden
+- **Hardware:** Load-Distribution über mehrere VPS-Instanzen
+- **Features:** Geographic-Distribution, Auto-Scaling, Enterprise-Security
+- **Installation:** Professional Setup mit Advanced-Configuration
+- **Cost:** €200-1000/Monat
 
-### 2.3 Cloud AI-Integration Strategy
+#### **Optional: Desktop-Branch (Zukunft)**
+- **Zielnutzer:** Einzelne Content-Moderatoren ohne VPS-Zugang
+- **Hardware:** Standard-Business-Laptop/PC
+- **Installation:** Windows/macOS-Installer mit lokaler Verarbeitung
+- **Integration:** Optional Sync mit VPS für Team-Workflows
 
-#### GPU-Task-Outsourcing
-- **Vision Processing:** Pose Estimation, NSFW Detection, Face Recognition
-- **Audio Processing:** Whisper Transcription, Emotion Analysis
-- **OCR Processing:** Multi-language Text Recognition
-- **Cost-Model:** Pay-per-use €10-500/Monat je nach Nutzung
+### 2.3 VPS-Self-Service-Requirements Spezifikation
 
-#### Fallback-Mechanismen
-- **Local Processing:** Basis-Funktionen auf VPS-CPU
-- **Queue-Management:** Intelligente Task-Distribution
-- **Cost-Limits:** Automatische Budget-Controls
+#### **VPS-Setup-Experience**
+- **Setup-Zeit:** <10 Minuten für komplette funktionierende VPS-Installation
+- **Technical-Knowledge:** Keine IT-Kenntnisse erforderlich
+- **Platform-Support:** Standard-VPS-Provider (Hetzner, DO, AWS, etc.)
+- **Dependencies:** Automatisch installiert (Docker, SSL, Domain-Config)
 
-## 3. ENTWICKLUNGS-ROADMAP - VPS-FIRST STRATEGY
+#### **Remote-Access für Content-Moderatoren**
+- **HTTPS-Access:** Automatische SSL-Zertifikate mit Let's Encrypt
+- **Domain-Management:** Einfache Subdomain-Setup oder Custom-Domain
+- **Multi-User-Access:** Gleichzeitige Nutzung durch mehrere Team-Mitglieder
+- **Security:** Production-ready Security-Configuration
 
-### 3.1 Alpha 0.5.0 - Production VPS-Ready (2-3 Wochen)
-**Ziel:** VPS-Production-Deployment ohne manuelle Eingriffe
+#### **Content-Analysis-Capabilities**
+- **NSFW-Detection:** Pornografische/sexuelle Inhalte
+- **Violence-Detection:** Gewaltdarstellungen, Kämpfe
+- **Restraint-Detection:** Fesselungen, BDSM-Inhalte (UC-001)
+- **Object-Detection:** Waffen, Drogen, verdächtige Gegenstände
+- **Audio-Analysis:** Bedrohungen, Schreie, verdächtige Gespräche
 
-**Priorität 1: VPS-Production-Readiness**
-- [ ] **CPU-Dockerfiles:** Dockerfile.cpu für alle AI-Services
-- [ ] **SSL-Automation:** Let's Encrypt Integration mit Nginx
-- [ ] **VPS-Deployment-Scripts:** Infrastructure-as-Code für Standard-Server
-- [ ] **Health-Monitoring:** Production-ready Service-Überwachung
-- [ ] **Performance-Benchmarks:** Baseline für verschiedene VPS-Größen
+## 3. ENTWICKLUNGS-ROADMAP - VPS-FIRST SELF-SERVICE
 
-**Erfolgsmetriken:**
-- `make vps-deploy` funktioniert auf Standard-VPS ohne manuelle Eingriffe
-- SSL-Setup automatisiert mit Production-ready Nginx-Konfiguration
-- Alle AI-Services haben funktionierende CPU-only Dockerfiles
-- Performance-Benchmarks für 8GB, 16GB, 32GB VPS etabliert
+### 3.1 Alpha 0.5.0 - Self-Service VPS-Setup & SSL-Automation (2-3 Wochen)
+**Ziel:** Content-Moderatoren können VPS ohne IT-Support einrichten und weltweit zugreifen
 
-### 3.2 Alpha 0.6.0 - Cloud AI-Integration (4-6 Wochen)
-**Ziel:** Seamless VPS ↔ Cloud AI Communication
-
-**Features:**
-- [ ] **Vast.ai API-Integration:** GPU-Instanz-Management
-- [ ] **Job-Queue-Enhancement:** Cloud AI-Task-Distribution
-- [ ] **Cost-Optimization:** Smart Resource-Allocation
-- [ ] **Fallback-Mechanisms:** Local Processing bei Cloud-Failures
-- [ ] **Budget-Controls:** Automatische Cost-Limits
+**Priorität 1: Self-Service VPS-Setup**
+- [ ] **One-Click VPS-Deployment:** `make vps-deploy` für Standard-VPS-Provider
+- [ ] **SSL-Automation:** Let's Encrypt Integration für automatische HTTPS
+- [ ] **Domain-Management:** Einfache Setup-Anleitung für weltweiten Zugriff
+- [ ] **Health-Monitoring:** Production-ready Service-Überwachung für Nicht-Techniker
 
 **Erfolgsmetriken:**
-- VPS kann automatisch Vast.ai-Instanzen erstellen/zerstören
-- Cloud AI-Tasks werden nahtlos von VPS-Job-Queue verwaltet
-- Cost-Monitoring und Budget-Alerts funktionieren
-- Fallback auf lokale CPU-Processing bei Cloud-Problemen
+- VPS-Installation funktioniert ohne IT-Kenntnisse in <10 Minuten
+- Automatische SSL-Setup ermöglicht weltweiten HTTPS-Zugriff
+- Content-Moderator kann von überall Videos hochladen und analysieren lassen
+- Alle Services zeigen "ready-to-use" Status im Health-Dashboard
 
-### 3.3 Alpha 0.7.0 - Feature-Complete (6-12 Wochen)
-**Ziel:** End-to-End Workflows funktional
+### 3.2 Alpha 0.6.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
+**Ziel:** Vollständiger Content-Moderation-Workflow mit VPS-Cloud-Hybrid-Architecture
 
 **Features:**
-- [ ] **End-to-End Workflows:** Upload → Cloud Processing → Results
-- [ ] **UI-Integration:** Streamlit-Frontend vollständig integriert
-- [ ] **Service-Communication:** Alle Services kommunizieren erfolgreich
-- [ ] **Performance-Baseline:** Messbare Performance-Metriken
-- [ ] **Basic User-Management:** Multi-User-Support
+- [ ] **VPS-Cloud-AI-Integration:** VPS orchestriert Cloud AI-Tasks via Vast.ai
+- [ ] **Professional Content-Analysis:** NSFW, Violence, Objects, Audio-Detection
+- [ ] **Content-Moderator-UI:** Review-Interface mit Export-Functions für HR
+- [ ] **Cost-Optimization:** Smart Local vs. Cloud-Recommendations mit Budget-Controls
+
+**🆕 UC-001: VPS-basierte Erweiterte Medienanalyse-Features:**
+- [ ] **Person-Tracking:** Identifikation gleicher Personen über VPS-processing
+- [ ] **Video-Kontext-Analyse:** LLM-basierte Beschreibung über VPS-hosted Services
+- [ ] **Professional Reporting:** PDF-Export für HR-Dokumentation von VPS-UI
+
+**Erfolgsmetriken:**
+- VPS-System ist von weltweit remote-zugänglich und stabil
+- Content-Moderator kann kompletten Workflow ohne Training durchführen
+- Cloud AI-Integration reduziert Analyse-Zeit um 70% (bei Nutzung)
+- Export-Funktionen erstellen verwendbare HR/Legal-Dokumentation
+
+### 3.3 Alpha 0.7.0 - Professional VPS Content-Moderation-Platform (6-12 Wochen)
+**Ziel:** Production-ready für Content-Moderation-Teams mit weltweitem Remote-Zugriff
+
+**Features:**
+- [ ] **Multi-User VPS-Access:** Mehrere Content-Moderatoren arbeiten gleichzeitig
+- [ ] **Case-Management:** Strukturierte HR/Security-Fall-Verwaltung über VPS
+- [ ] **Enterprise VPS-Readiness:** Database-Persistence, Backup-Integration
+- [ ] **Remote Management-UI:** Dashboard für HR/Security-Manager (weltweit zugänglich)
 
 **Beta-Transition-Kriterien:**
-- Vollständiger Analyse-Workflow: Bild/Video-Upload → AI-Analyse → Resultate
-- UI zeigt echte AI-Processing-Resultate
-- Performance-Benchmarks für verschiedene VPS-Konfigurationen
-- System läuft stabil >24 Stunden unter Last
-
-### 3.4 Beta 0.8.0-0.9.0 - Production-Readiness (3-6 Monate)
-**Ziel:** Enterprise-Features und Performance-Optimization
-
-**Features:**
-- [ ] **Enterprise-Security:** RBAC, Authentication, Audit-Logging
-- [ ] **Performance-Optimization:** Response-Time <100ms für VPS-Services
-- [ ] **Monitoring & Alerting:** Comprehensive Production-Monitoring
-- [ ] **Multi-Tenant-Support:** Isolated User-Environments
-- [ ] **Backup & Recovery:** Automated Disaster-Recovery
-
-### 3.5 Version 1.0 - VPS-Native AI-Platform (12-18 Monate)
-**Ziel:** Market-Leading VPS-AI-Platform
-
-**Enterprise-Features:**
-- [ ] **Multi-VPS-Support:** Load-Distribution über mehrere VPS
-- [ ] **Auto-Scaling:** Dynamic VPS + Cloud AI-Scaling
-- [ ] **Enterprise-UI:** React-basierte Professional-Interface
-- [ ] **API-Marketplace:** Third-Party-Integration-Ecosystem
-- [ ] **Compliance:** GDPR, SOC2, Enterprise-Security-Standards
+- Teams von 5-20 Content-Moderatoren können remote effektiv zusammenarbeiten
+- VPS läuft stabil für 24/7-Dauerbetrieb mit weltweitem Zugriff
+- SSL-Security und Remote-Access funktionieren zuverlässig
+- Export-Reports sind rechtlich verwendbar für HR-Verfahren
 
 ## 4. FUNKTIONALE ANFORDERUNGEN - VPS-OPTIMIERT
 
@@ -185,15 +203,41 @@ VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud
 - **Cloud AI:** NSFW-Detection, Restraint-Detection
 - **Integration:** Real-time Processing mit Cost-Limits
 
-### 4.2 Development-Infrastructure (Alpha 0.4.3 ✅)
+### 4.2 🆕 UC-001: Erweiterte Medienanalyse-Services (Alpha 0.6.0)
 
-#### 4.2.1 Professional Development-Standards
+#### 4.2.1 Personen-Dossier-System
+**Person Dossier Service**
+- **Job-Historie:** Detaillierte Timeline aller Auftritte
+- **Porträt-Management:** Automatische beste Gesichtsfoto-Extraktion
+- **Körpermaße:** Via Pose-Estimation geschätzte Proportionen
+- **Re-Identifikation:** Face-Embedding-basierte Personen-Verfolgung
+- **Korrektur-UI:** Benutzer kann falsche Zuordnungen korrigieren
+
+#### 4.2.2 Video-Kontext-Analyse-System
+**Video Context Analyzer Service**
+- **Bewegungsanalyse:** Tracking von Handlungen und Verhaltensänderungen
+- **Emotionale Timeline:** Gesichtsausdruck- und Audio-Emotion-Verlauf
+- **LLM-Kontext-Generierung:** Zusammenfassung von Fesselungsgrund und Verhalten
+- **Audio-Integration:** Transkription und Sentiment-Analyse von Aussagen
+- **Sicherheitsbewertung:** Automatische Risiko- und Compliance-Einschätzung
+
+#### 4.2.3 Erweiterte Kleidungsanalyse
+**Clothing Analyzer Service**
+- **200+ Kategorien:** Von Casual über Business bis Dessous und Fetish
+- **Material-Erkennung:** Leder, Latex, Seide, Baumwolle, etc.
+- **Stil-Klassifikation:** Push-up BH, Minirock, High Heels, etc.
+- **CLIP-Integration:** Erweiterte semantische Kleidungs-Klassifikation
+- **Such-Filter:** Nach spezifischen Kleidungstypen und Materialien
+
+### 4.3 Development-Infrastructure (Alpha 0.4.3 ✅)
+
+#### 4.3.1 Professional Development-Standards
 - **Pre-Commit-Hooks:** Automatische Code-Quality-Sicherung
 - **Cross-Platform-Scripts:** Windows PowerShell + Linux/macOS Bash
 - **IDE-Integration:** VS Code/PyCharm automatische Formatierung
 - **Development-Guidelines:** Comprehensive Standards dokumentiert
 
-#### 4.2.2 CI/CD-Pipeline-Stabilität
+#### 4.3.2 CI/CD-Pipeline-Stabilität
 - **GitHub Actions:** Vollständig stabil und zuverlässig
 - **Quality-Gates:** Black, isort, flake8, mypy Automation
 - **Test-Automation:** Unit Tests, Integration Tests, Service Health Checks
@@ -206,18 +250,26 @@ VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud
 - **Cloud AI-Latency:** <2s für Standard-Processing-Tasks
 - **System-Uptime:** >99.5% für VPS-Infrastructure
 - **Cost-Efficiency:** <€200/Monat für Small Business Setup
+- **🆕 UC-001 Performance:** Video-Analyse <5 Minuten, Dossier-Update <10s
 
 ### 5.2 Skalierbarkeit-Ziele
 - **Concurrent Users:** 50+ gleichzeitige Nutzer auf Standard-VPS
 - **Batch Processing:** 1000+ Dateien/Stunde mit Cloud AI-Integration
 - **Auto-Scaling:** Dynamische Cloud-Instanz-Allokation
 - **Multi-VPS:** Load-Distribution für Enterprise (Version 1.0+)
+- **🆕 UC-001 Skalierung:** >5 parallele Video-Analysen ohne Degradation
 
 ### 5.3 Development-Experience-Ziele ✅
 - **Setup-Time:** <5 Minuten für komplette Development-Environment
 - **Developer-Onboarding:** <10 Minuten bis productive
 - **Test-Execution:** <60 Sekunden für Unit Tests
 - **Cross-Platform:** Einheitlicher Workflow auf Windows/Linux/macOS
+
+### 5.4 🆕 UC-001 Quality-Anforderungen
+- **Re-Identifikation-Genauigkeit:** >90% korrekte Personen-Zuordnung
+- **Kleidungs-Klassifikation:** >85% Genauigkeit bei 200+ Kategorien
+- **Video-Kontext-Qualität:** Benutzer-Bewertung >4/5 für Verständlichkeit
+- **Korrektur-Effizienz:** <5% falsche Re-Identifikationen nach Korrektur
 
 ## 6. TECHNISCHE SPEZIFIKATIONEN - VPS-FIRST
 
@@ -229,89 +281,170 @@ VPS-Native AI-Plattform zur automatisierten Analyse von Medieninhalten mit Cloud
 - **Frontend:** Streamlit (Alpha), React (geplant für Version 1.0)
 - **Cloud AI:** Vast.ai API, Dynamic GPU-Instance-Management
 
-### 6.2 Development-Infrastructure
+### 6.2 🆕 UC-001 Technology-Spezifikationen
+- **LLM-Integration:** OpenAI GPT-4, Anthropic Claude für Kontext-Generierung
+- **CLIP-Enhancement:** Erweiterte Kleidungs-Kategorien und Material-Erkennung
+- **Timeline-Processing:** Frame-by-Frame Analyse mit zeitlicher Korrelation
+- **Audio-Processing:** Whisper Transcription + Emotion-Analysis-Integration
+- **UI-Framework:** React-Komponenten für Dossier-Management und Korrekturen
+
+### 6.3 Development-Infrastructure
 - **Code-Quality:** Pre-Commit-Hooks, Black, isort, flake8, mypy
 - **CI/CD:** GitHub Actions, Automated Testing, Deployment-Pipeline
 - **Environment-Management:** Comprehensive .env Configuration
 - **Cross-Platform:** Makefile + PowerShell + Bash Scripts
 
-### 6.3 VPS-Deployment-Architecture
+### 6.4 VPS-Deployment-Architecture
 - **Container-orchestration:** Docker-Compose (Alpha), Kubernetes (Version 1.0+)
 - **Load-Balancer:** Nginx mit SSL-Termination
 - **Monitoring:** Health-Checks, Log-Aggregation, Performance-Metrics
 - **Backup:** Automated VPS-Snapshots, Configuration-Management
 
-## 7. ABNAHMEKRITERIEN - PHASENWEISE
+## 7. 🆕 UC-001 DETAILLIERTE ANFORDERUNGEN
 
-### 7.1 Alpha 0.5.0 Kriterien
+### 7.1 Personen-Dossier-System
+
+#### 7.1.1 Dossier-Datenmodel
+```yaml
+PersonDossier:
+  dossier_id: UUID
+  display_name: Optional[str]
+  portrait_photo: Optional[str]  # Beste Gesichtsfoto-URL
+  body_measurements: Optional[BodyMeasurements]
+  job_history: List[JobHistoryEntry]
+  creation_metadata: CreationInfo
+
+JobHistoryEntry:
+  job_id: str
+  timestamp: datetime
+  video_context_summary: str
+  actions_detected: List[ActionEntry]
+  clothing_analysis: ClothingAnalysis
+  emotions_timeline: List[EmotionEntry]
+  restraints_detailed: RestraintAnalysis
+  statements_audio: List[AudioStatement]
+```
+
+#### 7.1.2 Kleidungsanalyse-Kategorien
+```yaml
+Clothing Categories (200+):
+  casual: [t-shirt, jeans, hoodie, sneakers, ...]
+  business: [blazer, dress_pants, business_dress, ...]
+  formal: [evening_dress, suit, formal_shoes, ...]
+  sportswear: [gym_clothes, athletic_shorts, sports_bra, ...]
+  intimate: [bra, underwear, lingerie, stockings, ...]
+  fetish: [latex, leather, vinyl, corset, ...]
+  materials: [cotton, silk, leather, lace, satin, ...]
+  specific_items:
+    - push_up_bra
+    - mini_skirt
+    - high_heels_6_inch
+    - silk_robe
+    - leather_cuffs
+```
+
+### 7.2 Video-Kontext-Analyse-System
+
+#### 7.2.1 Analyse-Dimensionen
+```yaml
+Bewegungsanalyse:
+  - Widerstandsbewegungen vs. Kooperation
+  - Stress-Indikatoren (Zittern, Verkrampfung)
+  - Bewegungseinschränkungen durch Fesselungen
+  - Körperhaltungsänderungen über Zeit
+
+Emotionale-Analyse:
+  - Gesichtsausdruck-Änderungen über Zeit
+  - Audio-Emotionen (Freude, Angst, Schmerz)
+  - Körpersprache-Interpretation
+  - Vokalisation-Muster
+
+Kontext-Generierung:
+  - LLM-basierte Zusammenfassung der Situation
+  - Grund der Fesselung (Training, Spiel, Bestrafung)
+  - Bewertung des Verhaltens der gefesselten Person
+  - Sicherheits- und Compliance-Einschätzung
+```
+
+### 7.3 Benutzer-Korrekturfunktionen
+
+#### 7.3.1 Re-Identifikation-Korrektur-UI
+```yaml
+Korrektur-Features:
+  - Personen-Merge: Zwei Dossiers zu einem zusammenführen
+  - Personen-Split: Ein Dossier in mehrere aufteilen
+  - Falsche-Zuordnung-Korrektur: Face-Embedding neu zuordnen
+  - Manual-Review-Interface: Benutzer bestätigt/korrigiert AI-Erkennungen
+  - Learning-System: Korrekturen verbessern zukünftige Genauigkeit
+```
+
+## 8. ABNAHMEKRITERIEN - PHASENWEISE
+
+### 8.1 Alpha 0.5.0 Kriterien
 - [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS ohne Fehler
 - [ ] SSL-Setup automatisiert mit Let's Encrypt
 - [ ] Alle Services starten mit CPU-only Dockerfiles
 - [ ] Health-Monitoring zeigt alle Services als "healthy"
-- [ ] Performance-Benchmarks dokumentiert für 8GB/16GB/32GB VPS
+- [ ] Performance-Benchmarks für 8GB, 16GB, 32GB VPS etabliert
 
-### 7.2 Alpha 0.6.0 Kriterien
-- [ ] VPS kann Vast.ai-Instanz automatisch erstellen und nutzen
-- [ ] Cloud AI-Task wird erfolgreich von VPS-Queue verwaltet
-- [ ] Cost-Monitoring zeigt korrekte Vast.ai-Kosten
-- [ ] Fallback auf lokale CPU-Processing funktioniert
-- [ ] Budget-Limit stoppt Cloud-Processing automatisch
+### 8.2 🆕 Alpha 0.6.0 UC-001 Kriterien
+- [ ] **Upload-to-Analysis-Workflow:** Video/Bild-Upload → Analyse → Dossier in <2 Minuten
+- [ ] **Personen-Dossiers:** Automatische Erstellung mit Porträt, Körpermaße, Job-Historie
+- [ ] **Kleidungsanalyse:** Erkennung von 200+ Kategorien (Casual→Dessous) mit >85% Genauigkeit
+- [ ] **Video-Kontext:** LLM-generierte Verhaltensberichte sind verständlich (User-Rating >4/5)
+- [ ] **Re-Identifikation:** >90% Genauigkeit bei Personen-Erkennung über mehrere Jobs
+- [ ] **Korrektur-UI:** Benutzer kann falsche Zuordnungen korrigieren und Dossiers zusammenführen
+- [ ] **Suchfunktionen:** Filter nach Kleidung, Material, Fesselungsart funktionieren
+- [ ] **Performance:** 5 parallele Video-Analysen ohne Performance-Degradation
+- [ ] **Cloud AI-Integration:** Vast.ai-Instanzen werden automatisch für UC-001-Tasks genutzt
 
-### 7.3 Alpha 0.7.0 (Beta-Transition) Kriterien
-- [ ] End-to-End: Bild-Upload → Cloud AI-Analyse → Resultate in UI
-- [ ] System läuft stabil >48 Stunden unter simulierter Last
-- [ ] Performance: <2s für Standard-Bild-Analyse via Cloud AI
-- [ ] Multi-User: >10 gleichzeitige Nutzer ohne Performance-Degradation
-- [ ] Cost-Efficiency: <€100/Monat für Small Business-Nutzung
+### 8.3 Alpha 0.7.0 Beta-Transition-Kriterien
+- [ ] End-to-End: Upload → Cloud AI-Analyse → Resultate in UI
+- [ ] System läuft stabil >48 Stunden unter Last
+- [ ] Performance: <2s für Standard-Analyse via Cloud AI
+- [ ] Multi-User: >10 gleichzeitige Nutzer ohne Degradation
+- [ ] **UC-001:** Vollständige Personen-Dossier-Workflows in Production-Qualität
 
-### 7.4 Version 1.0 Kriterien
-- [ ] Enterprise-Security-Audit bestanden
-- [ ] >99.5% Uptime über 3 Monate Production-Deployment
-- [ ] Performance-SLAs erfüllt: <100ms VPS-Services, <2s Cloud AI
-- [ ] Multi-Tenant-Support für >100 isolierte User-Environments
-- [ ] Compliance-Zertifizierung (GDPR, SOC2) erhalten
+### 8.4 Beta 0.8.0-0.9.0 Enterprise-Kriterien
+- [ ] >99.5% System-Uptime über 30 Tage
+- [ ] Response-Time <100ms für 95% aller VPS-Services
+- [ ] >50 gleichzeitige Nutzer ohne Performance-Impact
+- [ ] Security-Audit bestanden (Third-Party)
+- [ ] GDPR-Compliance für UC-001 Personen-Dossiers
 
-## 8. STRATEGISCHE POSITIONIERUNG
+### 8.5 Version 1.0 Production-Kriterien
+- [ ] >1000 aktive Nutzer auf der Platform
+- [ ] >95% Customer-Satisfaction-Score
+- [ ] <€50/Monat durchschnittliche Total-Cost-of-Ownership
+- [ ] >99.9% System-Availability mit SLA-Garantie
+- [ ] Market-Leading Position in VPS-Native AI-Segment
 
-### 8.1 Market-Differentiation
-- **VPS-Native AI-Platform:** Erste AI-Platform optimiert für Standard-Server
-- **Cost-Efficiency:** Professional AI ohne teure GPU-Hardware-Investitionen
-- **Developer-First:** Beste Development-Experience in der AI-Branche
-- **Enterprise-Scalable:** Von Einzelentwickler bis Enterprise-Deployment
+---
 
-### 8.2 Competitive-Advantages
-- **Setup-Time:** <5 Minuten vs. Stunden/Tage bei Konkurrenz
-- **Hardware-Requirements:** Standard-VPS vs. teure GPU-Server
-- **Development-Experience:** Professional-Grade Automation out-of-the-box
-- **Cost-Predictability:** VPS-Fix-Cost + Cloud AI-Pay-per-use
+## 9. 🎯 STRATEGIC SUCCESS FACTORS
 
-### 8.3 Target-Market
-- **Primary:** Small-Medium Businesses mit AI-Needs aber ohne GPU-Budget
-- **Secondary:** Enterprise mit Cost-Optimization-Requirements
-- **Tertiary:** Developers/Agencies die AI-Services für Clients entwickeln
+### 9.1 UC-001 Business Impact
+- **Unique Selling Proposition:** Detaillierte Personen-Dossierung mit Video-Kontext
+- **Market Differentiation:** Einzige VPS-native AI-Platform mit erweiterten Medienanalyse-Features
+- **User Experience:** Intuitive Korrektur-UI reduziert manuelle Nacharbeit um 60%
+- **Cost Efficiency:** VPS + Cloud AI-Hybrid kostet 70% weniger als GPU-Server-Alternativen
 
-## 9. SUCCESS-METRICS & KPIs
+### 9.2 Technical Excellence
+- **VPS-First Architecture:** 90% vorhandene Services nutzen, minimale neue Implementation
+- **Cloud AI-Integration:** Pay-per-use Model optimiert Kosten automatisch
+- **Development Standards:** Enterprise-Grade Qualität von Alpha-Phase an
+- **Performance:** Real-time Processing mit <5 Sekunden Response-Time
 
-### 9.1 Development-Success-Metrics ✅
-- **Setup-Time:** <5 Minuten (ERREICHT)
-- **Developer-Onboarding:** <10 Minuten bis productive (ERREICHT)
-- **CI/CD-Reliability:** >95% erfolgreiche Runs (ERREICHT)
-- **Code-Quality:** Automated Quality-Gates (ERREICHT)
+### 9.3 Risk Mitigation
+- **Implementation-Risk:** UC-001 nutzt 90% bestehende Services → Niedriges Risiko
+- **Technical-Risk:** Bewährte VPS-First-Architektur → Stabile Basis
+- **Market-Risk:** Unique Feature-Set differenziert von Konkurrenz
+- **Budget-Risk:** Strikte Cloud AI-Cost-Controls → Vorhersagbare Kosten
 
-### 9.2 VPS-Performance-Metrics (Alpha 0.5.0 Ziel)
-- **Service-Start-Time:** <30 Sekunden für alle VPS-Services
-- **Memory-Usage:** <8GB für komplette VPS-Environment
-- **Response-Time:** <100ms für lokale Service-API-Calls
-- **Uptime:** >99.5% für VPS-Infrastructure
+---
 
-### 9.3 Cloud AI-Integration-Metrics (Alpha 0.6.0 Ziel)
-- **Instance-Creation-Time:** <2 Minuten für Vast.ai-GPU-Instance
-- **Processing-Latency:** <3s für Standard-Bild-Analyse
-- **Cost-Efficiency:** <€0.50 pro Bild-Analyse
-- **Reliability:** >98% erfolgreiche Cloud AI-Tasks
+**🎯 Mission:** Die führende VPS-Native AI-Platform mit erweiterten Medienanalyse-Capabilities zu entwickeln.
 
-### 9.4 Enterprise-Readiness-Metrics (Version 1.0 Ziel)
-- **Multi-Tenant-Capacity:** >100 isolierte User-Environments
-- **Security-Compliance:** GDPR, SOC2 Zertifizierung
-- **Performance-SLA:** >99.9% API-Availability
-- **Customer-Success:** >90% Customer-Satisfaction (NPS >50)
+**⚡ Execution:** Bewährte Development-Standards + strategische UC-001-Integration in Alpha 0.6.0.
+
+**🚀 Vision:** Market-Leader in intelligenten VPS-AI-Solutions mit unvergleichlichen Personen-Dossier-Features.
