@@ -2,11 +2,11 @@
 
 ## Errors
 - Makefile: Duplicate target 'echo "${RED}❌ Fehler' at lines: 492, 547
+- Makefile: Duplicate target '@echo "${YELLOW}Services' at lines: 452, 462, 472, 482
 - Makefile: Duplicate target '@echo "TODO' at lines: 423, 427, 439, 443
 - Makefile: Duplicate target 'echo "${BLUE}Integriere Service' at lines: 454, 464, 474, 484
-- Makefile: Duplicate target '@echo "Generated' at lines: 271, 284
-- Makefile: Duplicate target '@echo "${YELLOW}Services' at lines: 452, 462, 472, 482
 - Makefile: Duplicate target '@curl -f http' at lines: 190, 191, 196, 310, 314, 315
+- Makefile: Duplicate target '@echo "Generated' at lines: 271, 284
 
 ## Warnings
 - pyproject.toml: tomli not installed, skipping validation

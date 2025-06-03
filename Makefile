@@ -877,3 +877,124 @@ config-health-check: ## Umfassende Konfigurationsprüfung
 
 validate-all-config: validate-config check-pytest-ini check-pyproject check-docker-compose ## Vollständige Konfigurationsvalidierung
 	@echo "✅ Vollständige Konfigurationsvalidierung abgeschlossen"
+
+# =============================================================================
+# LINTER-COMPLIANCE-REGEL (NEUE REGEL)
+# =============================================================================
+
+## Comprehensive Linter Compliance
+check-compliance: ## 🔍 Vollständige Linter-Compliance-Prüfung
+	@echo "${BLUE}🔍 Führe vollständige Linter-Compliance-Prüfung durch...${NC}"
+	python scripts/linter_compliance.py
+	@echo "${GREEN}✅ Linter-Compliance-Check abgeschlossen${NC}"
+
+check-compliance-critical: ## 🎯 Nur kritische Compliance-Checks
+	@echo "${BLUE}🎯 Führe kritische Linter-Checks durch...${NC}"
+	python scripts/linter_compliance.py --critical-only
+	@echo "${GREEN}✅ Kritische Compliance-Checks abgeschlossen${NC}"
+
+fix-compliance: ## 🔧 Automatische Compliance-Reparatur
+	@echo "${BLUE}🔧 Führe automatische Compliance-Reparatur durch...${NC}"
+	python scripts/linter_compliance.py --fix
+	@echo "${GREEN}✅ Automatische Reparatur abgeschlossen${NC}"
+
+compliance-report: ## 📊 Compliance-Report generieren
+	@echo "${BLUE}📊 Generiere Compliance-Report...${NC}"
+	python scripts/linter_compliance.py --report-only
+	@echo "${GREEN}✅ Compliance-Report generiert${NC}"
+
+lint-help: ## ❓ Linter-Compliance Hilfe anzeigen
+	@echo "${GREEN}🔍 Linter-Compliance-Regel - Verfügbare Befehle:${NC}"
+	@echo ""
+	@echo "${YELLOW}Compliance Checks:${NC}"
+	@echo "  make check-compliance         - Vollständige Compliance-Prüfung"
+	@echo "  make check-compliance-critical- Nur kritische Checks"
+	@echo "  make fix-compliance           - Automatische Reparatur"
+	@echo "  make compliance-report        - Report generieren"
+	@echo ""
+	@echo "${YELLOW}Einzelne Tools:${NC}"
+	@echo "  make format                   - Black + isort Formatierung"
+	@echo "  make check-format             - Formatierung prüfen"
+	@echo "  make lint                     - flake8 + mypy Checks"
+	@echo "  make validate-config          - Konfigurationsdatei-Validierung"
+	@echo ""
+	@echo "${YELLOW}Compliance Levels:${NC}"
+	@echo "  🎯 MINIMUM    - Kritische Checks bestanden"
+	@echo "  ⚠️ RECOMMENDED - + Security/Type Checks"
+	@echo "  🎉 EXCELLENCE - Alle Checks perfekt"
+	@echo ""
+	@echo "${YELLOW}CI/CD Integration:${NC}"
+	@echo "  - GitHub Actions: .github/workflows/linter-compliance.yml"
+	@echo "  - Pre-commit Hooks: make pre-commit-install"
+	@echo "  - Automatische Formatierung bei jedem Commit"
+
+compliance-help: lint-help ## ❓ Alias für lint-help
+
+format-help: ## ❓ Formatierungs-Hilfe anzeigen
+	@echo "${GREEN}🎨 Code-Formatierung - Verfügbare Befehle:${NC}"
+	@echo ""
+	@echo "${YELLOW}Automatische Formatierung:${NC}"
+	@echo "  make format                   - Black + isort Formatierung"
+	@echo "  make fix-all                  - Format + Lint + Config Fix"
+	@echo ""
+	@echo "${YELLOW}Formatierungs-Checks:${NC}"
+	@echo "  make check-format             - Formatierung prüfen"
+	@echo "  make format-check-strict      - Strenger Check für CI/CD"
+	@echo ""
+	@echo "${YELLOW}Reports:${NC}"
+	@echo "  make format-report            - Format-Compliance-Report"
+	@echo "  make black-violations-report  - Black-Violations-Report"
+	@echo ""
+	@echo "${YELLOW}Konfiguration:${NC}"
+	@echo "  - pyproject.toml: [tool.black] und [tool.isort]"
+	@echo "  - setup.cfg: [flake8] Konfiguration"
+	@echo "  - Line length: 88 Zeichen (Black Standard)"
+
+fix-imports: ## 🔧 Nur Import-Sortierung reparieren
+	@echo "${BLUE}🔧 Repariere Import-Sortierung...${NC}"
+	python -m isort services/ tests/ scripts/ --profile black
+	@echo "${GREEN}✅ Import-Sortierung abgeschlossen${NC}"
+
+fix-config: ## 🏗️ Nur Konfigurationsfehler reparieren
+	@echo "${BLUE}🏗️ Repariere Konfigurationsfehler...${NC}"
+	python scripts/validate_config.py --fix
+	@echo "${GREEN}✅ Konfigurationsreparatur abgeschlossen${NC}"
+
+## Security und Quality Gates
+security-gate: ## 🔒 Security Gate für CI/CD
+	@echo "${BLUE}🔒 Führe Security Gate durch...${NC}"
+	@python -m bandit -r services/ --severity-level medium --confidence-level medium
+	@python -m safety check
+	@echo "${GREEN}✅ Security Gate bestanden${NC}"
+
+quality-gate: ## 📋 Quality Gate für CI/CD
+	@echo "${BLUE}📋 Führe Quality Gate durch...${NC}"
+	@$(MAKE) check-format
+	@$(MAKE) lint
+	@$(MAKE) validate-config
+	@echo "${GREEN}✅ Quality Gate bestanden${NC}"
+
+compliance-gate: quality-gate security-gate ## 🚥 Vollständiges Compliance Gate
+	@echo "${GREEN}🚥 Compliance Gate erfolgreich bestanden!${NC}"
+
+## Daily Compliance Tasks
+daily-compliance: ## 📅 Tägliche Compliance-Prüfung
+	@echo "${BLUE}📅 Führe tägliche Compliance-Prüfung durch...${NC}"
+	@$(MAKE) fix-compliance
+	@$(MAKE) check-compliance
+	@$(MAKE) compliance-report
+	@echo "${GREEN}✅ Tägliche Compliance-Prüfung abgeschlossen${NC}"
+
+pre-merge-check: ## 🔀 Pre-Merge Compliance Check
+	@echo "${BLUE}🔀 Führe Pre-Merge Compliance Check durch...${NC}"
+	@$(MAKE) check-compliance-critical
+	@$(MAKE) test-unit
+	@$(MAKE) security-gate
+	@echo "${GREEN}✅ Pre-Merge Check bestanden - Ready to merge!${NC}"
+
+release-compliance: ## 🚀 Release Compliance Audit
+	@echo "${BLUE}🚀 Führe Release Compliance Audit durch...${NC}"
+	@$(MAKE) check-compliance
+	@$(MAKE) test
+	@$(MAKE) compliance-report
+	@echo "${GREEN}✅ Release Compliance Audit abgeschlossen${NC}"
