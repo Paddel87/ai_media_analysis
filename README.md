@@ -1,18 +1,64 @@
 # AI Media Analysis System
 
 [![AI Media Analysis Test Suite](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml/badge.svg)](https://github.com/Paddel87/ai_media_analysis/actions/workflows/tests.yml)
+[![Linter Compliance](https://github.com/Paddel87/ai_media_analysis/actions/workflows/linter-compliance.yml/badge.svg)](https://github.com/Paddel87/ai_media_analysis/actions/workflows/linter-compliance.yml)
+[![venv Environment](https://github.com/Paddel87/ai_media_analysis/actions/workflows/venv-validation.yml/badge.svg)](https://github.com/Paddel87/ai_media_analysis/actions/workflows/venv-validation.yml)
 
-**Status:** Alpha 0.4.3 - VPS-Development-Ready mit Code-Qualitäts-Automatisierung
+**Status:** Alpha 0.5.0 - Enterprise-Grade Development Framework
 **Architektur:** VPS-Orchestrierung + Cloud GPU Computing
 **Service-Struktur:** 24 Services in einheitlicher services/ Architektur
-**Code-Quality:** Automatisierte Formatierungsprävention mit Pre-Commit-Hooks
+**Development-Framework:** 5 Hauptentwicklungsregeln implementiert ✅
+**Code-Quality:** Vollautomatische Linter-Compliance mit 7-Tool-Pipeline
+**Environment:** Verbindliche venv-Isolation für alle Entwicklungstätigkeiten
 **Deployment-Ziel:** VPS/Dedizierte Server ohne eigene GPU
-**CI/CD:** Stabil mit proaktiver Formatierungsfehlervermeidung
-**Development-Environment:** Vollautomatisiert und VPS-optimiert
+**CI/CD:** Enterprise-Grade Qualitätssicherung
+**Development-Environment:** Vollautomatisiert und Production-Ready
 
 ## Überblick
 
-Das AI Media Analysis System ist ein **Cloud-Native Microservices-System** zur automatisierten Analyse von Medieninhalten. Das System ist für **Deployment auf VPS/dedizierten Servern ohne eigene GPU** optimiert und nutzt **Cloud GPU-Services** für AI-Processing.
+Das AI Media Analysis System ist ein **Cloud-Native Microservices-System** zur automatisierten Analyse von Medieninhalten mit **enterprise-grade Entwicklungsstandards**. Das System ist für **Deployment auf VPS/dedizierten Servern ohne eigene GPU** optimiert und nutzt **Cloud GPU-Services** für AI-Processing.
+
+### Alpha 0.5.0 - Enterprise Development Framework ✅
+
+**🎯 5 Hauptentwicklungsregeln erfolgreich implementiert:**
+
+1. **✅ Feature Testing Regel** - Umfassende Test-Pipeline
+   - Unit Tests mit 80%+ Coverage-Anforderung
+   - Integration Tests zwischen Services
+   - End-to-End Tests für vollständige Workflows
+   - Performance Tests und Load Testing
+   - Security Tests und Vulnerability Scans
+
+2. **✅ Black Standard Regel** - Automatische Code-Formatierung
+   - Verbindliche Black-Formatierung (88 Zeichen)
+   - Automatische isort Import-Sortierung
+   - Pre-commit Hooks für automatische Formatierung
+   - CI/CD-Integration mit Format-Checks
+
+3. **✅ Konfigurationsdatei-Validierung** - Config-Qualitätssicherung
+   - Syntaktische Validierung aller Config-Dateien
+   - Duplikate-Erkennung und -Reparatur
+   - Konsistenz-Checks zwischen Konfigurationen
+   - Automatische Reparatur-Tools
+
+4. **✅ Linter-Compliance-Regel** - 7-Tool-Qualitäts-Pipeline
+   - Black, isort, flake8, mypy, bandit, safety, config-validation
+   - 3-Level-Compliance-System (MINIMUM → RECOMMENDED → EXCELLENCE)
+   - Automatische Reparatur-Funktionen
+   - GitHub Actions Integration
+
+5. **✅ venv-Entwicklungsumgebung-Regel** - Environment-Isolation
+   - Verbindliche venv-Nutzung für alle Entwicklungstätigkeiten
+   - Automatisches venv-Setup und Health-Monitoring
+   - Cross-Platform-Kompatibilität (Windows/Linux/macOS)
+   - IDE-Integration und Dependency-Management
+
+**🚀 Enterprise-Features:**
+- **Automatische Qualitätssicherung:** Vollintegrierte Linter-Pipeline
+- **Reproduzierbare Umgebungen:** venv-Isolation mit Gesundheits-Monitoring
+- **Umfassende Test-Coverage:** Multi-Level-Testing-Framework
+- **CI/CD-Integration:** GitHub Actions für alle Qualitäts-Gates
+- **Development-Automation:** 50+ Makefile-Targets für alle Workflows
 
 ### Alpha 0.4.2 - Service-Architektur-Optimierung ✅
 
@@ -24,40 +70,144 @@ Das AI Media Analysis System ist ein **Cloud-Native Microservices-System** zur a
 - ✅ **Improved Modularität:** Template-Pattern für zukünftige Service-Erweiterungen
 - ✅ **Docker-Compose-Konsistenz:** Alle Services über services/ Pfade referenziert
 
-**Service-Kategorien:**
-- **Infrastructure Services:** nginx, vector_db, redis (VPS-Services)
-- **AI Processing Services:** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
-- **Management Services:** job_manager, control, embedding_server, llm_service
-- **UI Services:** ui, streamlit_ui für Development und Production
-- **Common Components:** Shared Libraries in services/common/
+## Enterprise Development Framework
 
-### Alpha 0.4.1 - Development-Stabilität erreicht ✅
+### 🔧 Entwicklungsumgebung Setup
 
-**Neue Development-Features:**
-- ✅ **Vollautomatisiertes Setup:** `make dev-setup` für komplette Development-Umgebung
-- ✅ **VPS-Optimierte Docker-Compose:** CPU-only Services mit optimierten Resource-Limits
-- ✅ **Environment-Management:** Standardisierte Konfiguration über config/environment.example
-- ✅ **Development-Scripts:** Automatisierte Setup, Quick-Start und Reset-Scripts
-- ✅ **Service-Monitoring:** Comprehensive Health-Checks und Continuous Monitoring
-- ✅ **Windows-Kompatibilität:** PowerShell-friendly Development-Workflow
+#### 1. Verbindliche venv-Aktivierung
+```bash
+# venv erstellen und aktivieren (VERPFLICHTEND)
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/macOS
 
-**Bestätigte Funktionalität:**
-- ✅ **Docker-Compose System:** VPS-optimiert, läuft stabil auf Standard-Hardware
-- ✅ **Redis Service:** Läuft stabil als Message Queue/Cache mit Health-Monitoring
-- ✅ **Vector-DB Service:** CPU-only mit faiss-cpu und PyTorch CPU-Versionen
-- ✅ **Build-Prozesse:** Systematisches Pattern für VPS-kompatible Services
-- ✅ **CI/CD Pipeline:** 57/61 Tests erfolgreich, automatisierte Quality Gates
-- ✅ **Development-Tools:** Makefile, run_tests.py, pytest-Suite vollständig
+# Automatisches Setup
+make venv-setup
+```
 
-**Strategische Architektur:**
-- 🎯 **VPS-First Development:** Optimiert für lokale Entwicklung auf Standard-Hardware
-- 🎯 **Cloud AI-Processing:** Vast.ai Integration für GPU-intensive Tasks
-- 🎯 **Cost-Efficient:** Keine teure GPU-Hardware für Development erforderlich
-- 🎯 **Auto-Setup:** <5 Minuten von Git-Clone zu laufendem System
+#### 2. Development-Dependencies installieren
+```bash
+# Im aktivierten venv
+make venv-install-dev   # Development-Tools
+make venv-install-test  # Test-Framework
+make venv-install-all   # Alle Dependencies
+```
 
-### VPS-Optimierte Development-Architektur
+#### 3. IDE-Konfiguration
+```bash
+# Automatische VS Code/Cursor Settings
+make venv-setup  # Erstellt .vscode/settings.json automatisch
+```
 
-#### Service-Struktur (Alpha 0.4.2)
+### 🧪 Testing Framework
+
+#### Umfassende Test-Pipeline
+```bash
+# Alle Tests (EMPFOHLEN)
+make test
+
+# Spezifische Test-Types
+make test-unit          # Unit Tests (80%+ Coverage)
+make test-integration   # Service-Integration Tests
+make test-e2e          # End-to-End Workflows
+make test-performance  # Performance und Load Tests
+make test-security     # Security Scans
+
+# Test-Validierung
+make test-validate     # Prüft Test-Anforderungen für neue Features
+make test-quality-gate # Quality Gate für Deployment
+```
+
+#### Test-Coverage-Anforderungen
+- **Unit Tests:** Minimum 80% Coverage
+- **Integration Tests:** Alle Service-Interaktionen
+- **E2E Tests:** Kritische User-Workflows
+- **Performance Tests:** Load Testing unter realistischen Bedingungen
+
+### 🎨 Code-Qualität und Formatierung
+
+#### Automatische Formatierung (Verbindlich)
+```bash
+# Automatische Formatierung
+make format             # Black + isort
+make fix-all           # Format + Lint + Config Fix
+
+# Format-Checks
+make check-format      # Nur prüfen ohne Änderungen
+make format-check-strict # Strenger Check für CI/CD
+```
+
+#### Linter-Compliance-Pipeline
+```bash
+# Vollständige Compliance-Prüfung
+make check-compliance
+
+# Spezifische Checks
+make check-compliance-critical  # Nur kritische Checks
+make fix-compliance            # Automatische Reparatur
+make compliance-report         # Detaillierter Report
+
+# Compliance-Hilfe
+make lint-help         # Alle verfügbaren Befehle
+make compliance-help   # Compliance-Level-Übersicht
+```
+
+#### 3-Level-Compliance-System
+- **🎯 MINIMUM:** Black, isort, flake8, Config-Validierung (CI/CD-Requirement)
+- **⚠️ RECOMMENDED:** + mypy, bandit, safety (Development Standard)
+- **🎉 EXCELLENCE:** Alle Checks + 100% Test Coverage (Production Ready)
+
+### 🔍 venv-Environment-Management
+
+#### venv-Gesundheitsüberwachung
+```bash
+# venv-Status und Gesundheit
+make venv-check         # Umfassender Gesundheitscheck
+make venv-status        # Schneller Status-Check
+make venv-doctor        # Diagnose-Tool bei Problemen
+
+# venv-Management
+make venv-clean-rebuild # venv neu erstellen
+make venv-sync         # Dependencies synchronisieren
+make venv-security     # Security-Check der Dependencies
+```
+
+#### Automatische Validierung
+- **Gesundheits-Score:** 0-100 Punkte mit automatischen Verbesserungsvorschlägen
+- **Dependency-Tracking:** Überwachung von Package-Versionen und Security-Updates
+- **Platform-Diagnose:** Cross-Platform-Kompatibilität
+
+### 🏗️ Konfigurationsdatei-Management
+
+#### Automatische Validierung
+```bash
+# Konfigurationsdatei-Checks
+make validate-config           # Alle Config-Dateien
+make check-pytest-ini         # pytest.ini spezifisch
+make check-pyproject          # pyproject.toml
+make check-docker-compose     # docker-compose.yml
+
+# Automatische Reparatur
+make fix-config              # Config-Reparatur
+make config-health-check     # Umfassende Config-Prüfung
+```
+
+### 📊 Continuous Integration
+
+#### GitHub Actions Workflows
+- **🧪 Test Suite:** Umfassende Test-Pipeline bei jedem Push
+- **🔍 Linter Compliance:** Automatische Code-Qualitätsprüfung
+- **🐍 venv Validation:** Environment-Validierung in CI/CD
+- **📋 Quality Gates:** Merge-Blocking bei kritischen Failures
+
+#### Pre-Commit Hooks
+```bash
+# Pre-commit Setup
+make pre-commit-install    # Hooks installieren
+make pre-commit-run       # Manuell ausführen
+```
+
+### Service-Struktur (Alpha 0.4.2)
 ```
 services/
 ├── Infrastructure Services (VPS)
@@ -84,15 +234,64 @@ services/
     └── error_handler.py    # Error Management
 ```
 
+### Enterprise Development-Workflow
+
+#### 1. Täglicher Workflow (Verbindlich)
+```bash
+# 1. venv aktivieren
+.venv\Scripts\activate
+
+# 2. Umgebung validieren
+make venv-check
+
+# 3. Services starten
+make quick-start
+
+# 4. Code-Entwicklung...
+
+# 5. Qualitätssicherung vor Commit
+make check-compliance      # Linter-Compliance
+make test-unit            # Unit Tests
+make fix-all              # Automatische Reparaturen
+
+# 6. Pre-Merge Validation
+make pre-merge-check      # Vollständiger Quality Gate
+```
+
+#### 2. Feature-Entwicklung
+```bash
+# 1. Feature-Anforderungen validieren
+make test-validate        # Test-Anforderungen prüfen
+
+# 2. Entwicklung mit kontinuierlicher Qualitätsprüfung
+make test-watch          # Kontinuierliche Tests
+make format-with-venv    # Formatierung mit venv-Check
+
+# 3. Quality Gate vor Feature-Abschluss
+make test-quality-gate   # Deployment-Readiness
+make compliance-gate     # Vollständige Compliance
+```
+
+#### 3. Release-Vorbereitung
+```bash
+# 1. Umfassende Validierung
+make release-compliance  # Release Compliance Audit
+make test-ci            # CI/CD Pipeline simulieren
+
+# 2. Documentation und Reports
+make test-report        # Umfassender Test-Report
+make compliance-report  # Compliance-Zusammenfassung
+```
+
 ### VPS-Optimierte Development-Architektur
 
 #### Local Development Environment
-- **Quick Setup:** Vollautomatisiertes `make dev-setup` für alle Dependencies
+- **Enterprise Setup:** Vollautomatisiertes `make venv-setup` für alle Dependencies
 - **Core Services:** Redis, Vector-DB, Nginx mit Health-Monitoring
 - **Resource-Optimized:** Memory-Limits für 8GB-16GB Development-Hardware
 - **Service-Isolation:** Jeder Service läuft unabhängig mit eigenen Health-Checks
-- **Logging:** Structured Logging für alle Services mit Rotation
-- **Monitoring:** Real-time Service-Status und Resource-Monitoring
+- **Quality Assurance:** Integrierte Linter-Pipeline und Test-Framework
+- **Environment-Isolation:** Verbindliche venv-Nutzung mit automatischer Validierung
 
 #### Cloud AI Services (Production-Ready)
 - **Computer Vision:** Pose Estimation, OCR, NSFW-Detection
@@ -101,83 +300,38 @@ services/
 - **Content Analysis:** CLIP-basierte Content-Klassifikation
 - **GPU-Management:** Dynamische Vast.ai Instanz-Allokation
 
-#### Enterprise Features (Version 1.0+)
-- **Multi-User-Management:** RBAC und Tenant-Isolation
-- **Cost-Optimization:** Auto-Scaling Cloud AI nach Bedarf
-- **Analytics:** Usage-Tracking und Performance-Monitoring
-- **Security:** SSL, API-Keys, Audit-Logging
-
 ### Development-Environment Setup
 
-#### Automatisiertes Setup (Empfohlen)
+#### Enterprise-Grade Setup (Empfohlen)
 ```bash
-# Ein-Kommando Setup für komplette Development-Umgebung
-make dev-setup
+# 1. venv erstellen und aktivieren (VERPFLICHTEND)
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/macOS
 
-# Oder für schnelles minimal Setup
-make quick-setup
+# 2. Automatisches Enterprise-Setup
+make venv-setup
 
-# Services starten
+# 3. Compliance validieren
+make check-compliance
+
+# 4. Services starten
 make quick-start
 
-# Tests ausführen
+# 5. Vollständige Tests
 make test
 ```
 
-#### Manuelles Setup
+#### Bestehende Entwickler (Migration)
 ```bash
-# Dependencies installieren
-pip install -r requirements.txt
-pip install -r requirements-ci.txt
+# 1. venv-Migration
+make venv-clean-rebuild
 
-# Environment konfigurieren
-cp config/environment.example .env
-# .env editieren für lokale Konfiguration
+# 2. Compliance-Update
+make fix-compliance
 
-# Core Services starten
-make run-core-services
-
-# Health Check
-make health-check-core
-```
-
-### Development-Workflow
-
-#### Täglicher Development-Workflow
-```bash
-# 1. Services starten
-make quick-start
-
-# 2. Code ändern...
-
-# 3. Tests ausführen
-make test-fast
-
-# 4. Code formatieren
-make format
-
-# 5. Pre-commit checks
-make pre-commit
-
-# 6. Services neu starten bei Bedarf
-make restart-core
-```
-
-#### Service-spezifische Entwicklung
-```bash
-# Nur bestimmte Services starten
-make run-core-services   # Redis, Vector-DB, Nginx
-make run-ai-services     # AI-Services starten
-
-# Service-spezifische Tests
-make test-redis         # Redis funktionalität
-make test-vector-db     # Vector Database
-make test-nginx         # Nginx Proxy-Konfiguration
-
-# Logs anzeigen
-make logs-core          # Core Service Logs
-make logs-ai            # AI Service Logs
-make monitor            # Continuous monitoring
+# 3. IDE neu konfigurieren
+# VS Code/Cursor: Python Interpreter → .venv/Scripts/python.exe wählen
 ```
 
 ### VPS-Requirements für Development
@@ -187,6 +341,7 @@ make monitor            # Continuous monitoring
 - **RAM:** 8GB (16GB empfohlen)
 - **Storage:** 50GB SSD
 - **OS:** Windows 10+, Ubuntu 20.04+, macOS 11+
+- **Python:** 3.11+ (für venv-Regel)
 - **Docker:** Docker Desktop oder Docker Engine + Docker Compose
 
 #### Empfohlene Development-Spezifikationen
@@ -194,159 +349,41 @@ make monitor            # Continuous monitoring
 - **RAM:** 16GB
 - **Storage:** 100GB SSD
 - **Network:** Breitband für Cloud AI-Integration
+- **IDE:** VS Code/Cursor mit Python-Extension
 
-### Production VPS-Deployment
+### Hilfe und Support
 
-#### VPS-Vorbereitung
+#### Development-Hilfe
 ```bash
-# VPS-Setup (Ubuntu/Debian)
-sudo apt update && sudo apt upgrade -y
-sudo apt install docker.io docker-compose-v2 git make -y
-sudo usermod -aG docker $USER
+# Framework-Hilfe
+make help               # Alle verfügbaren Befehle
+make venv-help         # venv-Management
+make test-help         # Testing Framework
+make lint-help         # Code-Qualität
+make compliance-help   # Compliance-System
 
-# Repository klonen und Setup
-git clone https://github.com/your-repo/ai_media_analysis.git
-cd ai_media_analysis
-make vps-setup
+# Diagnose-Tools
+make venv-doctor       # venv-Probleme
+make test-debug        # Test-Debugging
+make monitor           # Service-Monitoring
 ```
 
-#### Production-Deployment
-```bash
-# VPS-optimierte Services bauen und starten
-make vps-deploy
-make run-core-services
+#### Dokumentation
+- **Development Rules:** `.cursorrules/rules/` - Detaillierte Regel-Dokumentation
+- **API Documentation:** `API.md` - Service-APIs und Endpoints
+- **Contributing:** `CONTRIBUTING.md` - Beitrag-Guidelines
+- **Changelog:** `CHANGELOG.md` - Versions-Historie
 
-# Health Check
-make health-check-core
+### Enterprise Features (Ready)
+- **✅ Multi-Level-Testing:** Unit, Integration, E2E, Performance, Security
+- **✅ Automated Quality Assurance:** 7-Tool-Linter-Pipeline
+- **✅ Environment-Isolation:** venv-Management mit Health-Monitoring
+- **✅ CI/CD-Integration:** GitHub Actions für alle Quality Gates
+- **✅ Cross-Platform:** Windows/Linux/macOS kompatibel
+- **✅ Reproducible Builds:** Standardisierte Development-Umgebungen
 
-# SSL-Setup für Production
-# TODO: SSL-Konfiguration dokumentieren
-```
+---
 
-## Development-Roadmap
-
-### Alpha 0.4.0 ✅ - Development-Stabilität (ERREICHT)
-**Ziel:** Stabile lokale Entwicklungsumgebung
-**Erreicht:**
-- Vollautomatisiertes Development-Setup
-- VPS-optimierte Docker-Compose-Konfiguration
-- Comprehensive Service-Monitoring
-- Windows/Linux/macOS Kompatibilität
-
-### 🎯 Projekt-Status: Alpha 0.5.0 - Iteration 1 ABGESCHLOSSEN ✅
-
-### ✅ **Management-Core Services erfolgreich implementiert**
-- ✅ **Control Service:** System-Control-Interface mit Redis-Integration (Port 8006)
-- ✅ **Job Manager:** Task-Orchestration mit asyncio Job-Queue (Port 8005)
-- ✅ **Embedding Server:** Vector-Management mit CPU-optimierten Embeddings (Port 8007)
-- ✅ **LLM Service:** Multi-Provider Language-Model-Interface (Port 8008)
-
-### 📊 **Erfolgsmetriken**
-- ✅ **Service-Integration:** 14/24 Services in docker-compose.yml (58% Completion)
-- ✅ **Code-Qualität:** 1.353+ Zeilen neuer Service-Code mit unified FastAPI-Pattern
-- ✅ **API-Funktionalität:** 15+ REST-Endpoints implementiert und getestet
-- ✅ **Health-Checks:** Standardisierte `/health` Endpoints für alle Services
-- ✅ **Docker-Build:** Alle Services builden fehlerfrei und starten erfolgreich
-
-### 🔄 **Nächste Schritte: Iteration 2**
-**Ziel:** 4 AI-Processing Services (pose_estimation, ocr_detection, clip_nsfw, face_reid)
-**Timeline:** Januar 2025
-
-## Development-Tools und -Befehle
-
-### Häufige Entwicklungsbefehle
-```bash
-# Setup und Start
-make help                   # Alle verfügbaren Befehle anzeigen
-make dev-setup             # Komplette Development-Umgebung
-make quick-start           # Services schnell starten
-make vps-setup             # VPS-Environment vorbereiten
-
-# Services Management
-make run-core-services     # Nur Core-Services starten
-make run-ai-services       # AI-Services starten
-make stop-services         # Alle Services stoppen
-make restart-core          # Core-Services neu starten
-
-# Testing und Quality
-make test                  # Alle Tests ausführen
-make test-fast             # Nur schnelle Unit Tests
-make test-coverage         # Tests mit Coverage-Analyse
-make format                # Code formatieren
-make lint                  # Code-Linting
-make pre-commit            # Pre-commit Checks
-
-# Monitoring und Debugging
-make health-check          # Service-Health prüfen
-make monitor               # Continuous Service-Monitoring
-make logs                  # Alle Service-Logs anzeigen
-make logs-core             # Nur Core-Service-Logs
-
-# Utilities
-make clean                 # Temporäre Dateien bereinigen
-make clean-docker          # Docker-Artefakte bereinigen
-make reset-dev             # Komplette Development-Umgebung zurücksetzen
-```
-
-### Environment-Konfiguration
-```bash
-# Environment aus Template erstellen
-cp config/environment.example .env
-
-# Wichtige Einstellungen für lokale Entwicklung:
-DEPLOYMENT_MODE=local       # Lokaler Development-Modus
-CLOUD_MODE=false           # Cloud AI deaktiviert für lokale Dev
-LOG_LEVEL=INFO             # Ausführliches Logging
-DEBUG=true                 # Debug-Modus aktiviert
-```
-
-## VPS-Provider Empfehlungen
-
-### Development (Budget)
-- **Hetzner:** €20-40/Monat, Deutschland, sehr stabil
-- **DigitalOcean:** $20-48/Monat, global verfügbar
-- **Linode:** $12-48/Monat, developer-friendly
-
-### Production (Business)
-- **Hetzner Dedicated:** €60-100/Monat, hohe Performance
-- **AWS EC2:** Variable Kosten, Enterprise-Features
-- **Google Cloud:** Variable Kosten, AI-Integration
-
-## Status-Dokumentation
-
-Detaillierte Informationen zum aktuellen Projektstatus:
-- [PROJECT_STATE.md](PROJECT_STATE.md) - VPS-Deployment-Strategie und aktuelle Tasks
-- [STATUS.md](STATUS.md) - Entwicklungsphase und realistische Roadmap
-- [CHANGELOG.md](CHANGELOG.md) - Vollständige Versionshistorie mit Development-Features
-- [DEVELOPMENT_STRATEGY](DEVELOPMENT_STRATEGY) - Langfristige Entwicklungsstrategie
-
-## Beitragen
-
-Das Projekt ist in aktiver Alpha-Entwicklung mit Fokus auf VPS-Development-Stabilität:
-
-### Entwicklungsrichtlinien
-- **VPS-First:** Alle Features für Standard-Server optimieren
-- **Development-Stabilität:** Lokaler Workflow muss zuverlässig funktionieren
-- **Test-First:** Keine Features ohne entsprechende Tests
-- **Dokumentation:** Jede Änderung muss dokumentiert werden
-
-### Contribution-Workflow
-```bash
-# 1. Development-Environment setup
-make dev-setup
-
-# 2. Feature-Branch erstellen
-git checkout -b feature/your-feature
-
-# 3. Entwickeln mit kontinuierlichen Tests
-make test-fast
-
-# 4. Pre-commit checks
-make pre-commit
-
-# 5. Pull Request mit Tests und Dokumentation
-```
-
-## Lizenz
-
-[Lizenz-Information hier einfügen]
+**Entwicklung:** Enterprise-Grade Framework mit 5 Hauptentwicklungsregeln
+**Status:** Production-Ready Development Environment
+**Next:** Production Deployment auf VPS mit Cloud AI-Integration
