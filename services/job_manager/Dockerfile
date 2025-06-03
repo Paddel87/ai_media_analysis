@@ -27,4 +27,4 @@ RUN mkdir -p /app/data/incoming/videos \
 ENV PYTHONUNBUFFERED=1
 
 # Startbefehl
-CMD ["python3", "process_batch.py"] 
+CMD ["python3", "main.py"]

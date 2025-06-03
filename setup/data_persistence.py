@@ -78,7 +78,7 @@ class DataPersistenceManager:
 
 
 def main():
-    config_path = "data_schema/persistence_config.json"
+    config_path = os.getenv("CONFIG_PATH", "data_schema/persistence_config.json")
     manager = DataPersistenceManager(config_path)
 
     # Führe alle Wartungsaufgaben aus

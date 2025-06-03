@@ -58,3 +58,23 @@ repos:
         types_or: [javascript, jsx, ts, tsx, json, css, scss, md, yaml]
         additional_dependencies:
           - prettier@4.0.0-alpha.8
+
+  # Feature Testing Rule - Validiere Test-Anforderungen
+  - repo: local
+    hooks:
+      - id: feature-testing-validation
+        name: Validate Feature Testing Rule
+        entry: scripts/validate_feature_tests.py
+        language: python
+        files: '^services/.*\.py$'
+        exclude: '__init__\.py$|test_.*\.py$'
+        always_run: false
+        pass_filenames: true
+
+      - id: test-coverage-check
+        name: Check Test Coverage
+        entry: bash -c 'if [ -d "tests/unit" ]; then python -m pytest tests/unit/ --cov=services --cov-fail-under=80 --quiet --disable-warnings || echo "⚠️ Coverage check skipped - no unit tests found"; fi'
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-push]

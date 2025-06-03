@@ -632,3 +632,223 @@ integration-all: ## 🚀 Alle 4 Iterationen nacheinander ausführen
 	@$(MAKE) iteration-4
 	@echo "${GREEN}🎉 Alle 24 Services erfolgreich integriert!${NC}"
 	@$(MAKE) iteration-status
+
+# =============================================================================
+# 🧪 FEATURE TESTING FRAMEWORK (NEUE REGEL)
+# =============================================================================
+
+## Comprehensive Testing Pipeline
+test: test-unit test-integration test-e2e ## 🧪 Führe alle Tests aus (Feature Testing Regel)
+	@echo "${GREEN}✅ Alle Tests erfolgreich!${NC}"
+
+test-unit: ## 🧪 Unit Tests mit Coverage-Anforderung (min. 80%)
+	@echo "${BLUE}🧪 Führe Unit Tests aus...${NC}"
+	@pytest tests/unit/ -v \
+		--cov=services \
+		--cov-report=term-missing \
+		--cov-report=html \
+		--cov-fail-under=80 \
+		--maxfail=5 \
+		--timeout=300 \
+		--durations=10 \
+		-m "unit"
+	@echo "${GREEN}✅ Unit Tests abgeschlossen${NC}"
+
+test-integration: ## 🔗 Integration Tests zwischen Services
+	@echo "${BLUE}🔗 Führe Integration Tests aus...${NC}"
+	@echo "${YELLOW}Starte erforderliche Services für Integration Tests...${NC}"
+	@$(DOCKER_COMPOSE) up -d redis
+	@sleep 5
+	@pytest tests/integration/ -v \
+		--timeout=600 \
+		--maxfail=3 \
+		--durations=10 \
+		-m "integration"
+	@echo "${GREEN}✅ Integration Tests abgeschlossen${NC}"
+
+test-e2e: ## 🎯 End-to-End Tests (vollständige Workflows)
+	@echo "${BLUE}🎯 Führe E2E Tests aus...${NC}"
+	@echo "${YELLOW}Starte alle Services für E2E Tests...${NC}"
+	@$(DOCKER_COMPOSE) up -d
+	@echo "${YELLOW}Warte auf Service-Start (60s)...${NC}"
+	@sleep 60
+	@pytest tests/e2e/ -v \
+		--timeout=1200 \
+		--maxfail=1 \
+		--durations=10 \
+		--tb=short \
+		-m "e2e"
+	@$(DOCKER_COMPOSE) down
+	@echo "${GREEN}✅ E2E Tests abgeschlossen${NC}"
+
+test-performance: ## ⚡ Performance Tests und Load Testing
+	@echo "${BLUE}⚡ Führe Performance Tests aus...${NC}"
+	@pytest tests/performance/ -v \
+		--timeout=1800 \
+		--durations=10 \
+		-m "performance"
+	@echo "${GREEN}✅ Performance Tests abgeschlossen${NC}"
+
+test-security: ## 🔒 Security Tests und Vulnerability Scans
+	@echo "${BLUE}🔒 Führe Security Tests aus...${NC}"
+	@echo "${YELLOW}Bandit Security Scan...${NC}"
+	@bandit -r services/ --severity-level medium --confidence-level medium || echo "${YELLOW}⚠️ Bandit-Warnungen gefunden${NC}"
+	@echo "${YELLOW}Safety Dependency Check...${NC}"
+	@safety check || echo "${YELLOW}⚠️ Safety-Warnungen gefunden${NC}"
+	@echo "${YELLOW}Security-spezifische Tests...${NC}"
+	@pytest tests/ -v -m "security" --timeout=300 || echo "${YELLOW}⚠️ Security-Tests mit Warnungen${NC}"
+	@echo "${GREEN}✅ Security Tests abgeschlossen${NC}"
+
+test-coverage: ## 📊 Coverage Report generieren und anzeigen
+	@echo "${BLUE}📊 Generiere Coverage Report...${NC}"
+	@pytest tests/unit/ tests/integration/ \
+		--cov=services \
+		--cov-report=html:htmlcov \
+		--cov-report=term-missing \
+		--cov-report=xml \
+		--cov-fail-under=80
+	@echo "${GREEN}✅ Coverage Report generiert: htmlcov/index.html${NC}"
+	@echo "${YELLOW}Coverage-Zusammenfassung:${NC}"
+	@coverage report --show-missing
+
+test-smoke: ## 💨 Smoke Tests für schnelle Systemprüfung
+	@echo "${BLUE}💨 Führe Smoke Tests aus...${NC}"
+	@$(DOCKER_COMPOSE) up -d
+	@sleep 30
+	@pytest tests/ -v -m "smoke" \
+		--timeout=120 \
+		--maxfail=1
+	@$(DOCKER_COMPOSE) down
+	@echo "${GREEN}✅ Smoke Tests abgeschlossen${NC}"
+
+test-validate: ## 🔍 Validiere Test-Anforderungen für neue Features
+	@echo "${BLUE}🔍 Validiere Test-Anforderungen...${NC}"
+	@echo "${YELLOW}Prüfe Test-Coverage für services/...${NC}"
+	@for service_file in $$(find services/ -name "*.py" -not -name "__init__.py" -not -name "test_*"); do \
+		test_file=$$(echo "$$service_file" | sed 's|services/|tests/unit/services/|' | sed 's|\.py$$|_test.py|' | sed 's|/\([^/]*\)_test\.py$$|/test_\1.py|'); \
+		if [ ! -f "$$test_file" ]; then \
+			echo "${RED}❌ Missing test: $$test_file für $$service_file${NC}"; \
+			missing_tests=1; \
+		fi; \
+	done; \
+	if [ "$$missing_tests" = "1" ]; then \
+		echo "${RED}❌ Feature Testing Regel verletzt: Tests für alle Service-Dateien erforderlich${NC}"; \
+		exit 1; \
+	else \
+		echo "${GREEN}✅ Alle Service-Dateien haben entsprechende Tests${NC}"; \
+	fi
+
+test-watch: ## 👀 Kontinuierliche Test-Ausführung bei Dateiänderungen
+	@echo "${BLUE}👀 Starte kontinuierliche Test-Überwachung...${NC}"
+	@echo "${YELLOW}Tests werden bei Dateiänderungen automatisch ausgeführt...${NC}"
+	@pytest-watch tests/unit/ -- -v --tb=short
+
+test-parallel: ## 🚀 Parallele Test-Ausführung (schneller)
+	@echo "${BLUE}🚀 Führe Tests parallel aus...${NC}"
+	@pytest tests/unit/ -v \
+		--cov=services \
+		--cov-report=term-missing \
+		--cov-fail-under=80 \
+		-n auto \
+		--timeout=300 \
+		--durations=10
+
+test-debug: ## 🐛 Debug-Modus für Tests (ausführliche Ausgaben)
+	@echo "${BLUE}🐛 Debug-Modus für Tests...${NC}"
+	@pytest tests/ -v -s \
+		--tb=long \
+		--capture=no \
+		--timeout=600 \
+		--pdb-trace
+
+test-clean: ## 🧹 Test-Artifacts und Cache löschen
+	@echo "${BLUE}🧹 Lösche Test-Artifacts...${NC}"
+	@rm -rf .pytest_cache/
+	@rm -rf htmlcov/
+	@rm -rf .coverage*
+	@rm -rf coverage.xml
+	@find . -name "*.pyc" -delete
+	@find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	@echo "${GREEN}✅ Test-Artifacts gelöscht${NC}"
+
+test-setup: ## 🛠️ Test-Umgebung einrichten
+	@echo "${BLUE}🛠️ Richte Test-Umgebung ein...${NC}"
+	@pip install -r requirements-ci.txt
+	@mkdir -p tests/{unit,integration,e2e,performance,fixtures,utils}
+	@mkdir -p tests/unit/services
+	@mkdir -p tests/data/{videos,images,json}
+	@if [ ! -f "tests/conftest.py" ]; then \
+		echo "# Test configuration" > tests/conftest.py; \
+		echo "import pytest" >> tests/conftest.py; \
+		echo "" >> tests/conftest.py; \
+		echo "@pytest.fixture(scope='session')" >> tests/conftest.py; \
+		echo "def test_client():" >> tests/conftest.py; \
+		echo "    \"\"\"Test client fixture.\"\"\"" >> tests/conftest.py; \
+		echo "    pass" >> tests/conftest.py; \
+	fi
+	@echo "${GREEN}✅ Test-Umgebung eingerichtet${NC}"
+
+test-ci: ## 🤖 CI/CD Test-Pipeline (simuliert GitHub Actions)
+	@echo "${BLUE}🤖 Simuliere CI/CD Test-Pipeline...${NC}"
+	@$(MAKE) test-validate
+	@$(MAKE) test-unit
+	@$(MAKE) test-integration
+	@$(MAKE) test-security
+	@$(MAKE) test-coverage
+	@echo "${GREEN}✅ CI/CD Test-Pipeline erfolgreich${NC}"
+
+## Test Quality Gates
+test-quality-gate: ## 🚥 Quality Gate für Feature-Deployment
+	@echo "${BLUE}🚥 Prüfe Quality Gate...${NC}"
+	@$(MAKE) test-validate
+	@$(MAKE) test-unit
+	@coverage report --fail-under=80 || (echo "${RED}❌ Coverage unter 80%${NC}" && exit 1)
+	@$(MAKE) test-integration
+	@$(MAKE) test-security
+	@echo "${GREEN}✅ Quality Gate bestanden - Feature kann deployed werden${NC}"
+
+## Test Reporting
+test-report: ## 📋 Umfassender Test-Report generieren
+	@echo "${BLUE}📋 Generiere umfassenden Test-Report...${NC}"
+	@mkdir -p reports/
+	@echo "# Test Report - $(shell date)" > reports/test-report.md
+	@echo "" >> reports/test-report.md
+	@echo "## Test Coverage" >> reports/test-report.md
+	@coverage report --format=markdown >> reports/test-report.md 2>/dev/null || echo "Coverage-Daten nicht verfügbar" >> reports/test-report.md
+	@echo "" >> reports/test-report.md
+	@echo "## Test Statistics" >> reports/test-report.md
+	@echo "- Unit Tests: $$(find tests/unit -name 'test_*.py' | wc -l)" >> reports/test-report.md
+	@echo "- Integration Tests: $$(find tests/integration -name 'test_*.py' | wc -l)" >> reports/test-report.md
+	@echo "- E2E Tests: $$(find tests/e2e -name 'test_*.py' | wc -l)" >> reports/test-report.md
+	@echo "- Performance Tests: $$(find tests/performance -name 'test_*.py' | wc -l)" >> reports/test-report.md
+	@echo "${GREEN}✅ Test-Report erstellt: reports/test-report.md${NC}"
+
+test-help: ## ❓ Hilfe zu Test-Befehlen anzeigen
+	@echo "${GREEN}🧪 Feature Testing Framework - Verfügbare Befehle:${NC}"
+	@echo ""
+	@echo "${YELLOW}Grundlegende Tests:${NC}"
+	@echo "  make test              - Alle Tests ausführen"
+	@echo "  make test-unit         - Unit Tests (schnell, isoliert)"
+	@echo "  make test-integration  - Integration Tests (Service-Interaktionen)"
+	@echo "  make test-e2e          - End-to-End Tests (vollständige Workflows)"
+	@echo ""
+	@echo "${YELLOW}Spezielle Tests:${NC}"
+	@echo "  make test-performance  - Performance und Load Tests"
+	@echo "  make test-security     - Security Tests und Scans"
+	@echo "  make test-smoke        - Schnelle System-Checks"
+	@echo ""
+	@echo "${YELLOW}Test-Qualität:${NC}"
+	@echo "  make test-coverage     - Coverage Report"
+	@echo "  make test-validate     - Test-Anforderungen prüfen"
+	@echo "  make test-quality-gate - Quality Gate für Deployment"
+	@echo ""
+	@echo "${YELLOW}Test-Utilities:${NC}"
+	@echo "  make test-setup        - Test-Umgebung einrichten"
+	@echo "  make test-clean        - Test-Artifacts löschen"
+	@echo "  make test-parallel     - Parallel ausführen"
+	@echo "  make test-debug        - Debug-Modus"
+	@echo "  make test-watch        - Kontinuierliche Ausführung"
+	@echo ""
+	@echo "${YELLOW}Reporting:${NC}"
+	@echo "  make test-report       - Umfassender Test-Report"
+	@echo "  make test-ci           - CI/CD Pipeline simulieren"

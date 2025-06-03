@@ -199,7 +199,7 @@ services:
   ocr_detection:
     build:
       context: ./services/ocr_detection
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.cpu
     container_name: ai_ocr_detection
     volumes:
       - ./data/results:/app/results
@@ -239,7 +239,7 @@ services:
   clip_nsfw:
     build:
       context: ./services/clip_nsfw
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.cpu
     container_name: ai_clip_nsfw
     volumes:
       - ./data/results:/app/results
@@ -279,7 +279,7 @@ services:
   face_reid:
     build:
       context: ./services/face_reid
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.cpu
     container_name: ai_face_reid
     volumes:
       - ./data/results:/app/results
@@ -319,7 +319,7 @@ services:
   whisper_transcriber:
     build:
       context: ./services/whisper_transcriber
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.cpu
     container_name: ai_whisper_transcriber
     ports:
       - "8001:8000"
@@ -364,7 +364,7 @@ services:
   # Development UI Service
   streamlit-ui:
     build:
-      context: ./ui
+      context: ./streamlit_ui
       dockerfile: Dockerfile
     ports:
       - "8501:8501"
@@ -424,7 +424,6 @@ services:
       - REDIS_DB=1
       - MAX_CONCURRENT_JOBS=10
       - JOB_TIMEOUT=3600
-      - BATCH_ID=default_batch_iteration1
     depends_on:
       redis:
         condition: service_healthy
@@ -471,6 +470,8 @@ services:
       - SYSTEM_MODE=production
     depends_on:
       redis:
+        condition: service_healthy
+      job_manager:
         condition: service_healthy
     networks:
       - ai_network
@@ -519,6 +520,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      vector-db:
+        condition: service_healthy
     networks:
       - ai_network
     deploy:
@@ -565,6 +568,8 @@ services:
       - MAX_TOKENS=4096
     depends_on:
       redis:
+        condition: service_healthy
+      embedding_server:
         condition: service_healthy
     networks:
       - ai_network

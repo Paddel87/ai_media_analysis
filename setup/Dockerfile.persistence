@@ -13,7 +13,9 @@ COPY setup/requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
-COPY data_schema/persistence_config.json /app/config/
+# Erstelle config-Verzeichnis und kopiere Konfiguration
+RUN mkdir -p /app/config
+COPY data_schema/persistence_config.json /app/config/persistence_config.json
 COPY setup/data_persistence.py /app/
 
 # Erstelle notwendige Verzeichnisse
@@ -27,4 +29,4 @@ RUN mkdir -p /app/data/models \
 RUN chmod -R 755 /app/data
 
 # Starte den Service
-CMD ["python", "data_persistence.py"] 
+CMD ["python", "data_persistence.py"]

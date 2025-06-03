@@ -7,7 +7,7 @@ Diese umfassende Test-Suite wurde entwickelt, um das AI Media Analysis System vo
 ## 📊 Aktuelle Test-Statistiken
 
 - **Unit Tests**: 32 Tests ✅
-- **Integration Tests**: 10 Tests ✅  
+- **Integration Tests**: 10 Tests ✅
 - **Testabdeckung**: 70%+ angestrebt
 - **Unterstützte Python-Versionen**: 3.9, 3.10, 3.11
 
@@ -121,7 +121,7 @@ Die Test-Suite verwendet pytest-Marker für kategorisierte Test-Ausführung:
 ```ini
 [tool:pytest]
 testpaths = tests services
-addopts = 
+addopts =
     -v
     --cov=services
     --cov-report=html:htmlcov
@@ -309,4 +309,391 @@ Mit dieser Test-Suite wurde einer der kritischen Release Candidate Blocker erfol
 - ✅ **Entwickler-Tools**: Make-Targets, Test Runner, Coverage Reports
 - ✅ **Dokumentation**: Vollständige Test-Dokumentation
 
-**Das Projekt ist jetzt deutlich näher am Release Candidate Status!** 🎉 
+**Das Projekt ist jetzt deutlich näher am Release Candidate Status!** 🎉
+
+# 🧪 Feature Testing Framework
+
+Das Feature Testing Framework ist ein **obligatorisches** Regelwerk für alle neuen Features im AI Media Analysis System. Es stellt sicher, dass jede neue Funktionalität umfassend getestet wird, bevor sie deployed wird.
+
+## 📋 Testing-Regel (OBLIGATORISCH)
+
+**Jedes neue Feature MUSS die folgenden Test-Anforderungen erfüllen:**
+
+- ✅ **Unit Tests**: Minimum 80% Code Coverage
+- ✅ **Integration Tests**: Service-zu-Service Tests
+- ✅ **E2E Tests**: Vollständige Workflow-Tests
+- ✅ **Security Tests**: Sicherheitsprüfungen
+- ✅ **Pre-commit Validation**: Automatische Prüfung vor Commits
+
+## 🚀 Quick Start
+
+### 1. Test-Umgebung einrichten
+```bash
+# Test-Verzeichnisse und Basis-Konfiguration erstellen
+make test-setup
+
+# Dependencies installieren
+pip install -r requirements-ci.txt
+```
+
+### 2. Tests für neues Feature erstellen
+```bash
+# Beispiel: Service "my_service" mit Datei "processor.py"
+# Erstelle: tests/unit/services/my_service/test_processor.py
+
+mkdir -p tests/unit/services/my_service
+cat > tests/unit/services/my_service/test_processor.py << 'EOF'
+"""Tests für my_service.processor"""
+
+import pytest
+from unittest.mock import Mock, patch
+from services.my_service.processor import VideoProcessor
+
+
+class TestVideoProcessor:
+    """Test-Klasse für VideoProcessor"""
+
+    def test_process_video_success(self):
+        """Test erfolgreiche Video-Verarbeitung"""
+        # Given
+        processor = VideoProcessor()
+        mock_video = Mock()
+        mock_video.duration = 120
+
+        # When
+        result = processor.process(mock_video)
+
+        # Then
+        assert result is not None
+        assert result.status == "completed"
+
+    def test_process_video_invalid_input(self):
+        """Test Fehlerbehandlung bei ungültiger Eingabe"""
+        processor = VideoProcessor()
+
+        with pytest.raises(ValueError, match="Invalid video"):
+            processor.process(None)
+EOF
+```
+
+### 3. Tests ausführen
+```bash
+# Alle Tests
+make test
+
+# Nur Unit Tests
+make test-unit
+
+# Mit Coverage Report
+make test-coverage
+```
+
+## 🧪 Test-Kategorien
+
+### Unit Tests (`tests/unit/`)
+**Schnelle, isolierte Tests für einzelne Funktionen/Klassen**
+
+```python
+@pytest.mark.unit
+def test_video_frame_extraction():
+    """Test Frame-Extraktion aus Video"""
+    processor = VideoProcessor()
+    frames = processor.extract_frames(mock_video_data)
+    assert len(frames) == expected_frame_count
+```
+
+**Anforderungen:**
+- ⏱️ Schnell (< 1 Sekunde pro Test)
+- 🔒 Isoliert (keine externen Dependencies)
+- 📊 Minimum 80% Coverage
+- 🎯 Fokus auf einzelne Funktionen
+
+### Integration Tests (`tests/integration/`)
+**Tests für Service-zu-Service-Kommunikation**
+
+```python
+@pytest.mark.integration
+async def test_llm_service_video_analysis():
+    """Test Integration zwischen LLM Service und Video Pipeline"""
+    async with AsyncClient(app=app) as client:
+        response = await client.post("/analyze", json=test_data)
+        assert response.status_code == 200
+```
+
+**Anforderungen:**
+- 🔗 Service-Interaktionen
+- 💾 Echte Datenbank/Redis
+- 🌐 HTTP-API Tests
+- ⏱️ Mittlere Laufzeit (< 5 Minuten)
+
+### E2E Tests (`tests/e2e/`)
+**Vollständige Workflow-Tests**
+
+```python
+@pytest.mark.e2e
+@pytest.mark.slow
+async def test_complete_video_analysis_pipeline():
+    """Test komplette Video-Analyse von Upload bis Ergebnis"""
+    # Upload -> Analyse -> Ergebnis abrufen
+    video_id = await upload_test_video()
+    analysis_id = await start_analysis(video_id)
+    result = await wait_for_completion(analysis_id)
+    assert result.status == "completed"
+```
+
+**Anforderungen:**
+- 🎯 Benutzer-Workflows
+- 🐳 Docker-Services aktiv
+- ⏱️ Längere Laufzeit (< 30 Minuten)
+- 🔄 End-to-End Szenarien
+
+### Performance Tests (`tests/performance/`)
+**Last- und Performance-Tests**
+
+```python
+@pytest.mark.performance
+def test_video_processing_under_load():
+    """Test Video-Verarbeitung unter Last"""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(process_video, test_video) for _ in range(50)]
+        results = [f.result() for f in futures]
+    assert all(r.success for r in results)
+```
+
+## 🛠️ Verfügbare Commands
+
+### Basis-Tests
+```bash
+make test              # Alle Tests (Unit + Integration + E2E)
+make test-unit         # Unit Tests mit Coverage
+make test-integration  # Integration Tests
+make test-e2e          # End-to-End Tests
+```
+
+### Spezielle Tests
+```bash
+make test-performance  # Performance Tests
+make test-security     # Security Scans
+make test-smoke        # Schnelle System-Checks
+```
+
+### Test-Qualität
+```bash
+make test-coverage     # Coverage Report generieren
+make test-validate     # Test-Anforderungen prüfen
+make test-quality-gate # Quality Gate für Deployment
+```
+
+### Utilities
+```bash
+make test-setup        # Test-Umgebung einrichten
+make test-clean        # Test-Artifacts löschen
+make test-parallel     # Parallele Ausführung
+make test-debug        # Debug-Modus
+make test-watch        # Kontinuierliche Ausführung
+make test-help         # Alle Commands anzeigen
+```
+
+## 🚥 Quality Gates
+
+### Pre-commit Hooks
+**Automatische Validierung vor jedem Commit:**
+- ✅ Neue Service-Dateien haben entsprechende Tests
+- ✅ Test-Qualitätsprüfung
+- ✅ Code-Formatierung (Black, isort)
+- ✅ Typ-Prüfungen (mypy)
+- ✅ Security-Scans (bandit)
+
+### CI/CD Pipeline
+**GitHub Actions validiert automatisch:**
+- ✅ Unit Tests (80% Coverage required)
+- ✅ Integration Tests
+- ✅ E2E Tests
+- ✅ Security Tests
+- ✅ Performance Tests (bei main/develop)
+
+### Definition of Done
+**Ein Feature ist erst fertig, wenn:**
+- [ ] Unit Tests geschrieben (min. 80% Coverage)
+- [ ] Integration Tests implementiert
+- [ ] E2E Test für Hauptworkflow erstellt
+- [ ] Performance Test bei relevanten Features
+- [ ] Alle Tests laufen erfolgreich in CI/CD
+- [ ] Test-Dokumentation aktualisiert
+- [ ] Code Review mit Fokus auf Tests durchgeführt
+
+## 📁 Verzeichnisstruktur
+
+```
+tests/
+├── unit/                    # Unit Tests
+│   ├── services/
+│   │   ├── llm_service/
+│   │   │   ├── test_main.py
+│   │   │   ├── test_processor.py
+│   │   │   └── test_models.py
+│   │   ├── control/
+│   │   │   └── test_api.py
+│   │   └── ...
+│   └── utils/
+│       └── test_helpers.py
+├── integration/             # Integration Tests
+│   ├── test_service_communication.py
+│   ├── test_database_operations.py
+│   └── test_api_endpoints.py
+├── e2e/                    # End-to-End Tests
+│   ├── test_video_analysis_workflow.py
+│   ├── test_user_management.py
+│   └── test_complete_pipeline.py
+├── performance/            # Performance Tests
+│   ├── test_load_testing.py
+│   └── test_stress_testing.py
+├── fixtures/               # Test Fixtures
+│   ├── conftest.py
+│   ├── video_fixtures.py
+│   └── data_fixtures.py
+├── data/                   # Test Data
+│   ├── videos/
+│   │   ├── test_video_short.mp4
+│   │   └── test_video_medium.mp4
+│   ├── images/
+│   └── json/
+└── utils/                  # Test Utilities
+    ├── mock_services.py
+    ├── test_helpers.py
+    └── assertions.py
+```
+
+## 🎯 Best Practices
+
+### Test-Namen
+```python
+# ✅ Gut - beschreibt was getestet wird
+def test_video_processor_extracts_correct_frame_count_for_30fps_video():
+    pass
+
+# ❌ Schlecht - unklar was getestet wird
+def test_video_processor():
+    pass
+```
+
+### Test-Struktur (Given-When-Then)
+```python
+def test_feature():
+    """Test description"""
+    # Given - Setup
+    processor = VideoProcessor()
+    test_data = create_test_video(duration=10)
+
+    # When - Action
+    result = processor.process(test_data)
+
+    # Then - Assertion
+    assert result.frame_count == 300  # 10s * 30fps
+    assert result.status == "completed"
+```
+
+### Fixtures verwenden
+```python
+@pytest.fixture
+def sample_video():
+    """Sample video for testing"""
+    return create_test_video(duration=5, fps=30)
+
+def test_with_fixture(sample_video):
+    """Test using fixture"""
+    result = process_video(sample_video)
+    assert result is not None
+```
+
+### Mocking für externe Dependencies
+```python
+@patch('services.external_api.requests.post')
+def test_api_call(mock_post):
+    """Test API call with mocked response"""
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = {"status": "success"}
+
+    result = make_api_call()
+    assert result["status"] == "success"
+```
+
+## 🔧 Konfiguration
+
+### pytest.ini
+```ini
+[tool:pytest]
+testpaths = tests
+addopts =
+    --verbose
+    --cov=services
+    --cov-fail-under=80
+    --strict-markers
+markers =
+    unit: Unit tests
+    integration: Integration tests
+    e2e: End-to-end tests
+    slow: Slow-running tests
+    performance: Performance tests
+```
+
+### GitHub Actions
+Siehe `.github/workflows/feature-testing.yml` für die vollständige CI/CD Pipeline-Konfiguration.
+
+## ⚠️ Häufige Probleme
+
+### "Missing Tests" Fehler
+```bash
+❌ Feature Testing Regel verletzt!
+Neue Service-Dateien ohne entsprechende Tests:
+  📄 services/my_service/processor.py
+     ➜ Erstelle Test: tests/unit/services/my_service/test_processor.py
+```
+
+**Lösung:**
+```bash
+# Test-Datei erstellen
+mkdir -p tests/unit/services/my_service
+touch tests/unit/services/my_service/test_processor.py
+# Test implementieren (siehe Beispiele oben)
+```
+
+### Coverage unter 80%
+```bash
+❌ Coverage unter 80%
+Missing coverage in:
+  services/my_service/processor.py: 65%
+```
+
+**Lösung:**
+```bash
+# Mehr Tests hinzufügen oder
+# Coverage-Report für Details
+make test-coverage
+open htmlcov/index.html
+```
+
+### E2E Tests schlagen fehl
+```bash
+❌ E2E Tests failed - Services not ready
+```
+
+**Lösung:**
+```bash
+# Services manuell starten und testen
+docker-compose up -d
+sleep 60
+curl http://localhost:8000/health
+make test-e2e
+```
+
+## 📞 Support
+
+- **Dokumentation**: Siehe `.cursorrules/rules/feature_testing.md`
+- **Commands**: `make test-help`
+- **CI/CD**: GitHub Actions in `.github/workflows/feature-testing.yml`
+- **Validation**: `scripts/validate_feature_tests.py`
+
+---
+
+**Remember: Kein Feature ohne Tests! 🧪✨**
