@@ -1,8 +1,8 @@
 # AI Media Analysis - VPS-Deployment Projekt-Merkzettel
 
-## AKTUELLER IST-ZUSTAND (Alpha 0.4.2 - ERREICHT)
+## AKTUELLER IST-ZUSTAND (Alpha 0.4.4 - ERREICHT)
 
-### Service-Architektur-Optimierung ✅
+### Service-Architektur & Performance-Optimierung ✅
 - **✅ Einheitliche services/ Struktur:** 24 Services in standardisierter Architektur organisiert
 - **✅ Root-Level-Duplikate beseitigt:** 11 redundante Verzeichnisse erfolgreich entfernt
   - Entfernt: control/, embedding_server/, llm_interface/, object_review/
@@ -11,6 +11,7 @@
 - **✅ Modulare Service-Organisation:** Infrastructure, AI Processing, Management, UI Services kategorisiert
 - **✅ Docker-Compose-Konsistenz:** Alle Services verwenden ausschließlich services/ Pfade
 - **✅ Backup-Management:** Automatisierte Backup-Scripts vor Strukturänderungen
+- **✅ Performance-Optimierung:** Memory-Management, Concurrency, TTL-Caching implementiert
 
 ### Service-Kategorien etabliert ✅
 - **Infrastructure Services (VPS):** nginx, vector_db, redis für Standard-Server
@@ -29,6 +30,8 @@
 - **✅ Build-Prozesse:** Alle Services bauen erfolgreich nach VPS-Optimierung
 - **✅ Service-Architektur:** Grundlegend solide, VPS-kompatibel, jetzt strukturell optimiert
 - **✅ Development-Tools:** Makefile, run_tests.py, pytest-Suite vollständig implementiert
+- **✅ Performance-Features:** Memory-Management, dynamisches Concurrency-Management
+- **✅ Resource-Monitoring:** TTL-basiertes Caching, Graceful Degradation, Worker-Skalierung
 
 ### VPS-Deployment-Erfolge 🎯
 - **Standard-Server-Hardware:** Keine GPU-Dependencies erforderlich
@@ -56,13 +59,16 @@
 15. **✅ llm_service** - Language Model Interface, services/llm_service/
 16. **✅ common** - Shared Components, services/common/ mit logging_config.py, redis_config.py
 
-### Strukturelle Verbesserungen Alpha 0.4.2 🏗️
+### Strukturelle Verbesserungen Alpha 0.4.4 🏗️
 - **Eliminierte Code-Duplikation:** 11 redundante Service-Kopien entfernt
 - **Konsistente Build-Pfade:** docker-compose.yml referenziert nur services/
 - **Saubere Directory-Struktur:** Eindeutige Service-Hierarchie
 - **Verbesserte Code-Navigation:** Entwickler finden Services sofort in services/
 - **Service-Template-Pattern:** Standardisierte Struktur für neue Services
 - **Modulare Erweiterbarkeit:** Neue Services können einfach hinzugefügt werden
+- **Performance-Optimierung:** Intelligentes Resource-Management implementiert
+- **Memory-Effizienz:** Proaktives Cleanup und optimierte GC-Strategien
+- **Concurrency-Management:** Dynamische Worker-Skalierung und Load-Balancing
 
 ### Strategische VPS-Architektur-Entscheidung
 - **Primäres Ziel:** VPS/Dedizierte Server ohne eigene GPU
@@ -248,4 +254,4 @@
 - **Uptime:** >99.5% System-Availability
 - **Cost-Efficiency:** <€200/Monat für Small Business
 - **Scalability:** 50+ concurrent Users, 1000+ Dateien/Stunde
-- **Development-Experience:** <30s Service-Start, <5min Full-Stack-Setup 
+- **Development-Experience:** <30s Service-Start, <5min Full-Stack-Setup
