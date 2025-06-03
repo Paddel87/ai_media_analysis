@@ -4,10 +4,9 @@ import os
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from data_schema.person_dossier import FaceInstance, PersonDossier
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
-from data_schema.person_dossier import FaceInstance, PersonDossier
 
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)

@@ -188,9 +188,8 @@ async def test_resource_monitoring(client):
 # Test für Docker-Optimierungen
 @pytest.mark.asyncio
 async def test_docker_optimizations(client):
-    from main import force_reload_settings
-
     from config import get_settings
+    from main import force_reload_settings
 
     force_reload_settings()
     # Teste Memory-Limit

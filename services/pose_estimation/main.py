@@ -18,6 +18,7 @@ import psutil
 import redis.asyncio as redis
 import torch
 import uvicorn
+from config import get_settings
 from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from mmengine.model import BaseModel as MMBaseModel
@@ -34,8 +35,6 @@ from optimization import (
 )
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
-
-from config import get_settings
 
 # Logging Konfiguration
 logging.basicConfig(level=logging.INFO)

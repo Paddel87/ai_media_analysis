@@ -257,26 +257,32 @@ test-slow: test-integration test-e2e test-performance ## Langsame Tests
 test-ci: test-lint test-unit test-integration test-coverage ## Vollständige CI-Tests
 
 # =============================================================================
-# CODE-QUALITÄT
+# CODE-QUALITÄT UND BLACK-STANDARD
 # =============================================================================
 
 format: ## Formatiert den Code automatisch mit black und isort
-	@echo "🎨 Formatiere Code mit black..."
-	python -m black services tests
+	@echo "🎨 Formatiere Python-Code mit Black..."
+	python -m black services/ tests/ scripts/ --target-version py311
 	@echo "🔧 Sortiere Imports mit isort..."
-	python -m isort services tests
+	python -m isort services/ tests/ scripts/ --profile black
 	@echo "✅ Code-Formatierung abgeschlossen"
 
 check-format: ## Prüft Code-Formatierung ohne Änderungen
-	@echo "🔍 Prüfe black-Formatierung..."
-	python -m black --check --diff services tests
+	@echo "🔍 Prüfe Black-Formatierung..."
+	python -m black --check --diff services/ tests/ scripts/
 	@echo "🔍 Prüfe isort-Formatierung..."
-	python -m isort --check-only --diff services tests
+	python -m isort --check-only --diff services/ tests/ scripts/
 	@echo "✅ Formatierungs-Check abgeschlossen"
+
+format-check-strict: ## Strenger Formatierungs-Check für CI/CD
+	@echo "🚨 Strenger Black-Standard-Check..."
+	python -m black --check services/ tests/ scripts/ || (echo "❌ Black-Formatierung fehlgeschlagen" && exit 1)
+	python -m isort --check-only services/ tests/ scripts/ || (echo "❌ Import-Sortierung fehlgeschlagen" && exit 1)
+	@echo "✅ Strenger Formatierungs-Check erfolgreich"
 
 lint: ## Führt alle Linting-Checks durch
 	@echo "🔍 Führe flake8-Check durch..."
-	python -m flake8 services tests
+	python -m flake8 services tests scripts
 	@echo "🔍 Führe mypy-Check durch..."
 	python -m mypy services --ignore-missing-imports
 	@echo "✅ Linting abgeschlossen"
@@ -294,6 +300,31 @@ pre-commit-run: ## Führt Pre-Commit-Hooks manuell aus
 
 fix-all: format lint ## Führt automatische Formatierung und Linting durch
 	@echo "🔧 Automatische Code-Korrektur abgeschlossen"
+
+format-report: ## Generiert Format-Compliance-Report
+	@echo "📊 Generiere Format-Compliance-Report..."
+	@echo "# Black-Standard Compliance Report" > format-report.md
+	@echo "Generated: $(shell date)" >> format-report.md
+	@echo "" >> format-report.md
+	@echo "## Black Check Results" >> format-report.md
+	@python -m black --check services/ tests/ scripts/ --quiet && echo "✅ All files compliant" >> format-report.md || echo "❌ Files need formatting" >> format-report.md
+	@echo "" >> format-report.md
+	@echo "## Import Sorting Results" >> format-report.md
+	@python -m isort --check-only services/ tests/ scripts/ --quiet && echo "✅ All imports sorted" >> format-report.md || echo "❌ Imports need sorting" >> format-report.md
+	@echo "📋 Report saved: format-report.md"
+
+black-violations-report: ## Report für Black-Standard-Verletzungen
+	@echo "🔍 Generiere Black-Violations-Report..."
+	@mkdir -p reports/
+	@echo "# Black Standard Violations Report" > reports/black-violations.md
+	@echo "Generated: $(shell date)" >> reports/black-violations.md
+	@echo "" >> reports/black-violations.md
+	@echo "## Files requiring Black formatting:" >> reports/black-violations.md
+	@python -m black --check --diff services/ tests/ scripts/ >> reports/black-violations.md 2>&1 || true
+	@echo "" >> reports/black-violations.md
+	@echo "## Files requiring import sorting:" >> reports/black-violations.md
+	@python -m isort --check-only --diff services/ tests/ scripts/ >> reports/black-violations.md 2>&1 || true
+	@echo "📋 Violations report: reports/black-violations.md"
 
 test-security: ## Führt Security-Scan aus
 	@echo "🔒 Running security scan..."
@@ -512,8 +543,37 @@ service-add: ## 🔧 Service zu docker-compose.yml hinzufügen (SERVICE=name)
 service-dockerfile-cpu: ## 🐳 Dockerfile.cpu für Service erstellen (SERVICE=name)
 	@echo "${BLUE}🐳 Erstelle Dockerfile.cpu für $(SERVICE)${NC}"
 	@if [ ! -f "services/$(SERVICE)/Dockerfile.cpu" ]; then \
-		echo "${YELLOW}Erstelle CPU-optimierte Dockerfile für $(SERVICE)${NC}"; \
-		$(MAKE) dockerfile-cpu-template SERVICE=$(SERVICE); \
+		echo "# CPU-optimierte Dockerfile für $(SERVICE)" > services/$(SERVICE)/Dockerfile.cpu; \
+		echo "FROM python:3.11-slim" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# System-Dependencies für VPS" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "RUN apt-get update && apt-get install -y \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    build-essential \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    curl \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    && rm -rf /var/lib/apt/lists/*" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "WORKDIR /app" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Python Dependencies" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "COPY requirements.txt ." >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "RUN pip install --no-cache-dir -r requirements.txt" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Service Code" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "COPY . ." >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# VPS-Umgebungsvariablen" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV PYTHONUNBUFFERED=1" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV LOG_LEVEL=INFO" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV REDIS_HOST=redis" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV REDIS_PORT=6379" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Health-Check" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    CMD curl -f http://localhost:8000/health || exit 1" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Service starten" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "CMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "${GREEN}✅ Dockerfile.cpu für $(SERVICE) erstellt${NC}"; \
 	fi
 
 service-config-generate: ## ⚙️ Service-Konfiguration für docker-compose.yml generieren

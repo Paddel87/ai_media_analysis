@@ -1,247 +1,430 @@
-# AI Media Analysis System - Formatierungs-Regelwerk
-# Version: 1.0.0
-# Status: Aktiv
+# FORMATIERUNGS-REGELN FÜR AI MEDIA ANALYSIS SYSTEM
+# Version: 2.0.0 - Erweitert um obligatorischen Black-Standard
+# Status: Obligatorisch für alle Entwickler
 
-## Black Formatierung (Strikt!)
+## 🎨 NEUE OBLIGATORISCHE REGEL: BLACK-STANDARD COMPLIANCE
 
-### Grundregeln
-- **Line Length**: 88 Zeichen (Black Standard)
+**WICHTIG**: Ab sofort müssen ALLE Python-Dateien dem strengen Black-Standard entsprechen!
+
+📋 **Siehe detaillierte Regel**: `.cursorrules/rules/black_standard.md`
+
+### Sofortige Maßnahmen erforderlich:
+1. **Code automatisch formatieren**: `make format`
+2. **Pre-commit Hooks installieren**: `make pre-commit-install`
+3. **Formatierung vor jedem Commit prüfen**: `make check-format`
+
+---
+
+## 🔧 CODING-STYLE UND FORMATIERUNG
+
+### Black Code Formatter (OBLIGATORISCH)
+- **Einstellung**: Strenger Black-Standard ohne Anpassungen
+- **Line Length**: Maximal 88 Zeichen (Black-Standard)
 - **Target Version**: Python 3.11+
-- **String Quotes**: Doppelte Anführungszeichen für Strings
-- **Trailing Commas**: Immer in mehrzeiligen Strukturen
-- **Empty Lines**: Zwei Leerzeilen vor Top-Level-Klassen/Funktionen
+- **String Quotes**: Doppelte Anführungszeichen bevorzugt
+- **Import Sorting**: isort mit Black-Profil
 
-### Automatisierung
+```python
+# ✅ KORREKT - Black-konform
+def process_video_data(
+    video_path: str,
+    output_dir: str,
+    config: Optional[Dict[str, Any]] = None,
+    *,
+    batch_size: int = 1,
+) -> Dict[str, Any]:
+    """Verarbeitet Video-Daten mit konfigurierbaren Parametern."""
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"Video nicht gefunden: {video_path}")
+
+    return {
+        "status": "success",
+        "processed_frames": 0,
+        "output_path": output_dir,
+        "metadata": {"batch_size": batch_size},
+    }
+```
+
+### Import-Organisation mit isort
+```python
+# Standard Library
+import os
+import sys
+from typing import Dict, List, Optional
+
+# Third Party
+import redis
+import uvicorn
+from fastapi import FastAPI, HTTPException
+
+# Local Imports
+from services.common.config import Config
+from services.common.utils import logger
+```
+
+### Code-Formatierungs-Befehle
+```bash
+# Automatische Formatierung (empfohlen)
+make format
+
+# Formatierungs-Check ohne Änderungen
+make check-format
+
+# Strenger CI/CD-Check
+make format-check-strict
+```
+
+## 📝 DOCSTRING-STANDARDS
+
+### Funktions-Docstrings
+```python
+def analyze_video_content(
+    video_path: str,
+    analysis_types: List[str],
+    confidence_threshold: float = 0.8
+) -> AnalysisResult:
+    """
+    Analysiert Video-Inhalte mit verschiedenen AI-Modellen.
+
+    Args:
+        video_path: Pfad zur zu analysierenden Videodatei
+        analysis_types: Liste der durchzuführenden Analysen
+        confidence_threshold: Mindest-Konfidenz für Ergebnisse
+
+    Returns:
+        AnalysisResult mit detaillierten Analyseergebnissen
+
+    Raises:
+        FileNotFoundError: Wenn Videodatei nicht existiert
+        ValidationError: Bei ungültigen Analyse-Typen
+
+    Example:
+        >>> result = analyze_video_content(
+        ...     "video.mp4",
+        ...     ["nsfw", "objects", "faces"],
+        ...     confidence_threshold=0.9
+        ... )
+        >>> print(result.summary)
+    """
+```
+
+### Klassen-Docstrings
+```python
+class VideoProcessor:
+    """
+    Video-Verarbeitungsservice für AI-Media-Analysis.
+
+    Diese Klasse koordiniert die Video-Analyse durch verschiedene
+    AI-Services und aggregiert die Ergebnisse.
+
+    Attributes:
+        config: Service-Konfiguration
+        redis_client: Redis-Verbindung für Caching
+        active_jobs: Dictionary der aktuell laufenden Jobs
+
+    Example:
+        >>> processor = VideoProcessor(config)
+        >>> result = await processor.process_video("input.mp4")
+    """
+```
+
+## 🏗️ NAMENSKONVENTIONEN
+
+### Python Naming Standards (Black-kompatibel)
+- **Funktionen/Variablen**: `snake_case`
+- **Klassen**: `PascalCase`
+- **Konstanten**: `UPPER_SNAKE_CASE`
+- **Module**: `lowercase_with_underscores`
+- **Private Attributes**: `_leading_underscore`
+
+### Service-spezifische Namen
+```python
+# ✅ KORREKT
+class LLMService:
+    """Large Language Model Service"""
+
+    def __init__(self):
+        self.model_name = "gpt-4"
+        self.max_tokens = 4096
+        self._api_key = os.getenv("OPENAI_API_KEY")
+
+    async def analyze_text(self, text: str) -> AnalysisResult:
+        """Analysiert Text mit LLM"""
+        pass
+
+# Konstanten
+DEFAULT_BATCH_SIZE = 32
+MAX_VIDEO_DURATION = 3600
+SUPPORTED_FORMATS = ["mp4", "avi", "mov"]
+```
+
+## 🔒 TYPE HINTS (Erweitert für Black-Compliance)
+
+### Vollständige Type Annotations
+```python
+from typing import Dict, List, Optional, Union, Any, Callable
+from pathlib import Path
+
+def process_media_batch(
+    media_files: List[Path],
+    processors: Dict[str, Callable[[Path], Any]],
+    output_config: Optional[Dict[str, Union[str, int]]] = None,
+    *,
+    parallel: bool = True,
+    max_workers: int = 4,
+) -> Dict[str, List[Any]]:
+    """Verarbeitet mehrere Medien-Dateien parallel."""
+    pass
+```
+
+### Moderne Python Features
+```python
+# Python 3.10+ Union Syntax (wenn verfügbar)
+def get_analysis_result(video_id: str) -> dict[str, str | int | None]:
+    """Moderne Type Hint Syntax"""
+    pass
+
+# Generics
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+
+class ProcessingResult(Generic[T]):
+    """Generisches Verarbeitungsresultat"""
+
+    def __init__(self, data: T, metadata: dict[str, Any]) -> None:
+        self.data = data
+        self.metadata = metadata
+```
+
+## 🧪 TESTING-CODE FORMATIERUNG
+
+### Test-Struktur (Black-konform)
+```python
+class TestVideoProcessor:
+    """Test-Klasse für VideoProcessor"""
+
+    @pytest.fixture
+    def mock_video_data(self) -> Dict[str, Any]:
+        """Mock-Video-Daten für Tests"""
+        return {
+            "path": "/tmp/test_video.mp4",
+            "duration": 120,
+            "fps": 30,
+            "resolution": "1920x1080",
+        }
+
+    async def test_process_video_success(
+        self,
+        mock_video_data: Dict[str, Any],
+        mock_redis: MockRedis,
+    ) -> None:
+        """Test erfolgreiche Video-Verarbeitung"""
+        # Given
+        processor = VideoProcessor(config=test_config)
+
+        # When
+        result = await processor.process(mock_video_data)
+
+        # Then
+        assert result.status == "completed"
+        assert result.frame_count > 0
+        mock_redis.set.assert_called_once()
+```
+
+## 📁 DATEI-ORGANISATION
+
+### Service-Verzeichnis-Struktur (Black-formatiert)
+```
+services/
+├── llm_service/
+│   ├── __init__.py              # Leere __init__ oder Exports
+│   ├── main.py                  # FastAPI App (Black-formatiert)
+│   ├── models.py                # Pydantic Models
+│   ├── processors.py            # Business Logic
+│   ├── config.py                # Konfiguration
+│   └── requirements.txt         # Dependencies
+```
+
+### Import-Struktur pro Datei
+```python
+"""
+Modul-Docstring hier.
+
+Beschreibung des Moduls und seiner Funktionalität.
+"""
+
+# Standard Library Imports
+import os
+import sys
+from datetime import datetime
+from typing import Dict, List, Optional
+
+# Third Party Imports
+import redis
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+# Local Application Imports
+from services.common.config import Config
+from services.common.logging import get_logger
+from services.common.utils import validate_input
+
+# Konstanten
+LOGGER = get_logger(__name__)
+DEFAULT_TIMEOUT = 30
+
+# Rest des Codes...
+```
+
+## 🔄 PRE-COMMIT INTEGRATION
+
+### Automatische Formatierung vor Commits
 ```yaml
-# .pre-commit-config.yaml
+# .pre-commit-config.yaml (bereits konfiguriert)
 repos:
   - repo: https://github.com/psf/black
     rev: 24.2.0
     hooks:
       - id: black
         language_version: python3.11
-        args: [--line-length=88, --target-version=py311]
-```
+        args: [--target-version=py311]
 
-## Import-Sortierung (isort)
-
-### Grundregeln
-- **Profile**: Black-kompatibel
-- **Sections**:
-  1. Standard Library
-  2. Third Party
-  3. Local Application
-- **Line Length**: 88 Zeichen
-- **Multi-Line**: 3+ Imports
-
-### Automatisierung
-```yaml
-# .pre-commit-config.yaml
-repos:
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ["--profile", "black", "--line-length", "88"]
+        args: ["--profile", "black"]
 ```
 
-## Typ-Annotationen
-
-### Grundregeln
-- **Strict Mode**: Aktiviert
-- **Check Untyped Defs**: Aktiviert
-- **Disallow Untyped Defs**: Aktiviert
-- **Disallow Incomplete Defs**: Aktiviert
-
-### Automatisierung
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-all]
-        args: [--strict, --ignore-missing-imports]
-```
-
-## Code-Style-Checks (flake8)
-
-### Grundregeln
-- **Max Line Length**: 88 Zeichen
-- **Ignore Rules**:
-  - E203 (Black-kompatibel)
-  - W503 (Black-kompatibel)
-- **Complexity**:
-  - Max Complexity: 10
-  - Max Arguments: 5
-  - Max Local Variables: 15
-
-### Automatisierung
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
-      - id: flake8
-        args: [--max-line-length=88, --ignore=E203,W503]
-```
-
-## VSCode Integration
-
-### settings.json
-```json
-{
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "88"],
-    "editor.formatOnSave": true,
-    "editor.rulers": [88],
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.mypyEnabled": true
-}
-```
-
-## CI/CD Pipeline
-
-### GitHub Actions
-```yaml
-# .github/workflows/format-check.yml
-name: Format Check
-on: [push, pull_request]
-jobs:
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: |
-          python -m pip install --upgrade pip
-          pip install black isort flake8 mypy
-      - run: |
-          black --check --diff .
-          isort --check-only --profile black .
-          flake8 .
-          mypy .
-```
-
-## Entwicklungsworkflow
-
-### Pre-Commit Hooks
-1. **Black**: Automatische Formatierung
-2. **isort**: Import-Sortierung
-3. **flake8**: Style-Checks
-4. **mypy**: Typ-Checks
-
-### Manuelle Überprüfung
+### Developer Workflow
 ```bash
-# Formatierung prüfen
-black --check --diff .
+# 1. Pre-commit Hooks installieren (einmalig)
+make pre-commit-install
 
-# Imports prüfen
-isort --check-only --profile black .
+# 2. Entwicklung - Code wird automatisch formatiert
+git add .
+git commit -m "New feature"  # Hooks formatieren automatisch
 
-# Style prüfen
-flake8 .
-
-# Typen prüfen
-mypy .
+# 3. Manuelle Formatierung (falls nötig)
+make format
+git add .
+git commit -m "Feature + Formatierung"
 ```
 
-## Best Practices
+## 🚀 CI/CD INTEGRATION
 
-### Code-Formatierung
-1. **Strings**:
-   ```python
-   # ✅ Korrekt
-   message = "Hallo Welt"
+### GitHub Actions (automatisch aktiv)
+- **Formatierungs-Check**: Bei jedem Push/PR
+- **Automatische Reports**: Bei Formatierungsfehlern
+- **Enforcement**: PR kann nicht gemerged werden bei Problemen
 
-   # ❌ Falsch
-   message = 'Hallo Welt'
-   ```
+### Quality Gates
+1. **Black-Standard**: 100% Compliance erforderlich
+2. **Import-Sortierung**: isort-Compliance erforderlich
+3. **Line Length**: Maximal 88 Zeichen
+4. **Code Review**: Formatierung wird automatisch geprüft
 
-2. **Listen/Dictionaries**:
-   ```python
-   # ✅ Korrekt
-   items = [
-       "eins",
-       "zwei",
-       "drei",
-   ]
+## 📊 MONITORING UND METRIKEN
 
-   # ❌ Falsch
-   items = ["eins", "zwei", "drei"]
-   ```
+### Formatierungs-Compliance
+```bash
+# Wöchentlicher Report
+make format-report
 
-3. **Funktionsdefinitionen**:
-   ```python
-   # ✅ Korrekt
-   def process_data(
-       data: List[str],
-       options: Optional[Dict[str, Any]] = None,
-   ) -> Dict[str, Any]:
-       pass
+# Violations Report
+make black-violations-report
 
-   # ❌ Falsch
-   def process_data(data:List[str],options:Optional[Dict[str,Any]]=None)->Dict[str,Any]:
-       pass
-   ```
+# Live-Check während Entwicklung
+make check-format
+```
 
-### Import-Sortierung
+### Code-Qualitäts-Metriken
+- **Format-Compliance**: 100% für alle neuen Dateien
+- **Pre-commit-Erfolgsrate**: > 95%
+- **CI/CD-Failure durch Formatierung**: < 5%
+
+## 🎯 ENFORCEMENT UND REGELN
+
+### Obligatorische Anforderungen
+✅ **Alle Python-Dateien müssen Black-konform sein**
+✅ **isort mit Black-Profil für alle Imports**
+✅ **Pre-commit Hooks installiert und aktiv**
+✅ **CI/CD-Checks müssen erfolgreich sein**
+✅ **Code Review berücksichtigt Formatierung**
+
+### Ausnahmen (nur in Sonderfällen)
 ```python
-# ✅ Korrekt
-import os
-import sys
-from typing import Dict, List, Optional
-
-import numpy as np
-import torch
-from fastapi import FastAPI
-
-from .config import get_settings
-from .models import DataModel
-
-# ❌ Falsch
-from .models import DataModel
-import torch
-import os
-from fastapi import FastAPI
-import numpy as np
-from .config import get_settings
-import sys
-from typing import Dict, List, Optional
+# fmt: off
+manually_formatted_data = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+]
+# fmt: on
 ```
 
-## Fehlerbehandlung
+---
 
-### Formatierungsfehler
-1. **Black-Fehler**:
-   - Automatische Korrektur mit `black .`
-   - Manuelle Überprüfung der Änderungen
+## 🔗 INTEGRATION MIT ANDEREN REGELN
 
-2. **isort-Fehler**:
-   - Automatische Korrektur mit `isort .`
-   - Überprüfung der Import-Struktur
+### Feature Testing Integration
+- Test-Code unterliegt denselben Black-Standards
+- Test-Fixtures müssen formatiert sein
+- Mock-Daten werden automatisch formatiert
 
-3. **flake8-Fehler**:
-   - Manuelle Korrektur der Style-Probleme
-   - Dokumentation der Ausnahmen
+### Dokumentations-Integration
+- Code-Beispiele in Dokumentation müssen Black-konform sein
+- README-Code-Blöcke werden geprüft
+- API-Dokumentation verwendet konsistente Formatierung
 
-4. **mypy-Fehler**:
-   - Korrektur der Typ-Annotationen
-   - Dokumentation der `# type: ignore` Kommentare
+---
 
-## Dokumentation
+## ⚠️ MIGRATION UND ADOPTION
 
-### Formatierungsregeln
-- In `CONTRIBUTING.md` dokumentieren
-- In Team-Meetings besprechen
-- Regelmäßige Reviews durchführen
+### Bestehender Code
+1. **Datei-weise Migration**: Ein Service nach dem anderen
+2. **Separate Commits**: Formatierung getrennt von Features
+3. **Team-Koordination**: Koordinierte Black-Updates
 
-### Ausnahmen
-- Mit `# fmt: off/on` markieren
-- In Code-Reviews dokumentieren
-- In Team-Meetings besprechen
+### Neue Entwickler
+1. **Onboarding**: Black-Standard in Einführung
+2. **IDE-Setup**: Automatische Formatierung konfigurieren
+3. **Training**: Hands-on mit Black und isort
+
+---
+
+## 📞 SUPPORT UND TROUBLESHOOTING
+
+### Häufige Probleme
+- **"Line too long"**: Black formatiert automatisch
+- **Import-Konflikte**: `isort --profile black` verwenden
+- **Pre-commit Fehler**: `make format` vor Commit ausführen
+
+### Hilfe-Kommandos
+```bash
+make format-help      # Formatierungs-Hilfe
+make black-violations-report  # Detaillierte Probleme
+make check-format     # Aktuelle Compliance prüfen
+```
+
+---
+
+## 🎯 Status: SOFORT AKTIV
+
+**Diese erweiterte Formatierungs-Regel ist SOFORT OBLIGATORISCH für:**
+- ✅ Alle neuen Python-Dateien
+- ✅ Alle geänderten Python-Dateien
+- ✅ Alle Commits und Pull Requests
+- ✅ CI/CD Pipeline-Validierung
+- ✅ Code Review Requirements
+
+**Kein Python-Code ohne Black-Standard-Compliance!** 🎨✨
+
+---
+
+*Diese Regeln arbeiten zusammen mit:*
+- `.cursorrules/rules/black_standard.md` (Detaillierte Black-Regel)
+- `.cursorrules/rules/feature_testing.md` (Test-Standards)
+- `.cursorrules/rules/iterative_development.md` (Development-Workflow)
