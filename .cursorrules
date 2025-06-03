@@ -12,11 +12,14 @@ Du arbeitest an einem **hochmodernen AI Media Analysis System**. Befolge ALLE fo
 
 ## 🚀 KERN-PROJEKTREGELN
 
-### Deutscher Sprachstandard
-- **ALLE Antworten auf Deutsch** (User-spezifische Regel)
-- Code-Kommentare auf Deutsch
-- Dokumentation auf Deutsch
-- Nur Variablen/Funktionen auf Englisch
+### Internationale Code-Standards
+- **Code-Kommentare**: Englisch (internationale Best Practice)
+- **API-Dokumentation**: Englisch für externe Schnittstellen
+- **Interne Business-Dokumentation**: Deutsch für deutsche Stakeholder
+- **Variablen/Funktionen**: Englisch (bereits korrekt)
+- **Benutzer-Interface**: Deutsch für deutsche Zielgruppe
+- **Development-Communication**: Deutsch zwischen Team-Mitgliedern, Englisch in Code
+- **User-Antworten**: Deutsch (User-spezifische Regel)
 
 ### Iterative Entwicklung (4-Stufen-Modell)
 1. **Iteration 1**: Core-Funktionalität, Basis-Services, Docker-Setup
@@ -24,37 +27,34 @@ Du arbeitest an einem **hochmodernen AI Media Analysis System**. Befolge ALLE fo
 3. **Iteration 3**: Advanced Features, Optimierungen, Monitoring
 4. **Iteration 4**: Production-Ready, UI-Polish, Export-Features
 
-## 🎯 UC-001 HAUPTFEATURE (ALPHA 0.6.0)
+## 🎯 FEATURE IMPLEMENTATION (MODULAR)
 
-### UC-001: Enhanced Manual Analysis (AKTIV)
-**Quelle**: `docs/UC-001-ENHANCED-MANUAL-ANALYSIS.md` + `.cursorrules-backup/rules/uc001_integration.md`
+### Feature-Agnostic Architecture Standards
+**Core Principle**: Architektur-Standards sind unabhängig von spezifischen Features
 
-**PRIORITÄT 1 - OBLIGATORISCH:**
-- **Personen-Dossier-System** als Kern-Funktionalität
-- **Video-Kontext-Analyse** mit LLM-Integration
-- **Erweiterte Kleidungsanalyse** (200+ Kategorien)
-- **Benutzer-Korrektur-Interface** für Machine Learning
+**Current Active Feature**: UC-001 Enhanced Manual Analysis (Alpha 0.6.0)
+**Feature-Specific Rules**: `docs/features/UC-001/UC-001-RULES.md`
 
-**UC-001 Service-Standards:**
+**Core Service Standards (Feature-Independent):**
 ```python
-# PFLICHT für alle UC-001 Services:
-class UC001ServiceBase(ServiceBase):
-    async def create_job_history_entry(self, person_id: str, data: dict) -> JobHistoryEntry:
-        """UC-001 Standard: Job-Historie-Eintrag erstellen."""
-        pass
+# Domain-agnostic Service Standards
+class ServiceBase:
+    """Base class for all services - feature-independent."""
 
-    async def handle_user_correction(self, correction: dict) -> CorrectionResult:
-        """UC-001 Standard: Benutzer-Korrekturen verarbeiten."""
+    async def health_check(self) -> dict:
+        """Standard health check for every service."""
+        return {"status": "healthy", "service": self.__class__.__name__}
+
+    async def process(self, data: dict) -> dict:
+        """Generic processing interface."""
         pass
 ```
 
-**UC-001 Quality Gates (BLOCKING):**
-- Dossier-Update: <10 Sekunden
-- Re-Identifikation: >90% Genauigkeit
-- Kleidungsklassifikation: >85% bei 200+ Kategorien
-- Video-Analyse: 1080p in <5 Minuten
-
----
+**Feature Implementation Strategy:**
+- **Modular Design**: Features as interchangeable modules
+- **Plugin Architecture**: Features can be enabled/disabled
+- **Feature Flags**: Runtime-control over feature availability
+- **Domain Separation**: Business logic separated from technical infrastructure
 
 ## 📋 AKTIVE REGELWERKE (DETAILLIERT)
 
@@ -82,20 +82,28 @@ make check-all   # Vollständige Prüfung
 - bandit: Sicherheits-Checks
 - safety: Dependency-Vulnerabilities
 
-**Null-Toleranz für:**
-- F401: Unused imports
-- F841: Unused variables
-- E501: Line too long
-- Type-Hint-Fehler
+**Context-Aware Standards:**
+- **Production Code**: Null-Toleranz für F401, F841, E501, Type-Hints
+- **Development Code**: Relaxed enforcement mit cleanup deadlines
+- **Emergency Fixes**: Documented bypasses mit 48h cleanup window
+- **Experimental Code**: Focus auf Funktionalität, Style-Cleanup follow-up
 
-### 🧪 Testing Standards (STRENG)
+### 🧪 Testing Standards (Pragmatic & Context-Aware)
 **Quelle**: `.cursorrules-backup/rules/feature_testing.md`
 
-**Qualitätsstandards:**
-- Test Coverage: >80%
-- Unit Tests: Vollständige Abdeckung
-- Integration Tests: API-Endpoints
-- End-to-End Tests: Core-Workflows
+**Context-Aware Coverage-Targets:**
+- **Core Business Logic**: >90% Coverage (Personen-Erkennung, Dossier-Management)
+- **API Endpoints**: >85% Coverage (Public API-Interfaces)
+- **Data Processing**: >80% Coverage (AI-Pipeline, Data-Transformation)
+- **Infrastructure**: >70% Coverage (Configuration, Setup, Utils)
+- **UI Components**: >60% Coverage (User Interface Components)
+- **Scripts/Tools**: >50% Coverage (Development-Tools, Scripts)
+- **Experimental**: >30% Coverage (Prototype-Code, Research)
+
+**Testing Strategy:**
+- **Testing Pyramid**: 60% Unit, 30% Integration, 10% E2E
+- **Risk-Based Testing**: Kritische Pfade bekommen mehr Tests
+- **Contract Testing**: API-Contracts zwischen Services
 
 ### ⚙️ Konfigurations-Validierung
 **Quelle**: `.cursorrules-backup/rules/config_validation.md`
@@ -275,11 +283,31 @@ git commit -m "feat: video analysis service"
 
 ## 🎯 SOFORT-ANWEISUNGEN
 
-### Bei Code-Änderungen
-1. **IMMER** Black-formatiert schreiben
-2. **IMMER** Type-Hints verwenden
-3. **IMMER** Docstrings schreiben
-4. **IMMER** Tests aktualisieren
+### Context-Aware Quality Standards
+
+#### **Production Code (services/)**:
+- **Vollständige Quality Gates**: Alle Regeln mandatory
+- **Zero-Tolerance**: Für kritische Fehler (Security, Performance)
+- **Pre-Merge-Validation**: Vollständige Test-Suite erforderlich
+
+#### **Development/Experimental Code**:
+- **Relaxed Rules**: Experimenteller Code mit documented exceptions
+- **Focus auf Funktionalität**: Prototyping vor Perfection
+- **Gradual Cleanup**: Quality improvement über Zeit
+
+#### **Emergency Fixes**:
+- **Documented Bypass**: Quality Gate Bypass mit Ticket
+- **Post-Emergency Cleanup**: Mandatory follow-up für Standards
+- **Time-Boxed Exceptions**: Max. 48h für Emergency-Bypasses
+
+#### **Testing/Scripts**:
+- **Functional Focus**: Tests müssen funktionieren, Style secondary
+- **Maintenance Scripts**: Pragmatische Standards für Tool-Scripts
+
+### Bei Code-Änderungen (Context-Aware)
+1. **Production Code**: Black-formatiert schreiben, Type-Hints, Docstrings, Tests
+2. **Experimental Code**: Funktionalität first, Cleanup follow-up
+3. **Emergency Code**: Documented bypass mit cleanup deadline
 
 ### Bei Service-Entwicklung
 1. **IMMER** Health-Check implementieren
@@ -287,34 +315,34 @@ git commit -m "feat: video analysis service"
 3. **IMMER** Error-Handling einbauen
 4. **IMMER** Logging konfigurieren
 
-### Bei Fehlern
-1. **NIEMALS** Quality-Gates umgehen
-2. **IMMER** Root-Cause beheben
-3. **IMMER** Tests erweitern
-4. **IMMER** Dokumentation aktualisieren
-
 ---
 
-## 🏆 ERFOLGSKRITERIEN
+## 🏆 CONTEXT-AWARE ERFOLGSKRITERIEN
 
-### Code Quality
-- ✅ 100% Black-konform
-- ✅ 0 Linter-Fehler
-- ✅ >90% Type-Coverage
-- ✅ >80% Test-Coverage
+### Production Code Quality
+- ✅ 100% Black-konform für services/
+- ✅ 0 kritische Linter-Fehler für Production Code
+- ✅ >90% Type-Coverage für Core Business Logic
+- ✅ Context-appropriate Test-Coverage
+
+### Development Flexibility
+- ✅ Documented bypasses für Emergency Fixes
+- ✅ Relaxed rules für Experimental Code
+- ✅ Gradual cleanup für Development Code
+- ✅ Functional focus für Scripts/Tools
 
 ### Service Quality
 - ✅ Alle Health-Checks grün
-- ✅ <2s Response-Time
-- ✅ 99.9% Uptime
-- ✅ Vollständige Logs
+- ✅ Hardware-relative Response-Time-Targets
+- ✅ 99.9% Uptime für Production Services
+- ✅ Evidence-based Performance-Goals
 
 ### Dokumentation
-- ✅ Aktuelle README
-- ✅ Vollständige API-Docs
-- ✅ Service-Dokumentation
-- ✅ Deployment-Guides
+- ✅ Aktuelle README (Deutsch für Business, Englisch für APIs)
+- ✅ Code-Kommentare auf Englisch
+- ✅ Vollständige API-Docs (Englisch)
+- ✅ Deployment-Guides (Deutsch)
 
 ---
 
-**WICHTIG**: Diese Regeln sind PERMANENT AKTIV. Befolge sie bei JEDER Code-Änderung ohne Ausnahme.
+**WICHTIG**: Diese Regeln sind CONTEXT-AWARE und passen sich an Development-Phasen an. Production Code hat strikte Standards, Development Code hat notwendige Flexibilität.
