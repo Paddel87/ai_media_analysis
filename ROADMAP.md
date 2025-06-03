@@ -14,7 +14,8 @@
 - **🛡️ Pre-Commit-Hooks:** Automatische Code-Formatierung verhindert Pipeline-Fehler
 - **🌐 VPS-Optimierte Architecture:** GPU-Dependencies entfernt, Resource-Limits optimiert
 - **🔄 Cross-Platform:** Windows PowerShell, Linux, macOS Support
-- **📊 Service-Architecture:** 24 Services in einheitlicher services/ Struktur
+- **📊 Service-Architecture:** **10 aktive Services** in einheitlicher services/ Struktur konfiguriert
+- **⚠️ Service-Integration:** 14 weitere Services vorbereitet aber noch nicht im docker-compose.yml integriert
 - **✅ GitHub Actions:** Pipeline vollständig stabil (Run 41 erfolgreich)
 - **🚀 Performance-Optimierung:** Memory-Management, Concurrency, Caching implementiert
 
@@ -22,10 +23,33 @@
 - **Development-Experience:** Von 30-60 Minuten Setup auf <5 Minuten reduziert
 - **Developer-Onboarding:** Neue Entwickler productive in <10 Minuten
 - **Code-Quality-Automation:** Enterprise-Grade Standards implementiert
-- **Service-Strukturierung:** 11 redundante Root-Directories bereinigt
-- **VPS-Readiness:** Alle Services für Standard-Server ohne GPU optimiert
+- **Service-Strukturierung:** 24 Service-Verzeichnisse erstellt, 10 Services aktiv konfiguriert
+- **VPS-Readiness:** Alle 10 aktiven Services für Standard-Server ohne GPU optimiert
 - **Performance-Features:** Intelligentes Memory-Management, dynamisches Concurrency-Management
 - **Resource-Monitoring:** TTL-basiertes Caching, Graceful Degradation, Worker-Management
+
+### Aktive Services (10/24) ✅
+**Infrastructure Services (4):**
+- nginx: Load-Balancing, SSL-Ready
+- redis: Caching, Job-Queue
+- vector-db: Embeddings, CPU-optimiert
+- data-persistence: Daten-Management
+
+**AI Processing Services (5):**
+- pose_estimation: Körper-Pose-Erkennung
+- ocr_detection: Text-Erkennung
+- clip_nsfw: NSFW-Content-Detection
+- face_reid: Gesichtserkennung
+- whisper_transcriber: Audio-Transkription
+
+**UI Services (1):**
+- streamlit-ui: Development-Interface
+
+### Noch zu integrierende Services (14) ⏳
+- job_manager, control, embedding_server, llm_service
+- vision_pipeline, object_review, person_dossier
+- restraint_detection, thumbnail_generator, nsfw_detection
+- guardrails, llm_summarizer, clip_service, ui (Production)
 
 ## 🎯 Strategische Vision - VPS-First Self-Service Content-Moderation
 
@@ -59,22 +83,43 @@
 | Phase | Zeitrahmen | Hauptziel | Status |
 |-------|------------|-----------|--------|
 | **Alpha 0.4.4** | ✅ Abgeschlossen | Development-Infrastructure & Performance-Optimierung | ✅ ERREICHT |
-| **Alpha 0.5.0** | 2-3 Wochen | Self-Service VPS-Setup & SSL-Automation | 🔄 AKTIV |
+| **Alpha 0.5.0** | 2-3 Wochen | Service-Integration & VPS-Setup | 🔄 AKTIV |
 | **Alpha 0.6.0** | 6-8 Wochen | Content-Moderation-Features + Cloud AI | 🔄 Geplant |
 | **Alpha 0.7.0** | 6-12 Wochen | Professional Content-Moderation-Platform | 🔄 Geplant |
 | **Beta 0.8.0-0.9.0** | 3-6 Monate | Enterprise-Features & Forensik-Support | ⏳ Zukunft |
 | **Version 1.0** | 12-18 Monate | Market-Leading VPS Content-Moderation | ⏳ Zukunft |
 
-## 🚀 Alpha 0.5.0 - Self-Service VPS-Setup & SSL-Automation (2-3 Wochen)
+## 🚀 Alpha 0.5.0 - Service-Integration & VPS-Setup (2-3 Wochen)
 
 ### 🎯 Hauptziel
-**Content-Moderatoren können VPS ohne IT-Support einrichten und weltweit zugreifen**
+**Alle 24 Services integriert + Content-Moderatoren können VPS ohne IT-Support einrichten**
 
-### 📋 Priorität 1: Self-Service VPS-Setup
+### 📋 Priorität 1: Service-Integration abschließen (14 Services)
+- [ ] **Management-Services integrieren (4)**
+  - job_manager: Task-Orchestrierung in docker-compose.yml
+  - control: System-Control-Interface konfigurieren
+  - embedding_server: Vector-Management-Service aktivieren
+  - llm_service: Language-Model-Interface integrieren
+
+- [ ] **AI-Processing-Services integrieren (5)**
+  - vision_pipeline: Video-Processing-Pipeline konfigurieren
+  - object_review: Object-Detection-Review aktivieren
+  - person_dossier: Person-Tracking-System integrieren
+  - restraint_detection: Specialized Content-Detection konfigurieren
+  - thumbnail_generator: Video-Thumbnail-Creation aktivieren
+
+- [ ] **Content & UI-Services integrieren (5)**
+  - nsfw_detection: Enhanced NSFW-Detection konfigurieren
+  - guardrails: Content-Safety-Filtering aktivieren
+  - llm_summarizer: AI-Content-Summarization integrieren
+  - clip_service: Enhanced CLIP-Integration konfigurieren
+  - ui: Production Web-Interface aktivieren
+
+### 📋 Priorität 2: Self-Service VPS-Setup
 - [ ] **One-Click VPS-Deployment entwickeln**
   - `make vps-deploy` für Standard-VPS (Hetzner, DigitalOcean, AWS)
   - Automatisches Docker/Service-Setup ohne manuelle Konfiguration
-  - Health-Check-Dashboard für Service-Status-Übersicht
+  - Health-Check-Dashboard für alle 24 Services
 
 - [ ] **SSL-Automation & Domain-Management**
   - Let's Encrypt Integration für automatische SSL-Zertifikate
@@ -87,9 +132,9 @@
   - "Analysieren"-Button für One-Click-Content-Analysis
   - Progress-Tracking mit verständlichen Status-Updates
 
-### 📋 Priorität 2: VPS-Performance & Monitoring
-- [ ] **CPU-Only-Optimization implementieren**
-  - Dockerfile.cpu für alle AI-Services ohne GPU-Dependencies
+### 📋 Priorität 3: VPS-Performance & Monitoring
+- [ ] **CPU-Only-Optimization für alle Services**
+  - Dockerfile.cpu für alle 24 Services ohne GPU-Dependencies
   - Resource-Limits für Standard-VPS-Hardware (8GB-32GB RAM)
   - Performance-Benchmarks für verschiedene VPS-Größen
 
@@ -99,16 +144,19 @@
   - Simple Admin-Dashboard für Content-Moderatoren
 
 ### 📊 Erfolgsmetriken Alpha 0.5.0
+- [ ] Alle 24 Services laufen stabil im docker-compose.yml
 - [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS ohne IT-Kenntnisse
 - [ ] SSL-Setup automatisiert - weltweiter HTTPS-Zugriff in <10 Minuten
 - [ ] Content-Moderator kann Video hochladen und Analyse starten ohne Training
 - [ ] Alle Services starten automatisch und zeigen "ready-to-use" Status
 - [ ] VPS läuft stabil 24/7 für Remote-Team-Zugriff
+- [ ] Performance: Alle 24 Services laufen auf 16GB VPS ohne Degradation
 
 ### 🛠️ Technische Deliverables
+- **Service-Integration:** Alle 14 fehlenden Services in docker-compose.yml konfiguriert
 - **VPS-Deployment:** scripts/vps-deploy.sh für One-Click-Setup
 - **SSL-Automation:** scripts/ssl-setup.sh mit Let's Encrypt
-- **CPU-Dockerfiles:** services/*/Dockerfile.cpu für GPU-freien Betrieb
+- **CPU-Dockerfiles:** services/*/Dockerfile.cpu für GPU-freien Betrieb aller Services
 - **Content-Moderator-UI:** Streamlit-Interface für HR/Security-Teams
 - **Documentation:** Self-Service VPS-Setup-Guide für Nicht-Techniker
 

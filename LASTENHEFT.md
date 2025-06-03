@@ -42,8 +42,9 @@
 - **Phase:** Alpha 0.4.4 - Development-Infrastructure & Performance-Optimierung abgeschlossen
 - **CI/CD:** Vollständig stabil (GitHub Actions Run 41 erfolgreich)
 - **Development-Infrastructure:** Professional-Grade Automation implementiert
-- **Service-Architecture:** 24 Services in einheitlicher services/ Struktur
-- **VPS-Readiness:** Alle Services für Standard-Server optimiert
+- **Service-Architecture:** **10 aktive Services** in docker-compose.yml konfiguriert
+- **Service-Vorbereitung:** 24 Service-Verzeichnisse erstellt, 14 Services noch zu integrieren
+- **VPS-Readiness:** Alle 10 aktiven Services für Standard-Server optimiert
 - **Performance-Features:** Memory-Management, Concurrency, Caching optimiert
 
 ### 1.4 Development-Infrastructure & Performance-Erfolge Alpha 0.4.4 ✅
@@ -54,6 +55,7 @@
 - **🔄 Cross-Platform:** Windows/Linux/macOS Support
 - **🚀 Performance-Optimierung:** Intelligentes Memory-Management, Concurrency-Control
 - **📊 Resource-Monitoring:** TTL-basiertes Caching, Graceful Degradation
+- **✅ 10 aktive Services:** Funktionsfähige VPS-ready Service-Architektur
 
 ## 2. VPS-FIRST SELF-SERVICE CONTENT-MODERATION STRATEGIE
 
@@ -122,13 +124,20 @@
 ### 3.1 Alpha 0.5.0 - Self-Service VPS-Setup & SSL-Automation (2-3 Wochen)
 **Ziel:** Content-Moderatoren können VPS ohne IT-Support einrichten und weltweit zugreifen
 
-**Priorität 1: Self-Service VPS-Setup**
+**Priorität 1: Service-Integration abschließen**
+- [ ] **Fehlende 14 Services integrieren:** job_manager, control, embedding_server, etc.
+- [ ] **Service-Dependencies auflösen:** Alle 24 Services im docker-compose.yml konfigurieren
+- [ ] **Testing:** End-to-End Tests für alle Services implementieren
+- [ ] **Documentation:** Service-API-Dokumentation für alle 24 Services
+
+**Priorität 2: Self-Service VPS-Setup**
 - [ ] **One-Click VPS-Deployment:** `make vps-deploy` für Standard-VPS-Provider
 - [ ] **SSL-Automation:** Let's Encrypt Integration für automatische HTTPS
 - [ ] **Domain-Management:** Einfache Setup-Anleitung für weltweiten Zugriff
 - [ ] **Health-Monitoring:** Production-ready Service-Überwachung für Nicht-Techniker
 
 **Erfolgsmetriken:**
+- Alle 24 Services laufen stabil im docker-compose.yml
 - VPS-Installation funktioniert ohne IT-Kenntnisse in <10 Minuten
 - Automatische SSL-Setup ermöglicht weltweiten HTTPS-Zugriff
 - Content-Moderator kann von überall Videos hochladen und analysieren lassen
@@ -173,7 +182,7 @@
 
 ### 4.1 Core VPS-Services (Alpha 0.5.0 Ziel)
 
-#### 4.1.1 Infrastructure Services ✅
+#### 4.1.1 Infrastructure Services ✅ (4/4 aktiv)
 **Redis Service**
 - **Status:** VPS-ready, funktional getestet
 - **Resource-Limits:** 1GB Memory, 1 Core
@@ -189,22 +198,65 @@
 - **Functions:** Load-Balancing, SSL-Termination, Request-Routing
 - **SSL:** Let's Encrypt Integration (Alpha 0.5.0 Ziel)
 
-#### 4.1.2 AI-Services (Cloud AI-Integration)
+**Data Persistence Service**
+- **Status:** VPS-ready, aktiv konfiguriert
+- **Functions:** Daten-Management, Volume-Handling
 
-**Vision Pipeline Service**
-- **VPS-Function:** Job-Management, Preprocessing, Result-Aggregation
+#### 4.1.2 AI-Services ✅ (5/5 aktiv, Cloud AI-Integration vorbereitet)
+
+**Pose Estimation Service**
+- **Status:** VPS-ready mit CPU-Dockerfile
+- **VPS-Function:** Body-Pose-Detection über CPU
 - **Cloud AI:** GPU-intensive Processing via Vast.ai
-- **API:** Batch-Processing, Progress-Tracking, Cost-Monitoring
+- **API:** Real-time Processing, Progress-Tracking
 
-**Audio Analysis Service**
-- **VPS-Function:** Audio-Upload, Format-Conversion, Job-Queue
-- **Cloud AI:** Whisper Transcription, Emotion Analysis
-- **Features:** Multi-language Support, Speaker-ID
+**OCR Detection Service**
+- **Status:** VPS-optimiert, aktiv
+- **VPS-Function:** Text-Erkennung CPU-only
+- **Cloud AI:** Advanced OCR-Processing
+- **Features:** Multi-language Support
 
-**Content Moderation Services**
-- **VPS-Function:** Content-Classification, Rule-Engine
-- **Cloud AI:** NSFW-Detection, Restraint-Detection
+**CLIP NSFW Service**
+- **Status:** VPS-ready, CPU-optimiert
+- **VPS-Function:** Content-Classification CPU-based
+- **Cloud AI:** Advanced NSFW-Detection
 - **Integration:** Real-time Processing mit Cost-Limits
+
+**Face ReID Service**
+- **Status:** VPS-ready, funktional
+- **VPS-Function:** Gesichtserkennung CPU-only
+- **Cloud AI:** Advanced Face-Matching
+- **Features:** Person-Tracking über Video-Segmente
+
+**Whisper Transcriber Service**
+- **Status:** VPS-optimiert, aktiv
+- **VPS-Function:** Audio-Transkription CPU-based
+- **Cloud AI:** Large-Model Transcription
+- **Features:** Multi-language, Speaker-ID
+
+#### 4.1.3 Noch zu integrierende Services ⏳ (14 Services)
+
+**Management Services (4):**
+- [ ] **job_manager:** Task-Orchestrierung
+- [ ] **control:** System-Control-Interface
+- [ ] **embedding_server:** Vector-Embedding-Management
+- [ ] **llm_service:** Language-Model-Integration
+
+**AI Processing Services (5):**
+- [ ] **vision_pipeline:** Video-Processing-Pipeline
+- [ ] **object_review:** Object-Detection-Review
+- [ ] **person_dossier:** Person-Tracking-System
+- [ ] **restraint_detection:** Specialized Content-Detection
+- [ ] **thumbnail_generator:** Video-Thumbnail-Creation
+
+**Content Services (3):**
+- [ ] **nsfw_detection:** Enhanced NSFW-Detection
+- [ ] **guardrails:** Content-Safety-Filtering
+- [ ] **llm_summarizer:** AI-Content-Summarization
+
+**Additional Services (2):**
+- [ ] **clip_service:** Enhanced CLIP-Integration
+- [ ] **ui:** Production Web-Interface (vs. streamlit-ui)
 
 ### 4.2 🆕 UC-001: Erweiterte Medienanalyse-Services (Alpha 0.6.0)
 

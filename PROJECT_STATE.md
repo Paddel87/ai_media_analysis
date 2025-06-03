@@ -3,61 +3,99 @@
 ## AKTUELLER IST-ZUSTAND (Alpha 0.4.4 - ERREICHT)
 
 ### Service-Architektur & Performance-Optimierung ✅
-- **✅ Einheitliche services/ Struktur:** 24 Services in standardisierter Architektur organisiert
+- **✅ Einheitliche services/ Struktur:** 24 Service-Verzeichnisse erstellt, 10 Services aktiv konfiguriert
+- **✅ Docker-Compose-Integration:** 10 Services funktionsfähig in docker-compose.yml
+- **⚠️ Service-Integration:** 14 Services noch nicht in docker-compose.yml integriert
 - **✅ Root-Level-Duplikate beseitigt:** 11 redundante Verzeichnisse erfolgreich entfernt
   - Entfernt: control/, embedding_server/, llm_interface/, object_review/
   - Entfernt: ocr_logo_title/, preprocess/, qdrant/, streamlit_ui/
   - Entfernt: vector_db/, whisper/, vision_pipeline/
 - **✅ Modulare Service-Organisation:** Infrastructure, AI Processing, Management, UI Services kategorisiert
-- **✅ Docker-Compose-Konsistenz:** Alle Services verwenden ausschließlich services/ Pfade
+- **✅ Docker-Compose-Konsistenz:** Alle aktiven Services verwenden services/ Pfade
 - **✅ Backup-Management:** Automatisierte Backup-Scripts vor Strukturänderungen
 - **✅ Performance-Optimierung:** Memory-Management, Concurrency, TTL-Caching implementiert
 
-### Service-Kategorien etabliert ✅
-- **Infrastructure Services (VPS):** nginx, vector_db, redis für Standard-Server
-- **AI Processing Services (Cloud AI-ready):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
-- **Management Services:** job_manager, control, embedding_server, llm_service für System-Orchestrierung
-- **UI Services:** ui, streamlit_ui für Development und Production Interfaces
-- **Common Components:** services/common/ für shared Libraries und Utilities
+### Aktive Service-Kategorien (10/24 Services) ✅
+- **Infrastructure Services (4/4):** nginx, vector_db, redis, data-persistence
+- **AI Processing Services (5/10):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
+- **UI Services (1/2):** streamlit-ui (aktiv) - ui (noch zu integrieren)
+- **Management Services (0/4):** job_manager, control, embedding_server, llm_service (alle noch zu integrieren)
+
+### Noch zu integrierende Services (14) ⏳
+**Management Services (4):**
+- job_manager: Task-Orchestrierung
+- control: System-Control-Interface
+- embedding_server: Vector-Embedding-Management
+- llm_service: Language-Model-Integration
+
+**AI Processing Services (5):**
+- vision_pipeline: Video-Processing-Pipeline
+- object_review: Object-Detection-Review
+- person_dossier: Person-Tracking-System
+- restraint_detection: Specialized Content-Detection
+- thumbnail_generator: Video-Thumbnail-Creation
+
+**Content & UI Services (5):**
+- nsfw_detection: Enhanced NSFW-Detection
+- guardrails: Content-Safety-Filtering
+- llm_summarizer: AI-Content-Summarization
+- clip_service: Enhanced CLIP-Integration
+- ui: Production Web-Interface
 
 ### Was definitiv funktioniert ✅
 - **✅ VPS-System-Tests:** Docker-Compose erfolgreich auf Standard-Hardware getestet
+- **✅ 10 aktive Services:** Alle laufen stabil (healthy, 5+ Minuten Uptime) auf VPS-Hardware
 - **✅ Redis Service:** Läuft stabil (healthy, 5+ Minuten Uptime) auf VPS-Hardware
 - **✅ Vector-DB Service:** CPU-only optimiert, funktioniert auf Standard-VPS (Port 8002)
+- **✅ AI-Services (5):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
 - **✅ Dockerfile-Reparaturen:** Systematisches Pattern für alle Services etabliert
 - **✅ Dependencies-Management:** CPU-only Versionen (faiss-cpu, PyTorch CPU) implementiert
 - **✅ CI/CD Pipeline:** 57/61 Tests erfolgreich, automatisierte Quality Gates
-- **✅ Build-Prozesse:** Alle Services bauen erfolgreich nach VPS-Optimierung
-- **✅ Service-Architektur:** Grundlegend solide, VPS-kompatibel, jetzt strukturell optimiert
+- **✅ Build-Prozesse:** Alle 10 aktiven Services bauen erfolgreich nach VPS-Optimierung
+- **✅ Service-Architektur:** Grundlegend solide, VPS-kompatibel, strukturell optimiert
 - **✅ Development-Tools:** Makefile, run_tests.py, pytest-Suite vollständig implementiert
 - **✅ Performance-Features:** Memory-Management, dynamisches Concurrency-Management
 - **✅ Resource-Monitoring:** TTL-basiertes Caching, Graceful Degradation, Worker-Skalierung
 
 ### VPS-Deployment-Erfolge 🎯
-- **Standard-Server-Hardware:** Keine GPU-Dependencies erforderlich
+- **Standard-Server-Hardware:** Keine GPU-Dependencies erforderlich (für 10 aktive Services)
 - **Provider-Flexibilität:** Läuft auf jedem Standard-VPS (Hetzner, DigitalOcean, AWS)
 - **Cost-Efficiency:** €20-100/Monat VPS statt teurer GPU-Hardware
 - **Cloud AI-Integration:** Vast.ai-Strategie für GPU-intensive Tasks
 - **Development-Workflow:** Stabiler lokaler Development-Workflow etabliert
 - **Service-Modularität:** Professional-Grade Service-Architektur für Enterprise-Skalierung
 
-### Validierte Service-Status (Alpha 0.4.2)
+### Validierte Service-Status (Alpha 0.4.4)
+**✅ Aktive Services (10):**
 1. **✅ nginx** - VPS-ready, läuft stabil ohne GPU, Resource-optimiert, services/nginx/
 2. **✅ vector-db** - CPU-optimiert, faiss-cpu + PyTorch CPU, Health-Checks, services/vector_db/
 3. **✅ redis** - VPS-ready, läuft stabil ohne GPU, Resource-optimiert, im Docker-Compose integriert
-4. **⚡ pose_estimation** - VPS-ready, CPU-Dockerfile, Cloud-Mode-Flag, services/pose_estimation/
-5. **⚡ ocr_detection** - VPS-ready, CPU-Dockerfile, optimierte Resources, services/ocr_detection/
-6. **⚡ clip_nsfw** - VPS-ready, CPU-Dockerfile, Lightweight-Modelle, services/clip_nsfw/
-7. **⚡ whisper_transcriber** - VPS-ready, CPU-Dockerfile, kleinere Modelle, services/whisper_transcriber/
-8. **⚡ face_reid** - VPS-ready, CPU-Dockerfile, Cloud-Integration, services/face_reid/
-9. **✅ data-persistence** - VPS-Integration, Logging, Health-Checks
-10. **✅ ui** - Production Web Interface, services/ui/
-11. **✅ streamlit-ui** - Development-UI, services/streamlit_ui/ (kein Root-Level-Duplikat mehr)
-12. **✅ job_manager** - Task Orchestration, services/job_manager/
-13. **✅ control** - System Control, services/control/ (kein Root-Level-Duplikat mehr)
-14. **✅ embedding_server** - Vector Embeddings, services/embedding_server/ (kein Root-Level-Duplikat mehr)
-15. **✅ llm_service** - Language Model Interface, services/llm_service/
-16. **✅ common** - Shared Components, services/common/ mit logging_config.py, redis_config.py
+4. **✅ data-persistence** - VPS-Integration, Logging, Health-Checks, services/data_persistence/
+5. **✅ pose_estimation** - VPS-ready, CPU-Dockerfile, Cloud-Mode-Flag, services/pose_estimation/
+6. **✅ ocr_detection** - VPS-ready, CPU-Dockerfile, optimierte Resources, services/ocr_detection/
+7. **✅ clip_nsfw** - VPS-ready, CPU-Dockerfile, Lightweight-Modelle, services/clip_nsfw/
+8. **✅ whisper_transcriber** - VPS-ready, CPU-Dockerfile, kleinere Modelle, services/whisper_transcriber/
+9. **✅ face_reid** - VPS-ready, CPU-Dockerfile, Cloud-Integration, services/face_reid/
+10. **✅ streamlit-ui** - Development-UI, services/streamlit_ui/ (kein Root-Level-Duplikat mehr)
+
+**⏳ Vorbereitete Services (14) - Noch nicht in docker-compose.yml:**
+11. **⏳ job_manager** - Task Orchestration, services/job_manager/ (noch zu integrieren)
+12. **⏳ control** - System Control, services/control/ (noch zu integrieren)
+13. **⏳ embedding_server** - Vector Embeddings, services/embedding_server/ (noch zu integrieren)
+14. **⏳ llm_service** - Language Model Interface, services/llm_service/ (noch zu integrieren)
+15. **⏳ vision_pipeline** - Video Processing, services/vision_pipeline/ (noch zu integrieren)
+16. **⏳ object_review** - Object Detection Review, services/object_review/ (noch zu integrieren)
+17. **⏳ person_dossier** - Person Tracking, services/person_dossier/ (noch zu integrieren)
+18. **⏳ restraint_detection** - Specialized Detection, services/restraint_detection/ (noch zu integrieren)
+19. **⏳ thumbnail_generator** - Thumbnail Creation, services/thumbnail_generator/ (noch zu integrieren)
+20. **⏳ nsfw_detection** - Enhanced NSFW, services/nsfw_detection/ (noch zu integrieren)
+21. **⏳ guardrails** - Content Safety, services/guardrails/ (noch zu integrieren)
+22. **⏳ llm_summarizer** - AI Summarization, services/llm_summarizer/ (noch zu integrieren)
+23. **⏳ clip_service** - Enhanced CLIP, services/clip_service/ (noch zu integrieren)
+24. **⏳ ui** - Production Interface, services/ui/ (noch zu integrieren)
+
+**✅ Common Components:**
+- **✅ common** - Shared Components, services/common/ mit logging_config.py, redis_config.py
 
 ### Strukturelle Verbesserungen Alpha 0.4.4 🏗️
 - **Eliminierte Code-Duplikation:** 11 redundante Service-Kopien entfernt
@@ -112,23 +150,33 @@
 
 ## VPS-DEPLOYMENT ROADMAP
 
-### Alpha 0.5.0 - VPS-Production-Ready (nächste 2-3 Wochen)
-**Ziel:** Production-Ready VPS-Setup für Standard-Server
+### Alpha 0.5.0 - Service-Integration & VPS-Production-Ready (nächste 2-3 Wochen)
+**Ziel:** Alle 24 Services integriert + Production-Ready VPS-Setup für Standard-Server
 **Erfolgskriterien:**
-- Alle lokalen Services laufen stabil auf Standard-VPS
+- Alle 24 Services laufen stabil im docker-compose.yml
+- Health-Monitoring zeigt alle Services als "healthy"
 - Nginx SSL-Termination und Load-Balancing funktional
-- Health-Monitoring und Log-Aggregation implementiert
 - Automated VPS-Deployment-Scripts verfügbar
-- VPS-Performance-Benchmarks etabliert
-- **Development-Stability:** Lokaler Development-Workflow 100% funktional
+- VPS-Performance-Benchmarks für alle Services etabliert
+- **Development-Stability:** Lokaler Development-Workflow 100% funktional für alle Services
 
 **Konkrete Aufgaben:**
-- ✅ Docker-Compose: VPS-optimiert mit CPU-only Services
+**Priorität 1: Service-Integration abschließen (14 Services)**
+- ⚡ **job_manager Integration:** Task-Orchestrierung in docker-compose.yml
+- ⚡ **control Integration:** System-Control-Interface konfigurieren
+- ⚡ **embedding_server Integration:** Vector-Management-Service aktivieren
+- ⚡ **llm_service Integration:** Language-Model-Interface integrieren
+- ⚡ **vision_pipeline Integration:** Video-Processing-Pipeline konfigurieren
+- ⚡ **person_dossier Integration:** Person-Tracking-System aktivieren
+- ⚡ **UI-Services Integration:** ui (Production) + weitere Services
+
+**Priorität 2: VPS-Production-Setup**
+- ✅ Docker-Compose: VPS-optimiert mit CPU-only Services (10/24 Services)
 - ✅ Resource-Management: Memory-Limits für 8GB-16GB VPS angepasst
-- ✅ Health-Checks: Umfassende Service-Health-Monitoring
+- ✅ Health-Checks: Umfassende Service-Health-Monitoring (für 10 Services)
 - ✅ Logging: Structured Logging für alle Services
-- ⚡ Nginx: SSL-Setup und Service-Routing konfigurieren
-- ⚡ Config-Management: Centralized Configuration für alle Services
+- ⚡ Nginx: SSL-Setup und Service-Routing für alle 24 Services konfigurieren
+- ⚡ Config-Management: Centralized Configuration für alle 24 Services
 - ⚡ Environment-Variables: Standardisierte ENV-Konfiguration
 
 ### Alpha 0.6.0 - Cloud AI-Integration (4-6 Wochen)
