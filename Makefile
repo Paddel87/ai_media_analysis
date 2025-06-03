@@ -124,122 +124,6 @@ vps-test: ## VPS-spezifische Tests ausführen
 	@echo "Testing VPS resource limits..."
 	@if command -v docker &> /dev/null; then \
 		echo "🐳 Testing Docker resource constraints..."; \
-# AI Media Analysis System - VPS-Optimiertes Makefile
-# Vereinfacht Test-Ausführung und VPS-Development-Aufgaben
-
-.PHONY: help install test test-unit test-integration test-e2e test-performance
-.PHONY: test-coverage test-lint test-security test-docker test-all
-.PHONY: format lint clean setup dev-setup ci-setup
-.PHONY: run-services stop-services restart-services health-check
-.PHONY: vps-setup vps-deploy vps-test logs-all monitor
-.PHONY: format check-format lint pre-commit-install pre-commit-run
-
-# Default target
-help: ## Zeigt diese Hilfe an
-	@echo "AI Media Analysis System - VPS-Optimierte Entwicklungskommandos"
-	@echo ""
-	@echo "=== QUICK START ==="
-	@echo "  make dev-setup      - Komplette Development-Umgebung einrichten"
-	@echo "  make quick-start    - Services schnell starten"
-	@echo "  make test          - Alle Tests ausführen"
-	@echo ""
-	@echo "=== DEVELOPMENT ==="
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-# =============================================================================
-# INSTALLATION UND SETUP
-# =============================================================================
-
-install: ## Basis-Installation (Produktion)
-	@echo "📦 Installing base dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/base.txt
-
-install-dev: ## Development-Installation
-	@echo "🛠️ Installing development dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/development.txt
-
-install-test: ## Test-Installation
-	@echo "🧪 Installing test dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/testing.txt
-
-install-llm: ## LLM Service Dependencies
-	@echo "🤖 Installing LLM dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/services/llm.txt
-
-install-vision: ## Vision Service Dependencies
-	@echo "👁️ Installing vision dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/services/vision.txt
-
-install-cloud: ## Cloud Storage Dependencies
-	@echo "☁️ Installing cloud dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/services/cloud.txt
-
-install-all: ## Alle Dependencies (für lokale Entwicklung)
-	@echo "📦 Installing all dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements/testing.txt
-	pip install -r requirements/services/llm.txt
-	pip install -r requirements/services/vision.txt
-	pip install -r requirements/services/cloud.txt
-
-# Legacy support - weiterhin functional für Backwards Compatibility
-install-legacy: ## Legacy installation (alte requirements.txt)
-	@echo "📦 Installing legacy dependencies..."
-	python -m pip install --upgrade pip
-	pip install -r requirements.txt
-	pip install -r requirements-ci.txt
-
-dev-setup: install-dev ## Komplette Development-Umgebung
-	@echo "🛠️ Setting up complete development environment..."
-	@if [ -f "scripts/dev-setup.sh" ]; then \
-		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh; \
-	else \
-		python run_tests.py --check-env; \
-	fi
-
-quick-setup: install ## Schnelle minimale Einrichtung
-	@echo "⚡ Quick development setup..."
-	@if [ -f "scripts/dev-setup.sh" ]; then \
-		chmod +x scripts/dev-setup.sh && ./scripts/dev-setup.sh --quick; \
-	else \
-		@echo "✅ Quick setup completed"; \
-	fi
-
-ci-setup: install-test ## Setup für CI/CD-Umgebung
-	@echo "🔧 Setting up CI environment..."
-	python run_tests.py --check-env
-
-# =============================================================================
-# VPS-SPEZIFISCHE ENTWICKLUNG
-# =============================================================================
-
-vps-setup: ## VPS-Development-Umgebung vorbereiten
-	@echo "🌐 Setting up VPS development environment..."
-	@mkdir -p config logs data/{uploads,results,backups}
-	@echo "✅ VPS directory structure created"
-	@if [ ! -f ".env" ] && [ -f "config/environment.example" ]; then \
-		cp config/environment.example .env; \
-		echo "⚠️  Please edit .env file for your VPS configuration"; \
-	fi
-
-vps-deploy: vps-setup ## VPS-Deployment vorbereiten
-	@echo "🚀 Preparing VPS deployment..."
-	@echo "Building VPS-optimized Docker images..."
-	docker-compose build --parallel redis vector-db data-persistence nginx
-	@echo "✅ VPS deployment ready"
-
-vps-test: ## VPS-spezifische Tests ausführen
-	@echo "🧪 Running VPS-specific tests..."
-	python run_tests.py --unit -m "not gpu and not requires_gpu" -v
-	@echo "Testing VPS resource limits..."
-	@if command -v docker &> /dev/null; then \
-		echo "🐳 Testing Docker resource constraints..."; \
 		docker run --rm --memory=2g --cpus=2 python:3.11-slim python -c "print('✅ VPS resource limits OK')"; \
 	fi
 
@@ -564,3 +448,187 @@ deploy-staging: ## Deployed zu Staging-Umgebung
 deploy-production: ## Deployed zu Production-Umgebung
 	@echo "🚀 Deploying to production..."
 	@echo "TODO: Add production deployment"
+
+# =============================================================================
+# 🔄 ITERATIVE SERVICE-INTEGRATION (Alpha 0.5.0)
+# =============================================================================
+
+## Service-Integration Management
+iteration-1: ## 🔄 Integration Iteration 1: Management-Core (4 Services)
+	@echo "${GREEN}🔄 Starte Iteration 1: Management-Core Services${NC}"
+	@echo "${YELLOW}Services: $(ITERATION_1_SERVICES)${NC}"
+	@for service in $(ITERATION_1_SERVICES); do \
+		echo "${BLUE}Integriere Service: $$service${NC}"; \
+		$(MAKE) service-add SERVICE=$$service || exit 1; \
+	done
+	@$(MAKE) iteration-test ITERATION=1
+	@echo "${GREEN}✅ Iteration 1 abgeschlossen - Management-Core aktiv${NC}"
+
+iteration-2: ## 🔄 Integration Iteration 2: AI-Processing-Core (3 Services)
+	@echo "${GREEN}🔄 Starte Iteration 2: AI-Processing-Core Services${NC}"
+	@echo "${YELLOW}Services: $(ITERATION_2_SERVICES)${NC}"
+	@for service in $(ITERATION_2_SERVICES); do \
+		echo "${BLUE}Integriere Service: $$service${NC}"; \
+		$(MAKE) service-add SERVICE=$$service || exit 1; \
+	done
+	@$(MAKE) iteration-test ITERATION=2
+	@echo "${GREEN}✅ Iteration 2 abgeschlossen - AI-Processing-Pipeline aktiv${NC}"
+
+iteration-3: ## 🔄 Integration Iteration 3: Specialized-Services (4 Services)
+	@echo "${GREEN}🔄 Starte Iteration 3: Specialized-Services${NC}"
+	@echo "${YELLOW}Services: $(ITERATION_3_SERVICES)${NC}"
+	@for service in $(ITERATION_3_SERVICES); do \
+		echo "${BLUE}Integriere Service: $$service${NC}"; \
+		$(MAKE) service-add SERVICE=$$service || exit 1; \
+	done
+	@$(MAKE) iteration-test ITERATION=3
+	@echo "${GREEN}✅ Iteration 3 abgeschlossen - Specialized-Detection aktiv${NC}"
+
+iteration-4: ## 🔄 Integration Iteration 4: Content & UI-Services (3 Services)
+	@echo "${GREEN}🔄 Starte Iteration 4: Content & UI-Services${NC}"
+	@echo "${YELLOW}Services: $(ITERATION_4_SERVICES)${NC}"
+	@for service in $(ITERATION_4_SERVICES); do \
+		echo "${BLUE}Integriere Service: $$service${NC}"; \
+		$(MAKE) service-add SERVICE=$$service || exit 1; \
+	done
+	@$(MAKE) iteration-test ITERATION=4
+	@echo "${GREEN}✅ Iteration 4 abgeschlossen - Production-UI verfügbar${NC}"
+
+service-add: ## 🔧 Service zu docker-compose.yml hinzufügen (SERVICE=name)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "${RED}❌ Fehler: SERVICE Parameter erforderlich${NC}"; \
+		echo "${YELLOW}Verwendung: make service-add SERVICE=service_name${NC}"; \
+		exit 1; \
+	fi
+	@echo "${BLUE}🔧 Füge Service $(SERVICE) zu docker-compose.yml hinzu${NC}"
+	@if [ ! -d "services/$(SERVICE)" ]; then \
+		echo "${RED}❌ Service-Verzeichnis services/$(SERVICE) nicht gefunden${NC}"; \
+		exit 1; \
+	fi
+	@$(MAKE) service-dockerfile-cpu SERVICE=$(SERVICE)
+	@$(MAKE) service-config-generate SERVICE=$(SERVICE)
+	@echo "${GREEN}✅ Service $(SERVICE) erfolgreich hinzugefügt${NC}"
+
+service-dockerfile-cpu: ## 🐳 Dockerfile.cpu für Service erstellen (SERVICE=name)
+	@echo "${BLUE}🐳 Erstelle Dockerfile.cpu für $(SERVICE)${NC}"
+	@if [ ! -f "services/$(SERVICE)/Dockerfile.cpu" ]; then \
+		echo "${YELLOW}Erstelle CPU-optimierte Dockerfile für $(SERVICE)${NC}"; \
+		$(MAKE) dockerfile-cpu-template SERVICE=$(SERVICE); \
+	fi
+
+service-config-generate: ## ⚙️ Service-Konfiguration für docker-compose.yml generieren
+	@echo "${BLUE}⚙️ Generiere docker-compose.yml Konfiguration für $(SERVICE)${NC}"
+	@python scripts/generate_service_config.py $(SERVICE)
+
+service-test: ## 🧪 Service Health-Check (SERVICE=name)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "${RED}❌ Fehler: SERVICE Parameter erforderlich${NC}"; \
+		exit 1; \
+	fi
+	@echo "${BLUE}🧪 Teste Service $(SERVICE)${NC}"
+	@$(DOCKER_COMPOSE) ps $(SERVICE) || exit 1
+	@$(DOCKER_COMPOSE) exec $(SERVICE) curl -f http://localhost:8000/health || echo "${YELLOW}⚠️ Health-Check für $(SERVICE) fehlgeschlagen${NC}"
+
+iteration-test: ## 🧪 Test aller Services der aktuellen Iteration (ITERATION=1-4)
+	@echo "${BLUE}🧪 Teste Iteration $(ITERATION) Services${NC}"
+	@if [ "$(ITERATION)" = "1" ]; then \
+		for service in $(ITERATION_1_SERVICES); do $(MAKE) service-test SERVICE=$$service; done; \
+	elif [ "$(ITERATION)" = "2" ]; then \
+		for service in $(ITERATION_1_SERVICES) $(ITERATION_2_SERVICES); do $(MAKE) service-test SERVICE=$$service; done; \
+	elif [ "$(ITERATION)" = "3" ]; then \
+		for service in $(ITERATION_1_SERVICES) $(ITERATION_2_SERVICES) $(ITERATION_3_SERVICES); do $(MAKE) service-test SERVICE=$$service; done; \
+	elif [ "$(ITERATION)" = "4" ]; then \
+		for service in $(ALL_NEW_SERVICES); do $(MAKE) service-test SERVICE=$$service; done; \
+	fi
+	@echo "${GREEN}✅ Iteration $(ITERATION) Tests abgeschlossen${NC}"
+
+iteration-status: ## 📊 Status-Übersicht der aktuellen Service-Integration
+	@echo "${GREEN}📊 Service-Integration Status${NC}"
+	@echo "${BLUE}================================${NC}"
+	@echo "${YELLOW}Aktive Services (docker-compose.yml):${NC}"
+	@$(DOCKER_COMPOSE) config --services | wc -l | xargs echo "Services in docker-compose.yml:"
+	@echo ""
+	@echo "${YELLOW}Iteration 1 - Management-Core:${NC}"
+	@for service in $(ITERATION_1_SERVICES); do \
+		if $(DOCKER_COMPOSE) config --services | grep -q $$service; then \
+			echo "  ✅ $$service"; \
+		else \
+			echo "  ⏳ $$service"; \
+		fi; \
+	done
+	@echo ""
+	@echo "${YELLOW}Iteration 2 - AI-Processing-Core:${NC}"
+	@for service in $(ITERATION_2_SERVICES); do \
+		if $(DOCKER_COMPOSE) config --services | grep -q $$service; then \
+			echo "  ✅ $$service"; \
+		else \
+			echo "  ⏳ $$service"; \
+		fi; \
+	done
+	@echo ""
+	@echo "${YELLOW}Iteration 3 - Specialized-Services:${NC}"
+	@for service in $(ITERATION_3_SERVICES); do \
+		if $(DOCKER_COMPOSE) config --services | grep -q $$service; then \
+			echo "  ✅ $$service"; \
+		else \
+			echo "  ⏳ $$service"; \
+		fi; \
+	done
+	@echo ""
+	@echo "${YELLOW}Iteration 4 - Content & UI-Services:${NC}"
+	@for service in $(ITERATION_4_SERVICES); do \
+		if $(DOCKER_COMPOSE) config --services | grep -q $$service; then \
+			echo "  ✅ $$service"; \
+		else \
+			echo "  ⏳ $$service"; \
+		fi; \
+	done
+
+dockerfile-cpu-template: ## 📝 CPU-Dockerfile-Template für Service generieren
+	@mkdir -p services/$(SERVICE)
+	@if [ ! -f "services/$(SERVICE)/Dockerfile.cpu" ]; then \
+		echo "# CPU-optimierte Dockerfile für $(SERVICE)" > services/$(SERVICE)/Dockerfile.cpu; \
+		echo "FROM python:3.11-slim" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# System-Dependencies für VPS" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "RUN apt-get update && apt-get install -y \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    build-essential \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    curl \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    && rm -rf /var/lib/apt/lists/*" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "WORKDIR /app" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Python Dependencies" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "COPY requirements.txt ." >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "RUN pip install --no-cache-dir -r requirements.txt" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Service Code" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "COPY . ." >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# VPS-Umgebungsvariablen" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV PYTHONUNBUFFERED=1" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV LOG_LEVEL=INFO" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV REDIS_HOST=redis" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "ENV REDIS_PORT=6379" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Health-Check" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \\" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "    CMD curl -f http://localhost:8000/health || exit 1" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "# Service starten" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "CMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]" >> services/$(SERVICE)/Dockerfile.cpu; \
+		echo "${GREEN}✅ Dockerfile.cpu für $(SERVICE) erstellt${NC}"; \
+	fi
+
+integration-all: ## 🚀 Alle 4 Iterationen nacheinander ausführen
+	@echo "${GREEN}🚀 Starte komplette Service-Integration (4 Iterationen)${NC}"
+	@$(MAKE) iteration-1
+	@echo "${BLUE}Pause zwischen Iterationen (30s)...${NC}"
+	@sleep 30
+	@$(MAKE) iteration-2
+	@sleep 30
+	@$(MAKE) iteration-3
+	@sleep 30
+	@$(MAKE) iteration-4
+	@echo "${GREEN}🎉 Alle 24 Services erfolgreich integriert!${NC}"
+	@$(MAKE) iteration-status

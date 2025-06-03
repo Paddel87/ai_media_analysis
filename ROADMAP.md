@@ -89,33 +89,139 @@
 | **Beta 0.8.0-0.9.0** | 3-6 Monate | Enterprise-Features & Forensik-Support | ⏳ Zukunft |
 | **Version 1.0** | 12-18 Monate | Market-Leading VPS Content-Moderation | ⏳ Zukunft |
 
-## 🚀 Alpha 0.5.0 - Service-Integration & VPS-Setup (2-3 Wochen)
+## 🚀 Alpha 0.5.0 - Service-Integration & VPS-Setup (2-3 Wochen) - ITERATIV
 
 ### 🎯 Hauptziel
 **Alle 24 Services integriert + Content-Moderatoren können VPS ohne IT-Support einrichten**
 
-### 📋 Priorität 1: Service-Integration abschließen (14 Services)
-- [ ] **Management-Services integrieren (4)**
-  - job_manager: Task-Orchestrierung in docker-compose.yml
-  - control: System-Control-Interface konfigurieren
-  - embedding_server: Vector-Management-Service aktivieren
-  - llm_service: Language-Model-Interface integrieren
+### 📋 ITERATIVE VORGEHENSWEISE - Service-Integration (14 Services)
 
-- [ ] **AI-Processing-Services integrieren (5)**
-  - vision_pipeline: Video-Processing-Pipeline konfigurieren
-  - object_review: Object-Detection-Review aktivieren
-  - person_dossier: Person-Tracking-System integrieren
-  - restraint_detection: Specialized Content-Detection konfigurieren
-  - thumbnail_generator: Video-Thumbnail-Creation aktivieren
+#### **🔄 Iteration 1: Management-Core (Woche 1)**
+**Ziel:** Zentrale Orchestrierungs-Services aktivieren (4 Services)
 
-- [ ] **Content & UI-Services integrieren (5)**
-  - nsfw_detection: Enhanced NSFW-Detection konfigurieren
-  - guardrails: Content-Safety-Filtering aktivieren
-  - llm_summarizer: AI-Content-Summarization integrieren
-  - clip_service: Enhanced CLIP-Integration konfigurieren
-  - ui: Production Web-Interface aktivieren
+**Priorität 1.1: job_manager Integration ⚡**
+- [ ] **job_manager Dockerfile.cpu erstellen** (GPU-freie Version)
+- [ ] **docker-compose.yml Integration** mit Health-Checks
+- [ ] **Environment-Variables** für VPS-Betrieb konfigurieren
+- [ ] **Redis-Dependencies** testen und optimieren
+- [ ] **API-Endpoints** für Task-Management validieren
 
-### 📋 Priorität 2: Self-Service VPS-Setup
+**Priorität 1.2: control Service Integration ⚡**
+- [ ] **control Service Analyse** (aktuell sehr minimal)
+- [ ] **Service-Dependencies** klären und implementieren
+- [ ] **Health-Check-Endpoints** implementieren
+- [ ] **docker-compose.yml** Integration mit Resource-Limits
+
+**Priorität 1.3: embedding_server Integration ⚡**
+- [ ] **CPU-optimierte Version** erstellen (ohne GPU-Dependencies)
+- [ ] **Vector-DB-Integration** mit services/vector_db
+- [ ] **Memory-Optimization** für VPS-Hardware
+- [ ] **API-Testing** mit bestehenden Services
+
+**Priorität 1.4: llm_service Integration ⚡**
+- [ ] **Cloud AI-Integration** für LLM-Calls vorbereiten
+- [ ] **Local Fallback** für VPS-only Betrieb implementieren
+- [ ] **Cost-Monitoring** für externe API-Calls
+- [ ] **Health-Checks** und Error-Handling
+
+**Iteration 1 Erfolgskriterien:**
+- [ ] 4 Management-Services laufen stabil in docker-compose.yml
+- [ ] Health-Dashboard zeigt alle Services als "healthy"
+- [ ] Inter-Service-Communication über Redis funktioniert
+- [ ] VPS-Memory-Verbrauch <12GB für alle Services
+- [ ] Alle Tests laufen durch (`make test-services`)
+
+#### **🔄 Iteration 2: AI-Processing-Core (Woche 2)**
+**Ziel:** Zentrale AI-Processing-Pipeline aktivieren (3 Services)
+
+**Priorität 2.1: vision_pipeline Integration ⚡**
+- [ ] **Video-Processing-Pipeline** CPU-optimiert konfigurieren
+- [ ] **Cloud AI-Integration** für GPU-intensive Tasks vorbereiten
+- [ ] **Batch-Processing** mit job_manager integrieren
+- [ ] **File-Handling** und Storage-Management optimieren
+
+**Priorität 2.2: object_review Integration ⚡**
+- [ ] **Object-Detection-Review-System** implementieren
+- [ ] **Manual-Review-Interface** für Content-Moderatoren
+- [ ] **AI-Confidence-Scoring** und Human-Feedback-Loop
+- [ ] **Export-Functions** für Review-Reports
+
+**Priorität 2.3: person_dossier Integration ⚡**
+- [ ] **Person-Tracking-System** aktivieren
+- [ ] **Face-ReID-Integration** mit services/face_reid
+- [ ] **Dossier-Database-Schema** implementieren
+- [ ] **Privacy-Controls** und Data-Retention-Policies
+
+**Iteration 2 Erfolgskriterien:**
+- [ ] End-to-End Video-Analysis funktioniert
+- [ ] Person-Tracking über Video-Segmente implementiert
+- [ ] Manual-Review-Workflow für Content-Moderatoren verfügbar
+- [ ] Performance: Video-Analysis in <5 Minuten (VPS)
+- [ ] Integration-Tests für AI-Pipeline erfolgreich
+
+#### **🔄 Iteration 3: Specialized-Services (Woche 3)**
+**Ziel:** Spezialisierte Content-Detection aktivieren (4 Services)
+
+**Priorität 3.1: restraint_detection Integration ⚡**
+- [ ] **Specialized BDSM/Restraint-Detection** implementieren
+- [ ] **Custom-Models** für Content-Categorization
+- [ ] **Confidence-Thresholds** für verschiedene Content-Types
+- [ ] **UC-001 Integration** für Enhanced-Analysis-Features
+
+**Priorität 3.2: nsfw_detection Integration ⚡**
+- [ ] **Enhanced NSFW-Detection** (vs. clip_nsfw)
+- [ ] **Multi-Model-Ensemble** für höhere Genauigkeit
+- [ ] **Content-Classification** mit Severity-Levels
+- [ ] **False-Positive-Reduction** durch Ensemble-Voting
+
+**Priorität 3.3: thumbnail_generator Integration ⚡**
+- [ ] **Video-Thumbnail-Generation** für Preview-UI
+- [ ] **Smart-Frame-Selection** basierend auf Content-Analysis
+- [ ] **Batch-Processing** für Performance-Optimization
+- [ ] **Storage-Optimization** mit Compression
+
+**Priorität 3.4: guardrails Integration ⚡**
+- [ ] **Content-Safety-Filtering** implementieren
+- [ ] **Policy-Engine** für verschiedene Content-Policies
+- [ ] **Real-time Content-Blocking** für Live-Streams
+- [ ] **Audit-Logging** für Compliance-Requirements
+
+**Iteration 3 Erfolgskriterien:**
+- [ ] Specialized-Content-Detection funktioniert
+- [ ] UC-001 Enhanced-Analysis-Features implementiert
+- [ ] Content-Policy-Engine konfigurierbar
+- [ ] Performance: Specialized-Analysis in <2 Minuten zusätzlich
+- [ ] Content-Moderator-UI zeigt alle Detection-Results
+
+#### **🔄 Iteration 4: Content & UI-Services (Woche 3)**
+**Ziel:** Content-Processing und Production-UI (3 Services)
+
+**Priorität 4.1: llm_summarizer Integration ⚡**
+- [ ] **AI-Content-Summarization** für Video-Analysis
+- [ ] **Multi-Language-Support** für internationale Teams
+- [ ] **Context-Aware-Summaries** basierend auf Content-Type
+- [ ] **Cost-Optimization** für LLM-API-Calls
+
+**Priorität 4.2: clip_service Integration ⚡**
+- [ ] **Enhanced CLIP-Integration** für Semantic-Search
+- [ ] **Custom-Embeddings** für Domain-specific Content
+- [ ] **Similarity-Search** für Content-Matching
+- [ ] **Performance-Optimization** für Large-Scale-Search
+
+**Priorität 4.3: ui (Production) Integration ⚡**
+- [ ] **Production Web-Interface** (vs. streamlit-ui Development)
+- [ ] **Professional Content-Moderation-UI** für HR/Security
+- [ ] **Multi-User-Support** mit Role-Based-Access
+- [ ] **Export-Functions** für Management-Reports
+
+**Iteration 4 Erfolgskriterien:**
+- [ ] Production-UI verfügbar für Content-Moderatoren
+- [ ] AI-Summarization funktioniert in 3+ Sprachen
+- [ ] Semantic-Search für Content-Discovery implementiert
+- [ ] End-to-End Content-Moderation-Workflow vollständig
+- [ ] Export-Reports für HR/Legal-Teams verfügbar
+
+### 📋 Priorität 2: Self-Service VPS-Setup (parallel zu Iterationen)
 - [ ] **One-Click VPS-Deployment entwickeln**
   - `make vps-deploy` für Standard-VPS (Hetzner, DigitalOcean, AWS)
   - Automatisches Docker/Service-Setup ohne manuelle Konfiguration
@@ -143,22 +249,42 @@
   - Automated Alerting bei Service-Failures
   - Simple Admin-Dashboard für Content-Moderatoren
 
-### 📊 Erfolgsmetriken Alpha 0.5.0
+### 📊 Erfolgsmetriken Alpha 0.5.0 (Iterativ)
+
+**Nach Iteration 1 (Woche 1):**
+- [ ] 14 Services (10+4) laufen stabil im docker-compose.yml
+- [ ] Management-Services orchestrieren Task-Workflows
+- [ ] VPS-Memory-Verbrauch <12GB für alle aktiven Services
+
+**Nach Iteration 2 (Woche 2):**
+- [ ] 17 Services (10+7) mit AI-Processing-Pipeline aktiv
+- [ ] End-to-End Video-Analysis funktioniert
+- [ ] Person-Tracking und Manual-Review implementiert
+
+**Nach Iteration 3 (Woche 3):**
+- [ ] 21 Services (10+11) mit Specialized-Content-Detection
+- [ ] UC-001 Enhanced-Analysis-Features vollständig
+- [ ] Content-Policy-Engine konfigurierbar
+
+**Nach Iteration 4 (Ende Woche 3):**
 - [ ] Alle 24 Services laufen stabil im docker-compose.yml
-- [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS ohne IT-Kenntnisse
-- [ ] SSL-Setup automatisiert - weltweiter HTTPS-Zugriff in <10 Minuten
-- [ ] Content-Moderator kann Video hochladen und Analyse starten ohne Training
-- [ ] Alle Services starten automatisch und zeigen "ready-to-use" Status
-- [ ] VPS läuft stabil 24/7 für Remote-Team-Zugriff
+- [ ] Production-UI für Content-Moderatoren verfügbar
+- [ ] End-to-End Content-Moderation-Workflow vollständig
+- [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS
 - [ ] Performance: Alle 24 Services laufen auf 16GB VPS ohne Degradation
 
-### 🛠️ Technische Deliverables
-- **Service-Integration:** Alle 14 fehlenden Services in docker-compose.yml konfiguriert
-- **VPS-Deployment:** scripts/vps-deploy.sh für One-Click-Setup
-- **SSL-Automation:** scripts/ssl-setup.sh mit Let's Encrypt
-- **CPU-Dockerfiles:** services/*/Dockerfile.cpu für GPU-freien Betrieb aller Services
-- **Content-Moderator-UI:** Streamlit-Interface für HR/Security-Teams
-- **Documentation:** Self-Service VPS-Setup-Guide für Nicht-Techniker
+### 🛠️ Technische Deliverables (Iterativ)
+
+**Iteration 1:** 4 Management-Services in docker-compose.yml
+**Iteration 2:** 7 Services mit AI-Processing-Pipeline
+**Iteration 3:** 11 Services mit Specialized-Content-Detection
+**Iteration 4:** Alle 24 Services + Production-UI + VPS-Deployment
+
+**Tools für iterative Integration:**
+- `make service-add <service_name>`: Service zu docker-compose.yml hinzufügen
+- `make service-test <service_name>`: Service Health-Check
+- `make iteration-test`: Alle Services der aktuellen Iteration testen
+- `make vps-deploy-test`: VPS-Deployment mit aktueller Service-Anzahl testen
 
 ## 🎯 Alpha 0.6.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
 
