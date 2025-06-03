@@ -1,11 +1,22 @@
 # AI Media Analysis - VPS-Deployment Projekt-Merkzettel
 
-## AKTUELLER IST-ZUSTAND (Alpha 0.4.4 - ERREICHT)
+## AKTUELLER IST-ZUSTAND (Alpha 0.5.0 - Iteration 1 ABGESCHLOSSEN ✅)
+
+### 🔄 Iteration 1: Management-Core Services - ERFOLGREICH ABGESCHLOSSEN ✅
+- **✅ Service-Code-Erstellung:** 4/4 Management-Services vollständig implementiert
+  - ✅ **control/main.py:** 237 Zeilen FastAPI System-Control-Interface
+  - ✅ **job_manager/main.py:** 321 Zeilen Task-Orchestration-Service
+  - ✅ **embedding_server/serve.py:** 274 Zeilen Vector-Management-Service
+  - ✅ **llm_service/main.py:** 479 Zeilen Multi-Provider LLM-Service
+- **✅ Docker-Integration:** Alle Services builden fehlerfrei, 14/24 Services aktiv
+- **✅ API-Funktionalität:** 15+ REST-Endpoints implementiert und getestet
+- **✅ Health-Checks:** Standardisierte `/health` Endpoints für alle Services
+- **✅ Redis-Integration:** Service-Discovery und Caching für alle Services
 
 ### Service-Architektur & Performance-Optimierung ✅
-- **✅ Einheitliche services/ Struktur:** 24 Service-Verzeichnisse erstellt, 10 Services aktiv konfiguriert
-- **✅ Docker-Compose-Integration:** 10 Services funktionsfähig in docker-compose.yml
-- **⚠️ Service-Integration:** 14 Services noch nicht in docker-compose.yml integriert
+- **✅ Einheitliche services/ Struktur:** 24 Service-Verzeichnisse erstellt, 14 Services aktiv konfiguriert
+- **✅ Docker-Compose-Integration:** 14 Services funktionsfähig in docker-compose.yml (+4 in Iteration 1)
+- **⚡ Service-Integration:** 10 Services noch nicht in docker-compose.yml integriert (Iteration 2-4)
 - **✅ Root-Level-Duplikate beseitigt:** 11 redundante Verzeichnisse erfolgreich entfernt
   - Entfernt: control/, embedding_server/, llm_interface/, object_review/
   - Entfernt: ocr_logo_title/, preprocess/, qdrant/, streamlit_ui/
@@ -14,20 +25,15 @@
 - **✅ Docker-Compose-Konsistenz:** Alle aktiven Services verwenden services/ Pfade
 - **✅ Backup-Management:** Automatisierte Backup-Scripts vor Strukturänderungen
 - **✅ Performance-Optimierung:** Memory-Management, Concurrency, TTL-Caching implementiert
+- **✅ Iteration 1 Abgeschlossen:** 4 Management-Core Services integriert (job_manager, control, embedding_server, llm_service)
 
-### Aktive Service-Kategorien (10/24 Services) ✅
+### Aktive Service-Kategorien (14/24 Services) ✅
 - **Infrastructure Services (4/4):** nginx, vector_db, redis, data-persistence
 - **AI Processing Services (5/10):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
 - **UI Services (1/2):** streamlit-ui (aktiv) - ui (noch zu integrieren)
-- **Management Services (0/4):** job_manager, control, embedding_server, llm_service (alle noch zu integrieren)
+- **Management Services (4/4) ✅:** job_manager, control, embedding_server, llm_service (ITERATION 1 ABGESCHLOSSEN)
 
-### Noch zu integrierende Services (14) ⏳
-**Management Services (4):**
-- job_manager: Task-Orchestrierung
-- control: System-Control-Interface
-- embedding_server: Vector-Embedding-Management
-- llm_service: Language-Model-Integration
-
+### Noch zu integrierende Services (10) ⏳
 **AI Processing Services (5):**
 - vision_pipeline: Video-Processing-Pipeline
 - object_review: Object-Detection-Review

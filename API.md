@@ -273,7 +273,7 @@ import base64
 async def analyze_frame(image_path):
     with open(image_path, 'rb') as f:
         image_data = base64.b64encode(f.read()).decode()
-    
+
     async with aiohttp.ClientSession() as session:
         async with session.post(
             'https://api.example.com/v1/analyze/frame',
@@ -291,7 +291,7 @@ async def analyze_frame(image_path):
 ```javascript
 async function analyzeFrame(imageFile) {
     const base64 = await convertToBase64(imageFile);
-    
+
     const response = await fetch('https://api.example.com/v1/analyze/frame', {
         method: 'POST',
         headers: {
@@ -302,7 +302,7 @@ async function analyzeFrame(imageFile) {
             frame: base64
         })
     });
-    
+
     return await response.json();
 }
 ```
@@ -635,7 +635,7 @@ Für effiziente Verarbeitung großer Datenmengen:
 ### Caching
 - Redis-basiertes Caching für häufig abgerufene Ergebnisse
 - Cache-TTL: 1 Stunde
-- Cache-Invalidierung bei Updates 
+- Cache-Invalidierung bei Updates
 
 ## Performance-Optimierungen
 
@@ -732,4 +732,195 @@ Für effiziente Verarbeitung großer Datenmengen:
 3. **Client-Optimierung**:
    - Implementieren Sie Client-seitiges Caching
    - Nutzen Sie WebSocket für Echtzeit-Updates
-   - Implementieren Sie Request-Deduplizierung 
+   - Implementieren Sie Request-Deduplizierung
+
+## Management-Core Services (Iteration 1) ✅
+
+### Control Service (Port 8006) ✅
+**Status:** Healthy, Production-ready
+**Base URL:** `http://localhost:8006`
+
+#### Health Check
+```http
+GET /health
+```
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "control",
+  "redis_connected": true,
+  "timestamp": "2025-06-03T12:17:55.120320"
+}
+```
+
+#### System Status
+```http
+GET /status
+```
+**Response:**
+```json
+{
+  "status": "online",
+  "mode": "production",
+  "timestamp": "2025-06-03T12:17:55.120320",
+  "services": {
+    "control": "running",
+    "job_manager": "running",
+    "embedding_server": "running"
+  },
+  "redis_connected": true
+}
+```
+
+#### Execute Command
+```http
+POST /command
+Content-Type: application/json
+
+{
+  "command": "ping",
+  "target": null,
+  "parameters": {}
+}
+```
+
+#### List Services
+```http
+GET /services
+```
+
+### Job Manager Service (Port 8005) ✅
+**Status:** Functional, API-tested
+**Base URL:** `http://localhost:8005`
+
+#### Health Check
+```http
+GET /health
+```
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "job_manager",
+  "redis_connected": true,
+  "active_jobs": 0,
+  "max_concurrent_jobs": 10,
+  "batch_id": "default_batch_iteration1",
+  "timestamp": "2025-06-03T12:17:47.135290"
+}
+```
+
+#### Create Job
+```http
+POST /jobs
+Content-Type: application/json
+
+{
+  "job_type": "video_analysis",
+  "input_data": {
+    "video_url": "https://example.com/video.mp4",
+    "analysis_type": "full"
+  },
+  "priority": 1,
+  "timeout": 3600
+}
+```
+
+#### Get Job Status
+```http
+GET /jobs/{job_id}
+```
+
+#### List Jobs
+```http
+GET /jobs?status=completed&limit=10
+```
+
+#### Service Statistics
+```http
+GET /stats
+```
+
+### Embedding Server Service (Port 8007) ⚡
+**Status:** Implemented, CPU-optimized
+**Base URL:** `http://localhost:8007`
+
+#### Health Check
+```http
+GET /health
+```
+
+#### Create Embeddings
+```http
+POST /embeddings
+Content-Type: application/json
+
+{
+  "text": ["Hello world", "AI processing"],
+  "model": "sentence-transformers",
+  "normalize": true
+}
+```
+
+#### Vector Search
+```http
+POST /search
+Content-Type: application/json
+
+{
+  "query_embedding": [0.1, 0.2, 0.3, ...],
+  "top_k": 10,
+  "threshold": 0.8
+}
+```
+
+#### Get Cached Embedding
+```http
+GET /embeddings/cached/{text_hash}
+```
+
+### LLM Service (Port 8008) ✅
+**Status:** Fully implemented, Multi-provider
+**Base URL:** `http://localhost:8008`
+
+#### Health Check
+```http
+GET /health
+```
+
+#### Generate Text
+```http
+POST /generate
+Content-Type: application/json
+
+{
+  "prompt": "Analyze this content for policy violations",
+  "provider": "openai",
+  "model": "gpt-4",
+  "temperature": 0.7,
+  "max_tokens": 1000
+}
+```
+
+#### Batch Text Generation
+```http
+POST /generate_batch
+Content-Type: application/json
+
+{
+  "prompts": ["Prompt 1", "Prompt 2"],
+  "provider": "anthropic",
+  "model": "claude-3-opus"
+}
+```
+
+#### Get Embeddings
+```http
+POST /embeddings
+Content-Type: application/json
+
+{
+  "texts": ["Text to embed"]
+}
+```
