@@ -1,5 +1,6 @@
 import asyncio
 import gc
+import hashlib
 import math
 import os
 import pickle
@@ -16,6 +17,7 @@ import numpy as np
 import redis
 import torch
 from fastapi import FastAPI, HTTPException
+from PIL import Image
 from pydantic import BaseModel
 from transformers import (
     CLIPModel,
@@ -23,9 +25,8 @@ from transformers import (
     WhisperForConditionalGeneration,
     WhisperProcessor,
 )
-from PIL import Image
 
-# Lokale Imports
+# Lokale Imports - diese müssen nach den sys.path Änderungen stehen
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.logging_config import ServiceLogger
 
@@ -1788,7 +1789,9 @@ class RestraintDetector:
             logger.log_error(f"Fehler bei Frame-Analyse: {str(e)}", error=e)
             return self._create_error_result(str(e))
 
-    async def _preprocess_image(self, image: Union[str, np.ndarray, Image.Image]) -> np.ndarray:
+    async def _preprocess_image(
+        self, image: Union[str, np.ndarray, Image.Image]
+    ) -> np.ndarray:
         """Pipeline-Phase 1: Standardisiert und bereitet Bild vor."""
         # Format-Konvertierung
         if isinstance(image, str):
@@ -1815,10 +1818,7 @@ class RestraintDetector:
         return img
 
     async def _detect_restraints_by_mode(
-        self,
-        image: np.ndarray,
-        mode: str,
-        threshold: float
+        self, image: np.ndarray, mode: str, threshold: float
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Pipeline-Phase 2: Erkennung nach gewähltem Modus."""
         if mode == "fast":
@@ -1828,13 +1828,11 @@ class RestraintDetector:
         else:  # comprehensive (default)
             return await self._comprehensive_detection(image, threshold)
 
-    async def _fast_detection(self, image: np.ndarray, threshold: float) -> Dict[str, List[Dict[str, Any]]]:
+    async def _fast_detection(
+        self, image: np.ndarray, threshold: float
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Schnelle Erkennung für Real-time Anwendungen."""
-        results = {
-            "restraints": [],
-            "body_parts": [],
-            "poses": []
-        }
+        results = {"restraints": [], "body_parts": [], "poses": []}
 
         # Nur grundlegende Objekt-Erkennung
         restraints = await self._detect_restraint_objects(image, threshold)
@@ -1842,7 +1840,9 @@ class RestraintDetector:
 
         return results
 
-    async def _detailed_detection(self, image: np.ndarray, threshold: float) -> Dict[str, List[Dict[str, Any]]]:
+    async def _detailed_detection(
+        self, image: np.ndarray, threshold: float
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Detaillierte Analyse mit erweiterten Features."""
         # Parallel-Verarbeitung aller Erkennungstypen
         tasks = [
@@ -1850,20 +1850,24 @@ class RestraintDetector:
             self._detect_body_parts(image, threshold),
             self._detect_poses(image, threshold),
             self._detect_interactions(image, threshold),
-            self._detect_materials(image, threshold)
+            self._detect_materials(image, threshold),
         ]
 
-        restraints, body_parts, poses, interactions, materials = await asyncio.gather(*tasks)
+        restraints, body_parts, poses, interactions, materials = await asyncio.gather(
+            *tasks
+        )
 
         return {
             "restraints": restraints,
             "body_parts": body_parts,
             "poses": poses,
             "interactions": interactions,
-            "materials": materials
+            "materials": materials,
         }
 
-    async def _comprehensive_detection(self, image: np.ndarray, threshold: float) -> Dict[str, List[Dict[str, Any]]]:
+    async def _comprehensive_detection(
+        self, image: np.ndarray, threshold: float
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Umfassende Analyse mit allen verfügbaren Methoden."""
         # Basis-Erkennungen
         base_results = await self._detailed_detection(image, threshold)
@@ -1873,25 +1877,27 @@ class RestraintDetector:
             self._detect_scene_context(image, threshold),
             self._detect_emotional_states(image, threshold),
             self._analyze_lighting_shadows(image),
-            self._detect_environmental_factors(image)
+            self._detect_environmental_factors(image),
         ]
 
-        scene_context, emotions, lighting, environment = await asyncio.gather(*extended_tasks)
+        scene_context, emotions, lighting, environment = await asyncio.gather(
+            *extended_tasks
+        )
 
         # Zusammenführung
-        base_results.update({
-            "scene_context": scene_context,
-            "emotions": emotions,
-            "lighting": lighting,
-            "environment": environment
-        })
+        base_results.update(
+            {
+                "scene_context": scene_context,
+                "emotions": emotions,
+                "lighting": lighting,
+                "environment": environment,
+            }
+        )
 
         return base_results
 
     async def _validate_and_enhance_detections(
-        self,
-        detections: Dict[str, List[Dict[str, Any]]],
-        image: np.ndarray
+        self, detections: Dict[str, List[Dict[str, Any]]], image: np.ndarray
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Pipeline-Phase 3: Validierung und Verbesserung der Erkennungen."""
         validated = {}
@@ -1905,7 +1911,9 @@ class RestraintDetector:
                     # Spatial-Validierung
                     if self._validate_spatial_consistency(item, image):
                         # Kontext-Validierung
-                        enhanced_item = await self._enhance_detection_context(item, detections)
+                        enhanced_item = await self._enhance_detection_context(
+                            item, detections
+                        )
                         validated[category].append(enhanced_item)
 
         return validated
@@ -1921,13 +1929,15 @@ class RestraintDetector:
             "rope": 0.7,
             "chain": 0.8,
             "body_part": 0.5,
-            "pose": 0.6
+            "pose": 0.6,
         }
 
         threshold = type_thresholds.get(detection_type, 0.7)
         return confidence >= threshold
 
-    def _validate_spatial_consistency(self, detection: Dict[str, Any], image: np.ndarray) -> bool:
+    def _validate_spatial_consistency(
+        self, detection: Dict[str, Any], image: np.ndarray
+    ) -> bool:
         """Validiert räumliche Konsistenz der Erkennung."""
         bbox = detection.get("bbox", [])
         if len(bbox) != 4:
@@ -1948,18 +1958,20 @@ class RestraintDetector:
         return 0.001 <= area_ratio <= 0.8  # Zwischen 0.1% und 80% des Bildes
 
     async def _enhance_detection_context(
-        self,
-        detection: Dict[str, Any],
-        all_detections: Dict[str, List[Dict[str, Any]]]
+        self, detection: Dict[str, Any], all_detections: Dict[str, List[Dict[str, Any]]]
     ) -> Dict[str, Any]:
         """Erweitert Erkennung um Kontext-Informationen."""
         enhanced = detection.copy()
 
         # Nachbar-Analysen
-        enhanced["neighbors"] = self._find_neighboring_detections(detection, all_detections)
+        enhanced["neighbors"] = self._find_neighboring_detections(
+            detection, all_detections
+        )
 
         # Interaktions-Score
-        enhanced["interaction_score"] = self._calculate_interaction_score(detection, all_detections)
+        enhanced["interaction_score"] = self._calculate_interaction_score(
+            detection, all_detections
+        )
 
         # Relevanz-Score basierend auf Kontext
         enhanced["relevance_score"] = self._calculate_relevance_score(enhanced)
@@ -1967,9 +1979,7 @@ class RestraintDetector:
         return enhanced
 
     def _find_neighboring_detections(
-        self,
-        target: Dict[str, Any],
-        all_detections: Dict[str, List[Dict[str, Any]]]
+        self, target: Dict[str, Any], all_detections: Dict[str, List[Dict[str, Any]]]
     ) -> List[Dict[str, Any]]:
         """Findet benachbarte Erkennungen."""
         neighbors = []
@@ -1983,19 +1993,26 @@ class RestraintDetector:
                 if detection == target:
                     continue
 
-                if self._calculate_proximity(target_bbox, detection.get("bbox", [])) < 100:
-                    neighbors.append({
-                        "type": detection.get("type"),
-                        "confidence": detection.get("confidence"),
-                        "distance": self._calculate_proximity(target_bbox, detection.get("bbox", []))
-                    })
+                if (
+                    self._calculate_proximity(target_bbox, detection.get("bbox", []))
+                    < 100
+                ):
+                    neighbors.append(
+                        {
+                            "type": detection.get("type"),
+                            "confidence": detection.get("confidence"),
+                            "distance": self._calculate_proximity(
+                                target_bbox, detection.get("bbox", [])
+                            ),
+                        }
+                    )
 
         return sorted(neighbors, key=lambda x: x["distance"])[:5]  # Top 5
 
     def _calculate_proximity(self, bbox1: List[float], bbox2: List[float]) -> float:
         """Berechnet Entfernung zwischen zwei Bounding Boxes."""
         if len(bbox1) != 4 or len(bbox2) != 4:
-            return float('inf')
+            return float("inf")
 
         # Zentren der Boxen
         x1_center = bbox1[0] + bbox1[2] / 2
@@ -2007,9 +2024,7 @@ class RestraintDetector:
         return math.sqrt((x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2)
 
     def _calculate_interaction_score(
-        self,
-        detection: Dict[str, Any],
-        all_detections: Dict[str, List[Dict[str, Any]]]
+        self, detection: Dict[str, Any], all_detections: Dict[str, List[Dict[str, Any]]]
     ) -> float:
         """Berechnet Interaktions-Score basierend auf Kontext."""
         score = 0.0
@@ -2041,7 +2056,7 @@ class RestraintDetector:
         self,
         detections: Dict[str, List[Dict[str, Any]]],
         image: np.ndarray,
-        confidence_threshold: float
+        confidence_threshold: float,
     ) -> Dict[str, Any]:
         """Pipeline-Phase 4: Assembliert finale Analyse-Ergebnisse."""
         total_detections = sum(len(items) for items in detections.values())
@@ -2064,10 +2079,12 @@ class RestraintDetector:
             "risk_level": risk_level,
             "image_dimensions": image.shape[:2],
             "confidence_threshold": confidence_threshold,
-            "processing_timestamp": datetime.now().isoformat()
+            "processing_timestamp": datetime.now().isoformat(),
         }
 
-    def _get_top_detections(self, detections: Dict[str, List[Dict[str, Any]]], limit: int = 10) -> List[Dict[str, Any]]:
+    def _get_top_detections(
+        self, detections: Dict[str, List[Dict[str, Any]]], limit: int = 10
+    ) -> List[Dict[str, Any]]:
         """Ermittelt Top-Erkennungen nach Relevanz."""
         all_items = []
         for category, items in detections.items():
@@ -2077,10 +2094,14 @@ class RestraintDetector:
                 all_items.append(item_copy)
 
         # Sortierung nach Relevanz-Score
-        sorted_items = sorted(all_items, key=lambda x: x.get("relevance_score", 0), reverse=True)
+        sorted_items = sorted(
+            all_items, key=lambda x: x.get("relevance_score", 0), reverse=True
+        )
         return sorted_items[:limit]
 
-    def _calculate_overall_confidence(self, detections: Dict[str, List[Dict[str, Any]]]) -> float:
+    def _calculate_overall_confidence(
+        self, detections: Dict[str, List[Dict[str, Any]]]
+    ) -> float:
         """Berechnet Gesamt-Konfidenz der Analyse."""
         all_confidences = []
         for items in detections.values():
@@ -2094,6 +2115,28 @@ class RestraintDetector:
 
         # Weighted average mit Top-Erkennungen
         all_confidences.sort(reverse=True)
+
+        if not all_confidences:
+            return 0.0
+
+        # Top 50% der Confidences verwenden
+        top_count = max(1, len(all_confidences) // 2)
+        top_confidences = all_confidences[:top_count]
+
+        return sum(top_confidences) / len(top_confidences)
+
+    def _compute_frame_hash(self, frame: np.ndarray) -> str:
+        """Berechnet Hash für Frame-Caching."""
+        return hashlib.md5(frame.tobytes()).hexdigest()
+
+    async def _analyze_frame_with_cache(
+        self,
+        frame: np.ndarray,
+        audio_data: Optional[np.ndarray] = None,
+        sample_rate: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Analysiert Frame mit Caching-Unterstützung."""
+        try:
             # Frame-Hashing für Caching
             frame_hash = self._compute_frame_hash(frame)
 
@@ -2287,7 +2330,6 @@ class RestraintDetector:
                 current_load,
             )
 
-            # Ergebnisse cachen
             result = {
                 "restraint_data": {
                     "detections": results,
@@ -2311,7 +2353,7 @@ class RestraintDetector:
             return result
 
         except Exception as e:
-            logger.log_error("Fehler bei der Frame-Analyse", error=e)
+            logger.error(f"Fehler bei Frame-Analyse: {str(e)}")
             raise
 
     def _calculate_current_load(self) -> float:

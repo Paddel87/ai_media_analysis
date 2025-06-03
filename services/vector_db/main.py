@@ -4,30 +4,37 @@ import os
 import pickle
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import faiss
+
     _FAISS_AVAILABLE = True
 except ImportError:
     _FAISS_AVAILABLE = False
+
     # Fallback für Development ohne FAISS
     class MockFaiss:
         @staticmethod
         def read_index(path: str) -> Any:
             return None
+
         @staticmethod
         def write_index(index: Any, path: str) -> None:
             pass
+
         @staticmethod
         def IndexFlatL2(dimension: int) -> Any:
             return None
+
         @staticmethod
         def GpuIndexFlatL2(resources: Any, dimension: int, config: Any) -> Any:
             return None
+
         @staticmethod
         def GpuIndexFlatConfig() -> Any:
             return None
+
         @staticmethod
         def StandardGpuResources() -> Any:
             return None
@@ -243,9 +250,9 @@ class VectorDB:
 
         index = self.indices[collection_name]
 
-        if _FAISS_AVAILABLE and hasattr(index, 'ntotal'):
+        if _FAISS_AVAILABLE and hasattr(index, "ntotal"):
             vector_count = index.ntotal
-            vector_size = index.d if hasattr(index, 'd') else 0
+            vector_size = index.d if hasattr(index, "d") else 0
         else:
             vector_count = 0
             vector_size = 0
@@ -255,7 +262,7 @@ class VectorDB:
             vector_count=vector_count,
             vector_size=vector_size,
             status="ready" if _FAISS_AVAILABLE else "mock",
-            indexed=True
+            indexed=True,
         )
 
     async def upsert_vector(
@@ -263,7 +270,7 @@ class VectorDB:
         collection_name: str,
         vector: List[float],
         vector_id: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Fügt einen einzelnen Vektor zur Collection hinzu oder aktualisiert ihn.
@@ -282,7 +289,7 @@ class VectorDB:
             return await self.upsert_vectors(
                 collection_name=collection_name,
                 vectors=[vector_array[0]],
-                ids=[hash(vector_id)]  # String-ID zu Int-Hash konvertieren
+                ids=[hash(vector_id)],  # String-ID zu Int-Hash konvertieren
             )
         except Exception:
             logger.error("Error upserting single vector")

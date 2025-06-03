@@ -3,12 +3,13 @@ LLM Service Examples - Anwendungsbeispiele für verschiedene LLM-Provider
 Enthält Beispiele für OpenAI, Anthropic, Google Gemini und lokale Modelle
 """
 
-import json
 import logging
-from typing import Dict, List, Tuple, Any
 import time
+from typing import Any, Dict, List, Tuple
 
+import httpx
 import requests
+from pydantic import BaseModel
 
 # OpenAI GPT-4 Beispiel
 gpt4_example = {
@@ -354,7 +355,8 @@ def main():
         print(f"❌ Fehler in LLM Examples: {str(e)}")
         raise
 
-def _initialize_examples_service() -> 'ExamplesRunner':
+
+def _initialize_examples_service() -> "ExamplesRunner":
     """Initialisiert den Examples Service."""
     print("\n📋 Initialisiere LLM Service Examples...")
 
@@ -367,7 +369,8 @@ def _initialize_examples_service() -> 'ExamplesRunner':
         print(f"❌ Service-Initialisierung fehlgeschlagen: {str(e)}")
         raise
 
-def _run_basic_examples(runner: 'ExamplesRunner') -> None:
+
+def _run_basic_examples(runner: "ExamplesRunner") -> None:
     """Führt grundlegende LLM-Beispiele aus."""
     print("\n🔤 === BASIC LLM EXAMPLES ===")
 
@@ -375,12 +378,13 @@ def _run_basic_examples(runner: 'ExamplesRunner') -> None:
         ("Text-Generierung", runner.demo_text_generation),
         ("Text-Zusammenfassung", runner.demo_text_summarization),
         ("Sentiment-Analyse", runner.demo_sentiment_analysis),
-        ("Sprachübersetzung", runner.demo_translation)
+        ("Sprachübersetzung", runner.demo_translation),
     ]
 
     _execute_example_scenarios(basic_scenarios, "Basic")
 
-def _run_advanced_examples(runner: 'ExamplesRunner') -> None:
+
+def _run_advanced_examples(runner: "ExamplesRunner") -> None:
     """Führt erweiterte LLM-Features aus."""
     print("\n🧠 === ADVANCED LLM EXAMPLES ===")
 
@@ -388,12 +392,13 @@ def _run_advanced_examples(runner: 'ExamplesRunner') -> None:
         ("Kontext-Verstehen", runner.demo_context_understanding),
         ("Code-Generierung", runner.demo_code_generation),
         ("Kreatives Schreiben", runner.demo_creative_writing),
-        ("Faktenchecking", runner.demo_fact_checking)
+        ("Faktenchecking", runner.demo_fact_checking),
     ]
 
     _execute_example_scenarios(advanced_scenarios, "Advanced")
 
-def _run_integration_examples(runner: 'ExamplesRunner') -> None:
+
+def _run_integration_examples(runner: "ExamplesRunner") -> None:
     """Führt AI Media Analysis Integration-Szenarien aus."""
     print("\n🔗 === INTEGRATION EXAMPLES ===")
 
@@ -401,12 +406,13 @@ def _run_integration_examples(runner: 'ExamplesRunner') -> None:
         ("Video-Beschreibung", runner.demo_video_description),
         ("Bild-Analyse", runner.demo_image_analysis),
         ("Multi-Modal", runner.demo_multimodal_analysis),
-        ("Batch-Verarbeitung", runner.demo_batch_processing)
+        ("Batch-Verarbeitung", runner.demo_batch_processing),
     ]
 
     _execute_example_scenarios(integration_scenarios, "Integration")
 
-def _run_performance_examples(runner: 'ExamplesRunner') -> None:
+
+def _run_performance_examples(runner: "ExamplesRunner") -> None:
     """Führt Performance- und Skalierungs-Tests aus."""
     print("\n⚡ === PERFORMANCE EXAMPLES ===")
 
@@ -414,23 +420,19 @@ def _run_performance_examples(runner: 'ExamplesRunner') -> None:
         ("Concurrent-Requests", runner.demo_concurrent_processing),
         ("Large-Text-Handling", runner.demo_large_text_processing),
         ("Memory-Optimization", runner.demo_memory_optimization),
-        ("Streaming-Response", runner.demo_streaming_response)
+        ("Streaming-Response", runner.demo_streaming_response),
     ]
 
     _execute_example_scenarios(performance_scenarios, "Performance")
 
+
 def _execute_example_scenarios(
-    scenarios: List[Tuple[str, callable]],
-    category: str
+    scenarios: List[Tuple[str, callable]], category: str
 ) -> None:
     """Führt eine Liste von Beispiel-Szenarien aus."""
     print(f"\n📊 Führe {category} Examples aus ({len(scenarios)} Szenarien)...")
 
-    results = {
-        "successful": 0,
-        "failed": 0,
-        "errors": []
-    }
+    results = {"successful": 0, "failed": 0, "errors": []}
 
     for scenario_name, scenario_func in scenarios:
         try:
@@ -451,23 +453,24 @@ def _execute_example_scenarios(
 
     _print_category_summary(category, results)
 
+
 def _handle_scenario_success(
-    scenario_name: str,
-    result: Any,
-    execution_time: float
+    scenario_name: str, result: Any, execution_time: float
 ) -> None:
     """Behandelt erfolgreiche Szenario-Ausführung."""
     print(f"    ✅ {scenario_name} - {execution_time:.2f}s")
 
     # Logge wichtige Metriken
-    if hasattr(result, 'tokens_used'):
+    if hasattr(result, "tokens_used"):
         print(f"       📊 Tokens: {result.tokens_used}")
-    if hasattr(result, 'confidence'):
+    if hasattr(result, "confidence"):
         print(f"       📈 Konfidenz: {result.confidence:.2f}")
+
 
 def _handle_scenario_error(scenario_name: str, error: Exception) -> None:
     """Behandelt Szenario-Fehler."""
     print(f"    ❌ {scenario_name} - FEHLER: {str(error)}")
+
 
 def _print_category_summary(category: str, results: Dict[str, Any]) -> None:
     """Druckt Zusammenfassung einer Kategorie."""
@@ -481,6 +484,7 @@ def _print_category_summary(category: str, results: Dict[str, Any]) -> None:
         print(f"   ❌ Fehlgeschlagen: {results['failed']}")
         for error in results["errors"][:3]:  # Zeige max. 3 Fehler
             print(f"      • {error}")
+
 
 class ExamplesRunner:
     """Führt strukturierte LLM Service Examples aus."""

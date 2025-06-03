@@ -83,7 +83,9 @@ class CloudStorageManager:
         """
         try:
             # Phase 1: Validierung und Vorbereitung
-            upload_context = await self._prepare_upload(local_path, remote_path, chunk_size)
+            upload_context = await self._prepare_upload(
+                local_path, remote_path, chunk_size
+            )
 
             # Phase 2: Provider-spezifischer Upload
             success = await self._execute_provider_upload(upload_context, retry_count)
@@ -99,10 +101,7 @@ class CloudStorageManager:
             return False
 
     async def _prepare_upload(
-        self,
-        local_path: Union[str, Path],
-        remote_path: str,
-        chunk_size: int
+        self, local_path: Union[str, Path], remote_path: str, chunk_size: int
     ) -> Dict[str, Any]:
         """Bereitet Upload vor und validiert Parameter."""
         local_path = Path(local_path)
@@ -118,13 +117,11 @@ class CloudStorageManager:
             "file_size": file_size,
             "chunk_size": chunk_size,
             "requires_multipart": file_size > chunk_size,
-            "upload_id": None
+            "upload_id": None,
         }
 
     async def _execute_provider_upload(
-        self,
-        context: Dict[str, Any],
-        retry_count: int
+        self, context: Dict[str, Any], retry_count: int
     ) -> bool:
         """Führt provider-spezifischen Upload aus."""
         provider = self.config.provider
@@ -148,7 +145,7 @@ class CloudStorageManager:
                 self.logger.warning(f"Upload attempt {attempt + 1} failed: {str(e)}")
                 if attempt == retry_count - 1:
                     raise
-                await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                await asyncio.sleep(2**attempt)  # Exponential backoff
 
         return False
 
@@ -165,7 +162,7 @@ class CloudStorageManager:
             self.client.upload_file(
                 str(context["local_path"]),
                 self.config.bucket_name,
-                context["remote_path"]
+                context["remote_path"],
             )
             self.logger.info(f"S3 simple upload successful: {context['remote_path']}")
             return True
@@ -179,8 +176,7 @@ class CloudStorageManager:
         try:
             # Initiiere Multipart Upload
             response = self.client.create_multipart_upload(
-                Bucket=self.config.bucket_name,
-                Key=context["remote_path"]
+                Bucket=self.config.bucket_name, Key=context["remote_path"]
             )
             upload_id = response["UploadId"]
             context["upload_id"] = upload_id
@@ -193,13 +189,15 @@ class CloudStorageManager:
                 Bucket=self.config.bucket_name,
                 Key=context["remote_path"],
                 UploadId=upload_id,
-                MultipartUpload={"Parts": parts}
+                MultipartUpload={"Parts": parts},
             )
 
-            self.logger.info(f"S3 multipart upload successful: {context['remote_path']}")
+            self.logger.info(
+                f"S3 multipart upload successful: {context['remote_path']}"
+            )
             return True
 
-        except Exception as e:
+        except Exception:
             # Cleanup bei Fehler
             await self._cleanup_failed_s3_upload(context, upload_id)
             raise
@@ -219,17 +217,12 @@ class CloudStorageManager:
                     UploadId=context["upload_id"],
                     Body=chunk,
                 )
-                parts.append({
-                    "PartNumber": part_number,
-                    "ETag": response["ETag"]
-                })
+                parts.append({"PartNumber": part_number, "ETag": response["ETag"]})
 
         return parts
 
     async def _cleanup_failed_s3_upload(
-        self,
-        context: Dict[str, Any],
-        upload_id: Optional[str]
+        self, context: Dict[str, Any], upload_id: Optional[str]
     ) -> None:
         """Bereinigt fehlgeschlagenen S3-Upload."""
         if upload_id:
@@ -241,7 +234,9 @@ class CloudStorageManager:
                 )
                 self.logger.info(f"Aborted multipart upload: {upload_id}")
             except Exception as abort_error:
-                self.logger.error(f"Error aborting multipart upload: {str(abort_error)}")
+                self.logger.error(
+                    f"Error aborting multipart upload: {str(abort_error)}"
+                )
 
     async def _upload_to_gcs(self, context: Dict[str, Any]) -> bool:
         """Führt GCS-Upload aus."""
@@ -259,9 +254,7 @@ class CloudStorageManager:
         try:
             with open(context["local_path"], "rb") as f:
                 self.container.upload_blob(
-                    name=context["remote_path"],
-                    data=f,
-                    overwrite=True
+                    name=context["remote_path"], data=f, overwrite=True
                 )
             self.logger.info(f"Azure upload successful: {context['remote_path']}")
             return True
@@ -276,7 +269,7 @@ class CloudStorageManager:
                 self.client.files_upload(
                     f.read(),
                     context["remote_path"],
-                    mode=dropbox.files.WriteMode.overwrite
+                    mode=dropbox.files.WriteMode.overwrite,
                 )
             self.logger.info(f"Dropbox upload successful: {context['remote_path']}")
             return True
@@ -299,12 +292,13 @@ class CloudStorageManager:
         try:
             # Prüfe ob Datei existiert (provider-agnostisch)
             files = await self.list_files(
-                path=context["remote_path"],
-                pattern=Path(context["remote_path"]).name
+                path=context["remote_path"], pattern=Path(context["remote_path"]).name
             )
 
             if not files:
-                raise ValueError(f"Upload validation failed: File not found after upload")
+                raise ValueError(
+                    "Upload validation failed: File not found after upload"
+                )
 
             uploaded_file = files[0]
             expected_size = context["file_size"]
@@ -409,7 +403,9 @@ class CloudStorageManager:
             self.logger.error(f"Fehler beim Auflisten der Dateien: {str(e)}")
             raise
 
-    async def _get_provider_files(self, path: str, recursive: bool) -> List[Dict[str, Any]]:
+    async def _get_provider_files(
+        self, path: str, recursive: bool
+    ) -> List[Dict[str, Any]]:
         """Holt Dateien vom jeweiligen Cloud Provider."""
         if self.config.provider == "aws":
             return await self._list_s3_files(path, recursive)
@@ -431,9 +427,7 @@ class CloudStorageManager:
 
         try:
             response = await self.client.list_objects_v2(
-                Bucket=self.config.bucket_name,
-                Prefix=path,
-                Delimiter=delimiter
+                Bucket=self.config.bucket_name, Prefix=path, Delimiter=delimiter
             )
 
             for obj in response.get("Contents", []):
@@ -452,10 +446,7 @@ class CloudStorageManager:
         delimiter = None if recursive else "/"
 
         try:
-            blobs = self.bucket.list_blobs(
-                prefix=path,
-                delimiter=delimiter
-            )
+            blobs = self.bucket.list_blobs(prefix=path, delimiter=delimiter)
 
             for blob in blobs:
                 file_info = self._create_file_info_from_gcs(blob)
@@ -467,7 +458,9 @@ class CloudStorageManager:
 
         return files
 
-    async def _list_azure_files(self, path: str, recursive: bool) -> List[Dict[str, Any]]:
+    async def _list_azure_files(
+        self, path: str, recursive: bool
+    ) -> List[Dict[str, Any]]:
         """Listet Azure-Dateien auf."""
         files = []
 
@@ -475,7 +468,7 @@ class CloudStorageManager:
             blobs = self.container.list_blobs(name_starts_with=path)
 
             for blob in blobs:
-                if not recursive and "/" in blob.name[len(path):].lstrip("/"):
+                if not recursive and "/" in blob.name[len(path) :].lstrip("/"):
                     continue
 
                 file_info = self._create_file_info_from_azure(blob)
@@ -487,7 +480,9 @@ class CloudStorageManager:
 
         return files
 
-    async def _list_dropbox_files(self, path: str, recursive: bool) -> List[Dict[str, Any]]:
+    async def _list_dropbox_files(
+        self, path: str, recursive: bool
+    ) -> List[Dict[str, Any]]:
         """Listet Dropbox-Dateien auf."""
         files = []
 
@@ -511,7 +506,9 @@ class CloudStorageManager:
 
         return files
 
-    async def _list_mega_files(self, path: str, recursive: bool) -> List[Dict[str, Any]]:
+    async def _list_mega_files(
+        self, path: str, recursive: bool
+    ) -> List[Dict[str, Any]]:
         """Listet Mega-Dateien auf."""
         files = []
 
@@ -541,7 +538,7 @@ class CloudStorageManager:
         files: List[Dict[str, Any]],
         pattern: Optional[str],
         modified_after: Optional[datetime],
-        file_types: Optional[List[str]]
+        file_types: Optional[List[str]],
     ) -> List[Dict[str, Any]]:
         """Wendet alle Filter auf die Dateiliste an."""
         filtered = files
@@ -560,18 +557,29 @@ class CloudStorageManager:
 
         return filtered
 
-    def _filter_by_pattern(self, files: List[Dict[str, Any]], pattern: str) -> List[Dict[str, Any]]:
+    def _filter_by_pattern(
+        self, files: List[Dict[str, Any]], pattern: str
+    ) -> List[Dict[str, Any]]:
         """Filtert Dateien nach Name-Pattern."""
         import fnmatch
+
         return [f for f in files if fnmatch.fnmatch(f["name"], pattern)]
 
-    def _filter_by_date(self, files: List[Dict[str, Any]], modified_after: datetime) -> List[Dict[str, Any]]:
+    def _filter_by_date(
+        self, files: List[Dict[str, Any]], modified_after: datetime
+    ) -> List[Dict[str, Any]]:
         """Filtert Dateien nach Änderungsdatum."""
         return [f for f in files if f["modified"] > modified_after]
 
-    def _filter_by_file_types(self, files: List[Dict[str, Any]], file_types: List[str]) -> List[Dict[str, Any]]:
+    def _filter_by_file_types(
+        self, files: List[Dict[str, Any]], file_types: List[str]
+    ) -> List[Dict[str, Any]]:
         """Filtert Dateien nach Typ."""
-        return [f for f in files if any(f["name"].lower().endswith(ext.lower()) for ext in file_types)]
+        return [
+            f
+            for f in files
+            if any(f["name"].lower().endswith(ext.lower()) for ext in file_types)
+        ]
 
     def _finalize_file_list(self, files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Sortiert und finalisiert die Dateiliste."""
@@ -610,7 +618,9 @@ class CloudStorageManager:
             "provider": "azure",
         }
 
-    def _create_file_info_from_dropbox(self, entry: dropbox.files.FileMetadata) -> Dict[str, Any]:
+    def _create_file_info_from_dropbox(
+        self, entry: dropbox.files.FileMetadata
+    ) -> Dict[str, Any]:
         """Erstellt File-Info aus Dropbox-Datei."""
         return {
             "name": entry.path_display,
