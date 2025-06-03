@@ -214,47 +214,11 @@ monitor: ## Zeigt kontinuierliches Service-Monitoring
 	done
 
 # =============================================================================
-# TESTING
+# TESTING - siehe Feature Testing Regel weiter unten
 # =============================================================================
 
-test: ## Führt alle Tests aus (ohne E2E und Performance)
-	@echo "🧪 Running all tests..."
-	python run_tests.py -v
-
-test-unit: ## Führt nur Unit Tests aus
-	@echo "🔬 Running unit tests..."
-	python run_tests.py --unit -v
-
-test-integration: ## Führt nur Integration Tests aus
-	@echo "🔗 Running integration tests..."
-	python run_tests.py --integration -v
-
-test-e2e: ## Führt nur End-to-End Tests aus
-	@echo "🎯 Running end-to-end tests..."
-	python run_tests.py --e2e -v
-
-test-performance: ## Führt nur Performance Tests aus
-	@echo "⚡ Running performance tests..."
-	python run_tests.py --performance -v
-
-test-docker: ## Führt Docker-basierte Tests aus
-	@echo "🐳 Running Docker tests..."
-	python run_tests.py --docker -v
-
-test-coverage: ## Führt Tests mit Coverage-Analyse aus
-	@echo "📊 Running tests with coverage..."
-	python run_tests.py --coverage -v
-	@echo "📈 Coverage report: htmlcov/index.html"
-
-test-all: ## Führt komplette Test-Suite aus
-	@echo "🚀 Running comprehensive test suite..."
-	python run_tests.py --all -v
-
-test-fast: test-unit ## Schnelle Tests (nur Unit Tests)
-
-test-slow: test-integration test-e2e test-performance ## Langsame Tests
-
-test-ci: test-lint test-unit test-integration test-coverage ## Vollständige CI-Tests
+# Test-Targets sind in der Feature Testing Regel Sektion definiert (Zeile ~700)
+# Um Duplikate zu vermeiden, siehe die umfassenden Test-Targets weiter unten
 
 # =============================================================================
 # CODE-QUALITÄT UND BLACK-STANDARD
@@ -326,9 +290,7 @@ black-violations-report: ## Report für Black-Standard-Verletzungen
 	@python -m isort --check-only --diff services/ tests/ scripts/ >> reports/black-violations.md 2>&1 || true
 	@echo "📋 Violations report: reports/black-violations.md"
 
-test-security: ## Führt Security-Scan aus
-	@echo "🔒 Running security scan..."
-	python run_tests.py --security
+# test-security ist in der Feature Testing Regel Sektion definiert (siehe weiter unten)
 
 # =============================================================================
 # SERVICE-SPEZIFISCHE TESTS
@@ -644,41 +606,7 @@ iteration-status: ## 📊 Status-Übersicht der aktuellen Service-Integration
 		fi; \
 	done
 
-dockerfile-cpu-template: ## 📝 CPU-Dockerfile-Template für Service generieren
-	@mkdir -p services/$(SERVICE)
-	@if [ ! -f "services/$(SERVICE)/Dockerfile.cpu" ]; then \
-		echo "# CPU-optimierte Dockerfile für $(SERVICE)" > services/$(SERVICE)/Dockerfile.cpu; \
-		echo "FROM python:3.11-slim" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# System-Dependencies für VPS" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "RUN apt-get update && apt-get install -y \\" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "    build-essential \\" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "    curl \\" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "    && rm -rf /var/lib/apt/lists/*" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "WORKDIR /app" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# Python Dependencies" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "COPY requirements.txt ." >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "RUN pip install --no-cache-dir -r requirements.txt" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# Service Code" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "COPY . ." >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# VPS-Umgebungsvariablen" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "ENV PYTHONUNBUFFERED=1" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "ENV LOG_LEVEL=INFO" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "ENV REDIS_HOST=redis" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "ENV REDIS_PORT=6379" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# Health-Check" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \\" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "    CMD curl -f http://localhost:8000/health || exit 1" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "# Service starten" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "CMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]" >> services/$(SERVICE)/Dockerfile.cpu; \
-		echo "${GREEN}✅ Dockerfile.cpu für $(SERVICE) erstellt${NC}"; \
-	fi
+dockerfile-cpu-template: service-dockerfile-cpu ## 📝 CPU-Dockerfile-Template (Alias für service-dockerfile-cpu)
 
 integration-all: ## 🚀 Alle 4 Iterationen nacheinander ausführen
 	@echo "${GREEN}🚀 Starte komplette Service-Integration (4 Iterationen)${NC}"
