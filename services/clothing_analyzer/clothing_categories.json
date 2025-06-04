@@ -1,0 +1,176 @@
+{
+  "version": "2.0.0",
+  "strategy": "Option-A-Primary",
+  "uc001_component": "clothing_classification",
+  "total_categories": 205,
+  "last_updated": "2025-06-04",
+
+  "hierarchy": {
+    "level_1": ["material", "style", "type", "coverage", "occasion"],
+    "level_2": ["sub_type", "color", "pattern", "fit"],
+    "level_3": ["details", "accessories", "condition"]
+  },
+
+  "materials": {
+    "natural": [
+      "cotton", "linen", "wool", "silk", "hemp", "jute", "cashmere",
+      "alpaca", "mohair", "bamboo", "organic_cotton", "merino_wool"
+    ],
+    "synthetic": [
+      "polyester", "nylon", "acrylic", "spandex", "lycra", "elastane",
+      "microfiber", "fleece", "vinyl", "pvc", "latex", "rubber"
+    ],
+    "leather": [
+      "genuine_leather", "faux_leather", "patent_leather", "suede",
+      "nubuck", "bonded_leather", "vegan_leather"
+    ],
+    "specialty": [
+      "mesh", "lace", "satin", "velvet", "corduroy", "denim",
+      "canvas", "felt", "fur", "faux_fur", "metallic", "sequins"
+    ]
+  },
+
+  "styles": {
+    "casual": [
+      "everyday", "streetwear", "sporty", "relaxed", "comfortable",
+      "weekend", "loungewear", "athleisure", "bohemian", "hipster"
+    ],
+    "formal": [
+      "business", "professional", "office", "corporate", "suit",
+      "elegant", "sophisticated", "classic", "conservative"
+    ],
+    "evening": [
+      "cocktail", "party", "gala", "black_tie", "formal_evening",
+      "red_carpet", "glamorous", "festive", "celebration"
+    ],
+    "intimate": [
+      "lingerie", "underwear", "sleepwear", "nightwear", "intimate_apparel",
+      "undergarments", "foundation", "shapewear", "hosiery"
+    ],
+    "fetish": [
+      "bondage", "bdsm", "latex_wear", "leather_fetish", "corset",
+      "harness", "restraint", "kinky", "alternative", "gothic"
+    ],
+    "cosplay": [
+      "anime", "fantasy", "historical", "character", "costume",
+      "roleplay", "themed", "convention", "period", "theatrical"
+    ]
+  },
+
+  "clothing_types": {
+    "tops": [
+      "t_shirt", "shirt", "blouse", "tank_top", "crop_top", "halter_top",
+      "tube_top", "camisole", "bustier", "corset", "bodysuit", "sweater",
+      "hoodie", "cardigan", "blazer", "jacket", "coat", "vest", "kimono"
+    ],
+    "bottoms": [
+      "jeans", "pants", "trousers", "shorts", "skirt", "mini_skirt",
+      "midi_skirt", "maxi_skirt", "leggings", "tights", "stockings",
+      "yoga_pants", "sweatpants", "cargo_pants", "dress_pants", "capris"
+    ],
+    "dresses": [
+      "mini_dress", "midi_dress", "maxi_dress", "cocktail_dress",
+      "evening_gown", "sundress", "shift_dress", "wrap_dress",
+      "bodycon_dress", "a_line_dress", "ball_gown", "slip_dress"
+    ],
+    "outerwear": [
+      "coat", "jacket", "blazer", "cardigan", "hoodie", "poncho",
+      "cape", "trench_coat", "peacoat", "bomber_jacket", "leather_jacket",
+      "denim_jacket", "windbreaker", "parka", "fur_coat"
+    ],
+    "underwear": [
+      "bra", "panties", "briefs", "boxers", "thong", "g_string",
+      "boyshorts", "bikini_underwear", "hipster", "high_waisted",
+      "sports_bra", "push_up_bra", "strapless_bra", "bralette"
+    ],
+    "lingerie": [
+      "babydoll", "chemise", "negligee", "teddy", "bodysuit",
+      "garter_belt", "corset", "bustier", "camisole", "slip",
+      "robe", "kimono_robe", "peignoir", "nightgown"
+    ],
+    "swimwear": [
+      "bikini", "one_piece", "tankini", "monokini", "swim_dress",
+      "board_shorts", "swim_trunks", "speedo", "rash_guard", "cover_up"
+    ],
+    "activewear": [
+      "sports_bra", "athletic_shorts", "yoga_pants", "leggings",
+      "track_suit", "joggers", "athletic_top", "compression_wear",
+      "workout_clothes", "gym_wear", "running_gear", "fitness_wear"
+    ]
+  },
+
+  "coverage_levels": {
+    "minimal": ["revealing", "barely_there", "micro", "string", "sheer"],
+    "moderate": ["standard", "regular", "normal", "typical", "balanced"],
+    "full": ["conservative", "covered", "modest", "high_coverage", "complete"]
+  },
+
+  "fit_types": {
+    "loose": ["oversized", "baggy", "relaxed", "loose_fit", "flowing"],
+    "fitted": ["tight", "form_fitting", "bodycon", "slim_fit", "tailored"],
+    "structured": ["padded", "underwired", "boned", "corseted", "shaped"]
+  },
+
+  "occasions": {
+    "everyday": ["casual", "daily", "work", "school", "errands"],
+    "special": ["date", "party", "event", "celebration", "night_out"],
+    "intimate": ["bedroom", "private", "romantic", "sensual", "intimate"],
+    "athletic": ["gym", "sports", "exercise", "yoga", "running"],
+    "formal": ["business", "ceremony", "gala", "wedding", "formal_event"]
+  },
+
+  "colors": {
+    "basic": ["black", "white", "gray", "brown", "beige", "navy"],
+    "bright": ["red", "blue", "green", "yellow", "orange", "purple", "pink"],
+    "pastels": ["light_pink", "baby_blue", "mint_green", "lavender", "peach"],
+    "metallics": ["gold", "silver", "bronze", "copper", "metallic"],
+    "neons": ["neon_pink", "neon_green", "neon_yellow", "electric_blue"]
+  },
+
+  "patterns": {
+    "solid": ["plain", "solid_color", "monochrome"],
+    "prints": ["floral", "animal_print", "geometric", "abstract", "tribal"],
+    "textures": ["striped", "polka_dot", "checkered", "plaid", "houndstooth"],
+    "special": ["lace", "mesh", "sequined", "beaded", "embroidered"]
+  },
+
+  "accessories": {
+    "jewelry": ["necklace", "earrings", "bracelet", "ring", "anklet", "body_jewelry"],
+    "hair": ["hair_band", "hair_clip", "scrunchie", "headband", "hair_tie"],
+    "bags": ["purse", "handbag", "clutch", "backpack", "tote", "crossbody"],
+    "shoes": ["heels", "flats", "boots", "sneakers", "sandals", "platforms"],
+    "other": ["belt", "scarf", "hat", "gloves", "sunglasses", "watch"]
+  },
+
+  "fetish_specific": {
+    "materials": ["latex", "leather", "pvc", "vinyl", "rubber", "mesh"],
+    "styles": ["dominatrix", "submissive", "gothic", "punk", "alternative"],
+    "accessories": ["collar", "cuffs", "harness", "chains", "spikes", "studs"],
+    "garments": ["catsuit", "corset", "chaps", "mask", "hood", "gloves"]
+  },
+
+  "quality_indicators": {
+    "condition": ["new", "like_new", "good", "fair", "worn", "vintage"],
+    "quality": ["luxury", "high_end", "mid_range", "budget", "designer"],
+    "craftsmanship": ["handmade", "custom", "tailored", "mass_produced"]
+  },
+
+  "analysis_metadata": {
+    "confidence_thresholds": {
+      "high": 0.8,
+      "medium": 0.6,
+      "low": 0.4
+    },
+    "classification_hierarchy": {
+      "primary": ["type", "style", "material"],
+      "secondary": ["color", "pattern", "fit"],
+      "tertiary": ["details", "condition", "occasion"]
+    },
+    "power_user_features": {
+      "detailed_breakdown": true,
+      "confidence_scores": true,
+      "alternative_classifications": true,
+      "category_explanations": true
+    }
+  }
+}

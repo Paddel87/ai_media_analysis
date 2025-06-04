@@ -1,10 +1,33 @@
-fastapi>=0.68.0
-uvicorn>=0.15.0
-redis>=4.0.0
-pydantic>=1.8.0
-requests>=2.28.0
-python-dotenv==1.0.0
+# Job Manager Requirements
+# Version: 1.0.0 + UC-001 Enhanced Manual Analysis Integration
+
+# ===================================================================
+# CORE FASTAPI & ASYNC STACK
+# ===================================================================
+
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+
+# ===================================================================
+# UC-001 PIPELINE ORCHESTRATION DEPENDENCIES
+# ===================================================================
+
+# HTTP Client for Service Communication
+httpx==0.25.2
 aiohttp==3.9.1
-psutil==5.9.6
-asyncssh==2.14.1
-pydantic==2.6.1
+
+# Redis for Job Coordination
+redis==5.0.1
+aioredis==2.0.1
+
+# Rich Console for Power-User Output
+rich==13.7.0
+loguru==0.7.2
+
+# ===================================================================
+# EXISTING JOB MANAGER DEPENDENCIES
+# ===================================================================
+
+# Original job manager imports
+requests==2.31.0

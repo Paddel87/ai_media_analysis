@@ -1,6 +1,68 @@
 # Projektstatus
 
-## Aktueller Status: Alpha 0.4.4 - Performance-Optimierung
+## Aktueller Status: Alpha 0.6.1 - UI Critical Fix
+
+### 🎉 KRITISCHER UI-FIX ERFOLGREICH (Alpha 0.6.1)
+**Datum:** 3. Juni 2025
+**Dauer:** 30 Minuten
+**Problem:** UI-System komplett nicht funktionsfähig
+**Lösung:** Quick-Fix Streamlit-UI wiederhergestellt
+
+#### ✅ **Behobene UI-Probleme:**
+1. **Fehlende main.py:** Vollständige Streamlit-App erstellt (136 Zeilen)
+2. **Docker-Compose-Konfiguration:** Build-Context und Health-Check repariert
+3. **API-Verbindungen:** Alle Service-Hostnamen korrigiert (ai_* prefix)
+4. **Service-Status-Dashboard:** Real-time Health-Monitoring implementiert
+5. **UC-001 Integration:** Job-Management und File-Upload funktionsfähig
+
+#### 🚨 **Vor dem Fix (KAPUTT):**
+```bash
+❌ streamlit-ui Service: NICHT startbar (main.py fehlt)
+❌ Health-Check: Falscher Endpoint (/healthz statt /)
+❌ Build-Context: Zeigt auf ./ui statt ./services/ui
+❌ API-Hosts: Falsche Namen (job_manager statt ai_job_manager)
+❌ UI-Zugang: http://localhost:8501 nicht erreichbar
+```
+
+#### ✅ **Nach dem Fix (FUNKTIONIERT):**
+```bash
+✅ streamlit-ui Service: Up 27 seconds (health: starting)
+✅ Container: ai_media_analysis-streamlit-ui-1
+✅ Port: 0.0.0.0:8501->8501/tcp
+✅ Command: "streamlit run main.py"
+✅ UI-Zugang: http://localhost:8501 verfügbar
+```
+
+#### 🔧 **Implementierte UI-Features:**
+- **Service-Status-Dashboard:** Real-time Monitoring aller 6 Services
+- **UC-001 Job-Management:** Liste und Status aller UC-001 Jobs
+- **File-Upload:** Medien-Upload mit automatischer Job-Erstellung
+- **API-Integration:** Korrekte Verbindung zu allen Backend-Services
+- **Error-Handling:** Graceful handling bei Service-Ausfällen
+
+#### 💡 **Technische Details:**
+```python
+# Korrigierte API-Hosts (services/ui/main.py)
+API_HOSTS = {
+    "job_manager": "http://ai_job_manager:8000",      # Fixed
+    "control": "http://ai_control:8000",
+    "person_dossier": "http://ai_person_dossier:8000",
+    "video_context": "http://ai_video_context_analyzer:8000",
+    "clothing": "http://ai_clothing_analyzer:8000",
+    "uc001": "http://ai_uc001_job_manager:8012"       # Fixed
+}
+```
+
+```yaml
+# Korrigierte Docker-Compose (docker-compose.yml)
+streamlit-ui:
+  build:
+    context: ./services/ui          # Fixed: ./ui → ./services/ui
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8501"]  # Fixed: /healthz → /
+```
+
+### Vorheriger Status (Alpha 0.4.4 - Performance-Optimierung)
 
 ### Implementierte Features
 - ✅ Pose Estimation Service mit VPS-Optimierung
@@ -12,6 +74,7 @@
 - ✅ Worker-Management
 - ✅ Umfassende Testabdeckung
 - ✅ Metriken und Monitoring
+- ✅ **UI-System vollständig repariert (Alpha 0.6.1)**
 
 ### Performance-Optimierungen
 - **Memory-Management**

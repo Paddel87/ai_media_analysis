@@ -1,5 +1,44 @@
 # Changelog
 
+## [Alpha 0.6.1] - 2025-06-03 - UI Critical Fix
+
+### 🚨 Critical Fixes
+- **[CRITICAL]** UI-System komplett repariert - war nicht funktionsfähig
+- **[FIX]** Fehlende `services/ui/main.py` erstellt (136 Zeilen Streamlit-App)
+- **[FIX]** Docker-Compose `streamlit-ui` Service-Konfiguration korrigiert
+- **[FIX]** API-Host-Namen korrigiert (ai_* prefix für alle Services)
+- **[FIX]** Health-Check-Endpoint von `/healthz` auf `/` korrigiert
+- **[FIX]** Build-Context von `./ui` auf `./services/ui` korrigiert
+
+### ✨ New Features
+- **[UI]** Service-Status-Dashboard mit Real-time Health-Monitoring
+- **[UI]** UC-001 Job-Management Interface
+- **[UI]** File-Upload mit automatischer Job-Erstellung
+- **[UI]** Error-Handling für Service-Ausfälle
+- **[UI]** System-Information-Panel
+
+### 🔧 Technical Improvements
+- **[DOCKER]** Streamlit-UI Service läuft jetzt erfolgreich auf Port 8501
+- **[API]** Korrekte Verbindung zu allen 6 Backend-Services
+- **[MONITORING]** Real-time Service-Health-Checks implementiert
+
+### 🐛 Bug Fixes
+- **[CONTAINER]** `ai_media_analysis-streamlit-ui-1` startet erfolgreich
+- **[NETWORK]** API-Verbindungen zwischen UI und Services funktional
+- **[CONFIG]** Docker-Compose-Konfiguration für UI-Service vollständig
+
+### ⚡ Performance
+- **[UI]** Schnelle Service-Status-Abfragen (3s Timeout)
+- **[CACHE]** Graceful handling bei Service-Nicht-Verfügbarkeit
+
+### 📝 Documentation
+- **[STATUS]** STATUS.md mit detailliertem UI-Fix-Report aktualisiert
+- **[CHANGELOG]** Vollständige Dokumentation der UI-Reparatur
+
+### 🧪 Testing
+- **[UI]** UI-Service erfolgreich getestet - läuft auf http://localhost:8501
+- **[INTEGRATION]** Backend-Service-Verbindungen validiert
+
 ## [Alpha 0.5.0] - 2025-06-03 - 🔄 Iteration 1: Management-Core Services abgeschlossen ✅
 
 ### ✅ Service-Code-Erstellung - VOLLSTÄNDIG ABGESCHLOSSEN

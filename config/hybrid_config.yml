@@ -1,0 +1,208 @@
+# POWER-USER AI ARCHITECTURE CONFIG - OPTION A PRIMARY
+# Version: 2.0.0 - CPU-First Strategy mit Cloud-GPU als Optional
+# Power-User-First: Maximale lokale Kontrolle und Performance
+
+# ===================================================================
+# PRIMARY LAYER: CPU-OPTIMIZED LOCAL PROCESSING (Option A)
+# ===================================================================
+
+cpu_primary:
+  enabled: true
+  strategy: "power_user_local_first"
+  optimization_target: "performance"  # Performance over resource saving
+
+  services:
+    # POWER-USER OPTIMIZED CPU SERVICES
+    face_recognition:
+      method: "insightface_cpu_optimized"
+      model: "buffalo_s"  # Balanced accuracy/speed for CPU
+      target_latency: 800ms  # Realistic CPU target
+      memory_limit: "3GB"
+      batch_processing: true
+      multi_threading: true
+      cpu_cores: 4
+
+    frame_extractor:
+      method: "opencv_optimized"
+      target_latency: 30ms
+      memory_limit: "512MB"
+      parallel_extraction: true
+      batch_size: 16
+
+    thumbnail_generator:
+      method: "pil_optimized"
+      target_latency: 50ms
+      memory_limit: "256MB"
+      cache_enabled: true
+      quality_presets: ["fast", "balanced", "high"]
+
+    live_object_detection:
+      method: "yolo_v8n_cpu"  # Nano version für CPU
+      target_latency: 300ms
+      memory_limit: "2GB"
+      confidence_threshold: 0.5
+      classes: ["person", "clothing", "accessories", "objects"]
+
+    whisper_transcription:
+      model: "whisper_base"  # CPU-optimierte Version
+      target_latency: 8000ms  # 8s für CPU acceptable
+      memory_limit: "2GB"
+      language_detection: true
+      batch_processing: true
+
+    pose_estimation:
+      method: "mediapipe_cpu"
+      target_latency: 400ms
+      memory_limit: "1GB"
+      keypoints: 33  # Standard MediaPipe
+      real_time_capable: true
+
+    ocr_detection:
+      method: "tesseract_optimized"
+      target_latency: 600ms
+      memory_limit: "1GB"
+      languages: ["deu", "eng"]
+      preprocessing: true
+
+# ===================================================================
+# CLOUD GPU ENHANCEMENT LAYER - JEDERZEIT AKTIVIERBAR!
+# ===================================================================
+
+cloud_gpu_enhancement:
+  enabled: true  # IMMER VERFÜGBAR für Power-User
+  default_active: false  # Standardmäßig aus, User aktiviert bei Bedarf
+  strategy: "enhancement_on_demand"
+  user_control: "full"  # Power-User hat vollständige Kontrolle
+  cost_awareness: true  # Transparente Kostendarstellung
+
+  # WANN CLOUD ENHANCEMENT EMPFOHLEN WIRD:
+  recommended_use_cases:
+    ultra_accuracy:
+      - "Forensische Gesichtsanalyse (Buffalo_L)"
+      - "Research-Grade Audio Transcription (Whisper Large V3)"
+      - "Batch-Verarbeitung >50 Dateien"
+      - "Multi-Language Deep Analysis"
+      - "Experimental AI-Modelle (GPT-4 Vision, Claude 3)"
+
+    performance_gains:
+      face_recognition: "4x schneller, +15% Genauigkeit"
+      batch_processing: "10x schneller für große Datensets"
+      transcription: "+25% Genauigkeit, 99 Sprachen"
+      experimental: "Zugang zu neuesten AI-Modellen"
+
+  providers:
+    vast_ai:
+      priority: 1
+      gpu_types: ["RTX_4090", "RTX_3090", "A100"]
+      cost_limit_per_hour: 5.0  # USD - Erhöht für Power-User
+      auto_shutdown: true
+      availability: "on_demand"  # Sofort verfügbar
+
+    runpod:
+      priority: 2
+      gpu_types: ["RTX_4090", "A100"]
+      cost_limit_per_hour: 4.0
+      availability: "on_demand"
+
+  enhanced_services:
+    face_recognition_ultra:
+      model: "buffalo_l"  # Höchste verfügbare Genauigkeit
+      accuracy_gain: "+15%"
+      speed_improvement: "4x faster"
+      cost_per_job: "$0.05"
+      use_case: "Forensische Analyse, Research, Batch-Processing"
+
+    whisper_transcription_large:
+      model: "whisper_large_v3"
+      accuracy_gain: "+25%"
+      language_support: "99 Sprachen"
+      cost_per_minute: "$0.02"
+      use_case: "Multi-Language, Podcast-Transkription, Research"
+
+    batch_processing_accelerated:
+      description: "GPU-optimierte Batch-Verarbeitung"
+      speed_improvement: "10x faster"
+      batch_size: "100+ Dateien optimal"
+      cost_per_100_files: "$0.50"
+
+    experimental_ai_models:
+      models: ["GPT-4 Vision", "Claude 3 Vision", "Gemini Pro Vision"]
+      capability: "Erweiterte Szenenanalyse und Kontextverständnis"
+      cost_per_request: "$0.10"
+      access_level: "Power-User Beta"
+
+# ===================================================================
+# INTELLIGENT ROUTING - CPU-FIRST MIT CLOUD-ENHANCEMENT
+# ===================================================================
+
+orchestration:
+  strategy: "cpu_first_with_cloud_enhancement"
+  default_target: "cpu_primary"
+
+  routing_rules:
+    # CPU-First für alle Standard-Tasks
+    - condition: "default"
+      target: "cpu_primary"
+
+    - condition: "real_time_requirement == true"
+      target: "cpu_primary"
+
+    - condition: "cost_sensitive == true"
+      target: "cpu_primary"
+
+    # CLOUD ENHANCEMENT - USER TRIGGERED
+    - condition: "user_requests_cloud_enhancement == true"
+      target: "cloud_gpu_enhancement"
+      confirmation_dialog: "Cloud Enhancement: +X% Genauigkeit, Xms schneller, $X.XX Kosten"
+
+    - condition: "accuracy_requirement == 'research_grade'"
+      target: "cpu_primary"  # Standard bleibt CPU
+      enhancement_suggestion: "Cloud Enhancement verfügbar: +15% Genauigkeit für $0.05"
+
+    - condition: "batch_size > 50"
+      target: "cpu_primary"  # Standard bleibt CPU
+      enhancement_suggestion: "Cloud Batch-Processing: 10x schneller für $0.50"
+
+    # AUTOMATISCHE ENHANCEMENT-VORSCHLÄGE
+    - condition: "processing_time_estimate > 30s"
+      enhancement_available: true
+      suggestion: "Cloud GPU: 4x schneller verfügbar"
+
+    - condition: "complex_analysis_requested == true"
+      enhancement_available: true
+      suggestion: "Experimental AI-Modelle für erweiterte Analyse verfügbar"
+
+# ===================================================================
+# POWER-USER CONTROL INTERFACE
+# ===================================================================
+
+power_user_interface:
+  cpu_performance_monitoring: true    # Real-time CPU metrics
+  resource_optimization_hints: true   # CPU optimization suggestions
+  local_model_management: true        # Download/manage models locally
+
+  cloud_integration:
+    show_cloud_option: true           # Zeigt Cloud-Optionen IMMER an
+    cost_calculator: true             # Real-time Kostenberechnung
+    performance_comparison: true      # CPU vs Cloud Vergleich
+    user_choice_override: true        # Power-User kann alles übersteuern
+    one_click_enhancement: true       # Einfache Cloud-Aktivierung
+
+    enhancement_ui:
+      quality_selector: ["Standard CPU", "Enhanced Cloud GPU", "Ultra Research-Grade"]
+      cost_preview: "Zeigt Kosten vor Ausführung"
+      performance_preview: "Zeigt Zeit & Genauigkeit vor Ausführung"
+      batch_optimizer: "Schlägt optimale Batch-Größen vor"
+      model_selector: "User wählt spezifische AI-Modelle"
+
+  advanced_cpu_controls:
+    thread_optimization: true         # Multi-threading controls
+    memory_management: true           # RAM allocation controls
+    model_quality_selection: true     # CPU-optimierte Modell-Varianten
+    batch_size_optimization: true     # Optimal batching für CPU
+
+  development_features:
+    benchmark_mode: true              # Performance-Testing
+    profiling_tools: true             # CPU-Profiling für Optimierung
+    experimental_models: true         # Testing neuer CPU-Modelle
+    custom_pipeline_builder: true     # User baut eigene Pipelines

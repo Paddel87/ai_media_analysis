@@ -281,40 +281,69 @@ services:
       context: ./services/face_reid
       dockerfile: Dockerfile
     container_name: ai_face_reid
-    volumes:
-      - ./data/results:/app/results
-      - ./logs/face:/app/logs
     environment:
-      - PYTHONUNBUFFERED=1
+      # OPTION A PRIMARY CONFIGURATION - CPU-FIRST
+      - CPU_PRIMARY=true
+      - CLOUD_OPTIONAL=false  # User-controllable
+      - POWER_USER_MODE=true
+      - LOCAL_FIRST=true
+
+      # CPU-Optimized Configuration (PRIMARY)
+      - CPU_MODEL=buffalo_s  # Balanced accuracy/speed
+      - CPU_CORES=4
+      - MULTI_THREADING=true
+      - TARGET_LATENCY=800ms
+      - MEMORY_LIMIT=3GB
+      - BATCH_PROCESSING=true
+
+      # Cloud Enhancement (OPTIONAL - Disabled by default)
+      - CLOUD_ENHANCEMENT_AVAILABLE=true
+      - CLOUD_MODEL=buffalo_l
+      - CLOUD_COST_AWARENESS=true
+      - CLOUD_USER_CONFIRMATION=required
+
+      # Service Configuration
+      - SERVICE_NAME=face_reid
+      - SERVICE_PORT=8003
+      - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=INFO
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - CLOUD_MODE=false
-    depends_on:
-      redis:
-        condition: service_healthy
+
+      # Power-User CPU Controls
+      - CPU_PERFORMANCE_MONITORING=true
+      - RESOURCE_OPTIMIZATION=true
+      - LOCAL_MODEL_MANAGEMENT=true
+      - THREAD_OPTIMIZATION=true
+      - BENCHMARK_MODE=available
+      - PROFILING_TOOLS=true
+
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./data/models:/app/models
+      - ./data/frames:/app/frames
+      - ./logs/face_reid:/app/logs
+      - ./config/hybrid_config.yml:/app/config/hybrid_config.yml
     networks:
       - ai_network
+    depends_on:
+      - redis
+      - control
+    restart: unless-stopped
     deploy:
       resources:
+        # CPU-Primary Optimized Resources
         limits:
-          cpus: '2'
-          memory: 2G
+          cpus: '4.0'    # Full CPU power for Option A
+          memory: 4G     # Adequate for CPU models
         reservations:
-          cpus: '1'
-          memory: 1G
+          cpus: '2.0'    # Guaranteed CPU
+          memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      start_period: 120s  # Model loading time
 
   whisper_transcriber:
     build:
@@ -364,7 +393,7 @@ services:
   # Development UI Service
   streamlit-ui:
     build:
-      context: ./ui
+      context: ./services/ui
       dockerfile: Dockerfile
     ports:
       - "8501:8501"
@@ -389,7 +418,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:8501"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -583,6 +612,344 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =============================================================================
+  # UC-001 ENHANCED MANUAL ANALYSIS SERVICES
+  # =============================================================================
+
+  person_dossier:
+    build:
+      context: ./services/person_dossier
+      dockerfile: Dockerfile
+    container_name: ai_person_dossier
+    ports:
+      - "8009:8000"
+    volumes:
+      - ./data/dossiers:/app/data/dossiers:rw
+      - ./data/corrections:/app/data/corrections:rw
+      - ./logs/person_dossier:/app/logs
+      - ./config/hybrid_config.yml:/app/config/hybrid_config.yml:ro
+    environment:
+      # OPTION A PRIMARY CONFIGURATION - CPU-FIRST
+      - CPU_PRIMARY=true
+      - CLOUD_OPTIONAL=false  # User-controllable
+      - POWER_USER_MODE=true
+      - LOCAL_FIRST=true
+
+      # UC-001 CORE CONFIGURATION
+      - UC001_ENABLED=true
+      - DOSSIER_INTEGRATION=true
+      - USER_CORRECTIONS=true
+      - PERFORMANCE_MONITORING=true
+
+      # SERVICE CONFIGURATION
+      - SERVICE_NAME=person_dossier
+      - SERVICE_PORT=8000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_DB=5
+      - LOG_LEVEL=INFO
+
+      # CPU-OPTIMIZED SETTINGS
+      - CPU_CORES=4
+      - MULTI_THREADING=true
+      - BATCH_PROCESSING=true
+      - MEMORY_LIMIT=3GB
+
+      # POWER-USER FEATURES
+      - EXPORT_ENABLED=true
+      - SEARCH_OPTIMIZATION=true
+      - STATISTICS_DETAILED=true
+      - FACE_SIMILARITY_THRESHOLD=0.85
+
+      # CLOUD ENHANCEMENT (OPTIONAL)
+      - CLOUD_ENHANCEMENT_AVAILABLE=true
+      - CLOUD_COST_AWARENESS=true
+
+    networks:
+      - ai_network
+    depends_on:
+      - redis
+      - control
+    restart: unless-stopped
+    deploy:
+      resources:
+        # UC-001 CORE SERVICE - Priority Resources
+        limits:
+          cpus: '4.0'    # Full CPU power for core UC-001 functionality
+          memory: 4G     # Adequate for dossier management
+        reservations:
+          cpus: '2.0'    # Guaranteed CPU for responsiveness
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s  # Longer start for database initialization
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  video_context_analyzer:
+    build:
+      context: ./services/video_context_analyzer
+      dockerfile: Dockerfile
+    container_name: ai_video_context_analyzer
+    ports:
+      - "8010:8000"
+    volumes:
+      - ./data/video_analysis:/app/data/video_analysis:rw
+      - ./data/context_results:/app/data/context_results:rw
+      - ./data/llm_cache:/app/data/llm_cache:rw
+      - ./data/videos:/app/data/videos:ro  # Read-only video access
+      - ./logs/video_context_analyzer:/app/logs
+      - ./config/hybrid_config.yml:/app/config/hybrid_config.yml:ro
+    environment:
+      # OPTION A PRIMARY CONFIGURATION - CPU-FIRST + LLM
+      - CPU_PRIMARY=true
+      - CLOUD_OPTIONAL=true   # LLM cloud enhancement available
+      - POWER_USER_MODE=true
+      - LOCAL_FIRST=true
+
+      # UC-001 VIDEO CONTEXT ANALYZER CONFIGURATION
+      - UC001_ENABLED=true
+      - VIDEO_ANALYSIS=true
+      - LLM_INTEGRATION=true
+      - CONTEXT_GENERATION=true
+      - MOVEMENT_TRACKING=true
+      - EMOTION_ANALYSIS=true
+      - AUDIO_PROCESSING=true
+
+      # SERVICE CONFIGURATION
+      - SERVICE_NAME=video_context_analyzer
+      - SERVICE_PORT=8000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_DB=6
+      - LOG_LEVEL=INFO
+
+      # CPU-FIRST VIDEO PROCESSING
+      - VIDEO_CPU_THREADS=4
+      - FRAME_BATCH_SIZE=16
+      - ANALYSIS_QUEUE_SIZE=100
+      - MEMORY_OPTIMIZATION=true
+
+      # LLM OPTIMIZATION (Option A Primary)
+      - LLM_LOCAL_FIRST=true
+      - LLM_CLOUD_OPTIONAL=true
+      - LLM_COST_AWARENESS=true
+      - LLM_RESPONSE_CACHE=true
+
+      # POWER-USER CONTROLS
+      - EXPORT_ENABLED=true
+      - DETAILED_LOGGING=true
+      - PERFORMANCE_MONITORING=true
+      - CONTEXT_QUALITY_THRESHOLD=0.8
+
+      # CLOUD ENHANCEMENT API KEYS (OPTIONAL)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+    networks:
+      - ai_network
+    depends_on:
+      - redis
+      - control
+      - person_dossier
+    restart: unless-stopped
+    deploy:
+      resources:
+        # UC-001 VIDEO ANALYSIS SERVICE - High Performance Requirements
+        limits:
+          cpus: '6.0'    # High CPU for video processing + LLM
+          memory: 6G     # Adequate for video frames + LLM processing
+        reservations:
+          cpus: '3.0'    # Guaranteed CPU for video processing
+          memory: 3G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 120s  # Longer start for video processing initialization
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  clothing_analyzer:
+    build:
+      context: ./services/clothing_analyzer
+      dockerfile: Dockerfile
+    container_name: ai_clothing_analyzer
+    ports:
+      - "8011:8000"
+    volumes:
+      - ./data/clothing_analysis:/app/data/clothing_analysis:rw
+      - ./data/classifications:/app/data/classifications:rw
+      - ./data/category_cache:/app/data/category_cache:rw
+      - ./data/frames:/app/data/frames:ro  # Read-only frame access
+      - ./logs/clothing_analyzer:/app/logs
+      - ./config/hybrid_config.yml:/app/config/hybrid_config.yml:ro
+    environment:
+      # OPTION A PRIMARY CONFIGURATION - CPU-FIRST + CLIP
+      - CPU_PRIMARY=true
+      - CLOUD_OPTIONAL=true   # Cloud enhancement available for better accuracy
+      - POWER_USER_MODE=true
+      - LOCAL_FIRST=true
+
+      # UC-001 CLOTHING ANALYZER CONFIGURATION
+      - UC001_ENABLED=true
+      - CLOTHING_ANALYSIS=true
+      - CATEGORY_COUNT=200
+      - MATERIAL_DETECTION=true
+      - STYLE_CLASSIFICATION=true
+      - DOSSIER_INTEGRATION=true
+
+      # SERVICE CONFIGURATION
+      - SERVICE_NAME=clothing_analyzer
+      - SERVICE_PORT=8000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_DB=7
+      - LOG_LEVEL=INFO
+
+      # CPU-FIRST CLIP PROCESSING
+      - CLIP_CPU_THREADS=4
+      - CLIP_BATCH_SIZE=8
+      - CLIP_MODEL=ViT-B/32
+      - CLASSIFICATION_CACHE=true
+
+      # FORCE CPU-ONLY FOR OPTION A PRIMARY
+      - CUDA_VISIBLE_DEVICES=""
+      - TORCH_DEVICE=cpu
+
+      # POWER-USER FEATURES
+      - EXPORT_ENABLED=true
+      - DETAILED_CATEGORIZATION=true
+      - CONFIDENCE_THRESHOLD=0.7
+      - CATEGORY_HIERARCHY=true
+
+      # CLOUD ENHANCEMENT (OPTIONAL)
+      - CLOUD_CLASSIFICATION_AVAILABLE=true
+      - CLOUD_COST_AWARENESS=true
+
+      # API KEYS FOR CLOUD ENHANCEMENT (OPTIONAL)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+    networks:
+      - ai_network
+    depends_on:
+      - redis
+      - control
+      - person_dossier
+    restart: unless-stopped
+    deploy:
+      resources:
+        # UC-001 CLOTHING ANALYSIS SERVICE - CLIP Performance Requirements
+        limits:
+          cpus: '4.0'    # High CPU for CLIP processing
+          memory: 4G     # Adequate for CLIP model + image processing
+        reservations:
+          cpus: '2.0'    # Guaranteed CPU for CLIP operations
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 150s  # Longer start for CLIP model loading
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  uc001_job_manager:
+    build:
+      context: ./services/job_manager
+      dockerfile: Dockerfile.uc001
+    container_name: ai_uc001_job_manager
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./data/uc001:/app/data/uc001:rw
+      - ./data/jobs:/app/data/jobs:rw
+      - ./data/dossiers:/app/data/dossiers:rw
+      - ./logs/uc001:/app/logs/uc001
+      - ./config/uc001:/app/config/uc001:ro
+    environment:
+      # UC-001 ENHANCED MANUAL ANALYSIS - JOB MANAGER
+      - UC001_ENABLED=true
+      - UC001_RESEARCH_MODE=true
+      - UC001_POWER_USER=true
+      - UC001_MAX_CONCURRENT=5
+
+      # PIPELINE ORCHESTRATION CONFIGURATION
+      - PIPELINE_ORCHESTRATOR=true
+      - SERVICE_COORDINATION=true
+      - JOB_QUEUE_MANAGEMENT=true
+      - QUALITY_MONITORING=true
+
+      # SERVICE CONFIGURATION
+      - SERVICE_NAME=uc001_job_manager
+      - SERVICE_PORT=8012
+      - REDIS_URL=redis://redis:6379
+      - REDIS_DB=8
+      - LOG_LEVEL=INFO
+
+      # UC-001 SERVICE ENDPOINTS (Internal Docker Network)
+      - PERSON_DOSSIER_URL=http://person_dossier:8009
+      - VIDEO_CONTEXT_URL=http://video_context_analyzer:8010
+      - CLOTHING_ANALYZER_URL=http://clothing_analyzer:8011
+
+      # POWER-USER PIPELINE FEATURES
+      - RESEARCH_PIPELINES=true
+      - UNRESTRICTED_ANALYSIS=true
+      - ADVANCED_MONITORING=true
+      - EXPORT_CAPABILITIES=true
+
+      # PERFORMANCE OPTIMIZATION
+      - ASYNC_PROCESSING=true
+      - PARALLEL_JOBS=true
+      - REDIS_COORDINATION=true
+      - REAL_TIME_STATUS=true
+
+      # DEVELOPMENT & DEBUGGING
+      - DEBUG_ENDPOINTS=true
+      - QUEUE_INSPECTION=true
+      - SERVICE_VALIDATION=true
+
+    networks:
+      - ai_network
+    depends_on:
+      - redis
+      - control
+      - person_dossier
+      - video_context_analyzer
+      - clothing_analyzer
+    restart: unless-stopped
+    deploy:
+      resources:
+        # UC-001 JOB MANAGER - PIPELINE ORCHESTRATION REQUIREMENTS
+        limits:
+          cpus: '3.0'    # CPU for job coordination and pipeline management
+          memory: 3G     # Memory for job queues and service coordination
+        reservations:
+          cpus: '1.5'    # Guaranteed CPU for pipeline processing
+          memory: 1.5G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health/uc001"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s  # Allow time for service dependency validation
     logging:
       driver: "json-file"
       options:

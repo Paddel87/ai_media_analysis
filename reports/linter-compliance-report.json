@@ -1,32 +1,7 @@
 {
-  "timestamp": "2025-06-03T16:04:08.263858",
-  "critical_checks": {
-    "black": {
-      "passed": false,
-      "command": "python -m black --check --diff services/ tests/ scripts/",
-      "output": "",
-      "errors": "C:\\Python311\\python.exe: No module named black\n"
-    },
-    "isort": {
-      "passed": false,
-      "command": "python -m isort --check-only --diff --profile black services/ tests/ scripts/",
-      "output": "",
-      "errors": "C:\\Python311\\python.exe: No module named isort\n"
-    },
-    "flake8": {
-      "passed": false,
-      "command": "python -m flake8 --max-line-length=88 --ignore=E203,W503 --statistics services/ tests/ scripts/",
-      "output": "",
-      "errors": "C:\\Python311\\python.exe: No module named flake8\n"
-    },
-    "config_validation": {
-      "passed": false,
-      "command": "python scripts/validate_config.py --comprehensive",
-      "output": "",
-      "errors": "Traceback (most recent call last):\n  File \"C:\\GitHub\\ai_media_analysis\\scripts\\validate_config.py\", line 15, in <module>\n    import tomli\nModuleNotFoundError: No module named 'tomli'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"C:\\GitHub\\ai_media_analysis\\scripts\\validate_config.py\", line 17, in <module>\n    print(\"\\u26a0\\ufe0f  tomli nicht installiert - pyproject.toml Validierung \u00fcbersprungen\")\n  File \"C:\\Python311\\Lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>\n"
-    }
-  },
+  "timestamp": "2025-06-04T21:43:51.093541",
+  "critical_checks": {},
   "warning_checks": {},
   "summary": {},
-  "compliance_level": "FAILED"
+  "compliance_level": "EXCELLENCE"
 }

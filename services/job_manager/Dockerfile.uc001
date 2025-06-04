@@ -1,0 +1,67 @@
+# UC-001 Enhanced Manual Analysis - Job Manager
+# Version: 1.0.0 - Pipeline-Orchestrierung für Enhanced Manual Analysis
+# Build: CPU-optimized für VPS-Einsatz
+
+FROM python:3.11-slim
+
+# Metadata
+LABEL maintainer="AI Media Analysis Team"
+LABEL version="1.0.0"
+LABEL description="UC-001 Enhanced Manual Analysis - Job Manager"
+LABEL uc001.enabled="true"
+LABEL uc001.component="job_manager"
+
+# Set working directory
+WORKDIR /app
+
+# System packages for UC-001 pipeline requirements
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create UC-001 directories
+RUN mkdir -p /app/data/uc001 \
+    /app/logs/uc001 \
+    /app/config/uc001
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy UC-001 pipeline modules
+COPY uc001_pipeline.py .
+COPY uc001_api.py .
+
+# Copy job manager components
+COPY main.py .
+COPY manager.py .
+COPY api.py .
+COPY process_batch.py .
+COPY gpu_providers.py .
+
+# UC-001 Environment Configuration
+ENV UC001_ENABLED=true
+ENV UC001_RESEARCH_MODE=true
+ENV UC001_POWER_USER=true
+ENV UC001_MAX_CONCURRENT=5
+
+# Service Configuration
+ENV REDIS_URL=redis://redis:6379
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Health check for UC-001 pipeline
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8012/health/uc001 || exit 1
+
+# Expose UC-001 Job Manager port
+EXPOSE 8012
+
+# UC-001 startup command
+CMD ["python", "uc001_api.py"]

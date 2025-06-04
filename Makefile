@@ -1344,3 +1344,69 @@ BLUE := \033[0;34m
 YELLOW := \033[1;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
+
+# =============================================================================
+# UC-001 ENHANCED MANUAL ANALYSIS - JOB MANAGER
+# =============================================================================
+
+uc001-start: ## Startet UC-001 Enhanced Manual Analysis Services
+	@echo "🎯 Starting UC-001 Enhanced Manual Analysis services..."
+	docker-compose up -d redis control person_dossier video_context_analyzer clothing_analyzer uc001_job_manager
+	@echo "⏳ Waiting for UC-001 services to initialize..."
+	sleep 60
+	@$(MAKE) uc001-health
+
+uc001-stop: ## Stoppt UC-001 Services
+	@echo "🛑 Stopping UC-001 services..."
+	docker-compose stop uc001_job_manager clothing_analyzer video_context_analyzer person_dossier
+
+uc001-restart: uc001-stop uc001-start ## Startet UC-001 Services neu
+
+uc001-health: ## Überprüft UC-001 Service-Health
+	@echo "🏥 Checking UC-001 Enhanced Manual Analysis health..."
+	@curl -f http://localhost:8012/health/uc001 > /dev/null 2>&1 && echo "✅ UC-001 Job Manager healthy" || echo "❌ UC-001 Job Manager not healthy"
+	@curl -f http://localhost:8009/health > /dev/null 2>&1 && echo "✅ Person Dossier healthy" || echo "❌ Person Dossier not healthy"
+	@curl -f http://localhost:8010/health > /dev/null 2>&1 && echo "✅ Video Context Analyzer healthy" || echo "❌ Video Context Analyzer not healthy"
+	@curl -f http://localhost:8011/health > /dev/null 2>&1 && echo "✅ Clothing Analyzer healthy" || echo "❌ Clothing Analyzer not healthy"
+
+uc001-status: ## Zeigt UC-001 Pipeline Status
+	@echo "📊 UC-001 Enhanced Manual Analysis Pipeline Status:"
+	@curl -s http://localhost:8012/uc001/pipeline/status | python -m json.tool 2>/dev/null || echo "❌ Unable to fetch pipeline status"
+
+uc001-logs: ## Zeigt UC-001 Job Manager Logs
+	@echo "📋 UC-001 Job Manager Logs (last 50 lines):"
+	@docker logs --tail 50 ai_uc001_job_manager 2>/dev/null || echo "❌ UC-001 Job Manager container not found"
+
+uc001-debug: ## Debug UC-001 Services
+	@echo "🔍 UC-001 Enhanced Manual Analysis Debug Information:"
+	@echo ""
+	@echo "=== UC-001 SERVICE CONNECTIVITY ==="
+	@curl -s http://localhost:8012/uc001/debug/services | python -m json.tool 2>/dev/null || echo "❌ Unable to fetch service debug info"
+	@echo ""
+	@echo "=== UC-001 JOB QUEUE ==="
+	@curl -s http://localhost:8012/uc001/debug/queue | python -m json.tool 2>/dev/null || echo "❌ Unable to fetch queue debug info"
+
+uc001-test: ## Testet UC-001 Pipeline mit Dummy-Job
+	@echo "🧪 Testing UC-001 Enhanced Manual Analysis Pipeline..."
+	@echo "Submitting test job..."
+	@curl -X POST "http://localhost:8012/uc001/analyze/person" \
+		-H "Content-Type: application/x-www-form-urlencoded" \
+		-d "media_path=/app/data/test/dummy.jpg&user_id=test_user" \
+		2>/dev/null | python -m json.tool || echo "❌ UC-001 test failed"
+
+uc001-metrics: ## Zeigt UC-001 Performance Metrics
+	@echo "📈 UC-001 Pipeline Performance Metrics:"
+	@curl -s http://localhost:8012/uc001/pipeline/metrics | python -m json.tool 2>/dev/null || echo "❌ Unable to fetch metrics"
+
+# UC-001 Development Targets
+uc001-build: ## Baut UC-001 Job Manager Docker Image
+	@echo "🔨 Building UC-001 Job Manager..."
+	docker-compose build uc001_job_manager
+
+uc001-dev: ## Startet UC-001 im Development-Modus
+	@echo "🛠️ Starting UC-001 in development mode..."
+	@$(MAKE) uc001-build
+	@$(MAKE) uc001-start
+	@echo "🎯 UC-001 Development environment ready!"
+	@echo "📖 API Documentation: http://localhost:8012/docs"
+	@echo "🔧 Debug Endpoints: http://localhost:8012/uc001/debug/services"

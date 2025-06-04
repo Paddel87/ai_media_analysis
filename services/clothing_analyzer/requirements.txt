@@ -1,0 +1,85 @@
+# OPTION A PRIMARY: CPU-OPTIMIZED CLOTHING ANALYZER REQUIREMENTS
+# UC-001 Enhanced Manual Analysis - Stable Implementation
+# Version: 2.2.0 - CPU-First Strategy ohne komplexe CLIP Dependencies
+
+# ===================================================================
+# CORE FASTAPI STACK (ESSENTIAL)
+# ===================================================================
+
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+
+# ===================================================================
+# UC-001 CORE DEPENDENCIES (ESSENTIAL)
+# ===================================================================
+
+# Database & Persistence
+redis==5.0.1
+aioredis==2.0.1
+
+# ===================================================================
+# IMAGE PROCESSING (CPU-OPTIMIZED)
+# ===================================================================
+
+# Image Processing & Computer Vision
+Pillow>=8.0.0,<10.1.0                 # Image processing
+opencv-python-headless==4.8.1.78      # CPU-optimized OpenCV
+numpy==1.24.3                         # Vectorized operations
+scikit-image==0.22.0                  # Advanced image processing
+
+# ===================================================================
+# POWER-USER CPU PERFORMANCE (CORE)
+# ===================================================================
+
+# Performance & Data Processing
+pandas==2.1.3                         # Data manipulation
+joblib==1.3.2                         # Parallel computing
+numba==0.58.1                         # JIT compilation
+scipy==1.11.4                         # Scientific computing
+
+# ===================================================================
+# MACHINE LEARNING UTILITIES (CPU-OPTIMIZED)
+# ===================================================================
+
+# Classification & Feature Extraction
+scikit-learn==1.3.2                   # ML algorithms
+
+# ===================================================================
+# NETWORKING & API INTEGRATION
+# ===================================================================
+
+httpx==0.25.2
+aiohttp==3.9.1
+requests==2.31.0
+python-multipart==0.0.6
+
+# ===================================================================
+# JSON & SERIALIZATION (FAST)
+# ===================================================================
+
+orjson==3.9.10
+python-dateutil==2.8.2
+
+# ===================================================================
+# POWER-USER MONITORING (ESSENTIAL)
+# ===================================================================
+
+psutil==5.9.6
+loguru==0.7.2
+rich==13.7.0
+
+# ===================================================================
+# CONFIGURATION & UTILITIES
+# ===================================================================
+
+pyyaml==6.0.1
+python-dotenv==1.0.0
+aiofiles==23.2.1
+
+# ===================================================================
+# TESTING (DEVELOPMENT)
+# ===================================================================
+
+pytest==7.4.3
+pytest-asyncio==0.21.1

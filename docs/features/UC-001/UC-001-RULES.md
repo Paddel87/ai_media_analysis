@@ -1,17 +1,50 @@
 # UC-001 Enhanced Manual Analysis - Development Rules
-**Version**: 1.0.0
-**Status**: Feature-Specific Rules (Separated from Core Architecture)
-**Integration**: Alpha 0.6.0
+**Version**: 1.2.0 - **POWER-USER FIRST STRATEGY**
+**Status**: FOKUS AUF UNRESTRICTED POWER-USER (Alpha 0.6.0)
+**Integration**: Alpha 0.6.0 - Maximale Feature-Nutzung ohne Beschränkungen
+**User Scenarios**: → siehe `UC-001-USER-SCENARIOS.md` für detaillierte Power-User-Workflows
 
 ---
 
 ## 🎯 **UC-001 FEATURE OVERVIEW**
 
 ### **Enhanced Manual Analysis Components:**
-- **Personen-Dossier-System** als Kern-Funktionalität
-- **Video-Kontext-Analyse** mit LLM-Integration
-- **Erweiterte Kleidungsanalyse** (200+ Kategorien)
-- **Benutzer-Korrektur-Interface** für Machine Learning
+- **Personen-Dossier-System** als Kern-Funktionalität (**UNRESTRICTED**)
+- **Video-Kontext-Analyse** mit LLM-Integration (**FULL-POWER**)
+- **Erweiterte Kleidungsanalyse** (200+ Kategorien **OHNE FILTER**)
+- **Benutzer-Korrektur-Interface** für Machine Learning (**VOLLZUGRIFF**)
+
+### **🚀 POWER-USER-FIRST STRATEGY** *(V1.2.0 PRIORITY)*:
+```yaml
+Alpha-0.6.0-Focus:
+  - Unrestricted Upload & Analysis     # ✅ PRIORITY 1
+  - Maximum AI-Service-Integration     # ✅ PRIORITY 1
+  - Research-Grade-Output-Quality      # ✅ PRIORITY 1
+  - Zero-Content-Restrictions          # ✅ PRIORITY 1
+  - Advanced-User-Controls             # ✅ PRIORITY 1
+
+Enterprise-Features (LATER):
+  - Content-Moderation                 # ⏭️ Alpha 0.7.0+
+  - Management-Dashboards              # ⏭️ Alpha 0.8.0+
+  - Compliance-Restrictions            # ⏭️ Alpha 0.8.0+
+  - Audit-Trails                       # ⏭️ Alpha 0.9.0+
+```
+
+### **🎭 ERWEITERTE ANWENDERSICHTEN** *(V1.1.0 NEW)*:
+```yaml
+Benutzergruppen:
+  - Analyst/Forscher (Original)      # ✅ Alpha 0.6.0 implementiert
+  - Content-Moderator (HR/Security)  # 🆕 Alpha 0.7.0 geplant
+  - Manager/Supervisor (Reporting)   # 🆕 Alpha 0.8.0 geplant
+  - Compliance-Officer (Audit)       # 🆕 Alpha 0.8.0 geplant
+  - System-Administrator (Extended)  # 🔄 Alpha 0.7.0 erweitert
+
+Integration-Strategy:
+  - Modulare Extensions pro Benutzergruppe
+  - Gemeinsame Service-Basis (UC001ServiceBase)
+  - Konfigurierbare UI-Dashboards
+  - Role-Based-Access-Control
+```
 
 ---
 
@@ -252,3 +285,21 @@ class UC001MessageProtocol:
 **🔗 Integration**: docs/UC-001-ENHANCED-MANUAL-ANALYSIS.md
 **⚙️ Core-Rules**: .cursorrules (Feature-agnostic)
 **🎯 Status**: BEREIT FÜR IMPLEMENTATION
+
+🎮 POWER-USER KONTROLLE:
+  Standard: CPU-First (kostenlos, privat, schnell)
+  Enhanced: Cloud GPU (jederzeit aktivierbar, transparent, on-demand)
+  Kontrolle: User entscheidet situativ was optimal ist
+
+🔄 PRAKTISCHER WORKFLOW:
+  1. System startet mit CPU-Verarbeitung (Option A)
+  2. Cloud Enhancement wird IMMER als Option angezeigt
+  3. User sieht: "☁️ Cloud Enhancement: +15% Genauigkeit, 4x schneller, $0.05"
+  4. User klickt bei Bedarf auf Cloud Enhancement
+  5. System nutzt beste verfügbare Cloud GPU Instanz
+
+💡 BEST OF BOTH WORLDS:
+  ✅ Alltägliche Tasks: Schnell, kostenlos, privat auf CPU
+  ✅ Detaillierte Analysen: Ultra-Genauigkeit auf Cloud GPU
+  ✅ Große Batches: 10x schnellere Verarbeitung in Cloud
+  ✅ Experimental: Zugang zu GPT-4 Vision, Claude 3, etc.

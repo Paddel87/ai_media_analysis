@@ -1,0 +1,114 @@
+# OPTION A PRIMARY: CPU-OPTIMIZED VIDEO CONTEXT ANALYZER REQUIREMENTS
+# UC-001 LLM-basierte Video-Kontext-Analyse mit maximaler CPU-Performance
+# Version: 2.1.0 - CPU-First Strategy + Video Processing + LLM Integration (Docker-Compatible)
+
+# ===================================================================
+# CORE FASTAPI STACK (ESSENTIAL)
+# ===================================================================
+
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+
+# ===================================================================
+# UC-001 CORE DEPENDENCIES (ESSENTIAL)
+# ===================================================================
+
+# Database & Persistence
+redis==5.0.1
+aioredis==2.0.1
+
+# ===================================================================
+# VIDEO PROCESSING (CPU-OPTIMIZED)
+# ===================================================================
+
+# Core Video Processing
+opencv-python-headless==4.8.1.78  # CPU-optimized, no GUI
+ffmpeg-python==0.2.0               # Video manipulation
+imageio==2.31.6                    # Video I/O
+imageio-ffmpeg==0.4.9              # FFmpeg backend
+
+# Frame Extraction & Analysis
+Pillow>=8.0.0,<10.1.0             # Image processing
+numpy==1.24.3                     # Vectorized operations
+
+# ===================================================================
+# LLM INTEGRATION (CPU-FIRST WITH CLOUD OPTIONAL)
+# ===================================================================
+
+# OpenAI Integration (Cloud Enhancement)
+openai==1.3.7                     # GPT-4 Vision for cloud enhancement
+tiktoken==0.5.2                   # Token counting
+
+# Local LLM Options (CPU-optimized) - SIMPLIFIED
+torch==2.1.1                      # CPU-only PyTorch (default CPU version)
+transformers==4.35.2              # Hugging Face models
+sentencepiece==0.1.99             # Tokenization
+
+# ===================================================================
+# POWER-USER CPU PERFORMANCE (CORE)
+# ===================================================================
+
+# Performance & Data Processing
+pandas==2.1.3                     # Data manipulation
+joblib==1.3.2                     # Parallel computing
+numba==0.58.1                     # JIT compilation
+
+# ===================================================================
+# NETWORKING & API INTEGRATION
+# ===================================================================
+
+httpx==0.25.2
+aiohttp==3.9.1
+requests==2.31.0
+python-multipart==0.0.6
+
+# ===================================================================
+# JSON & SERIALIZATION (FAST)
+# ===================================================================
+
+orjson==3.9.10
+python-dateutil==2.8.2
+
+# ===================================================================
+# POWER-USER MONITORING (ESSENTIAL)
+# ===================================================================
+
+psutil==5.9.6
+loguru==0.7.2
+rich==13.7.0
+
+# ===================================================================
+# CONFIGURATION & UTILITIES
+# ===================================================================
+
+pyyaml==6.0.1
+python-dotenv==1.0.0
+aiofiles==23.2.1
+
+# ===================================================================
+# TESTING (DEVELOPMENT)
+# ===================================================================
+
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# ===================================================================
+# VIDEO ANALYSIS SPECIFIC (SIMPLIFIED)
+# ===================================================================
+
+# Audio Processing (for video context)
+librosa==0.10.1                   # Audio analysis
+soundfile==0.12.1                 # Audio I/O
+
+# Computer Vision
+scikit-image==0.22.0              # Image processing algorithms
+scipy==1.11.4                     # Scientific computing
+
+# ===================================================================
+# OPTIONAL: CLOUD ENHANCEMENT PACKAGES
+# ===================================================================
+
+# Uncomment for Cloud Enhancement (Option B)
+# anthropic==0.7.7                # Claude integration
+# google-cloud-aiplatform==1.38.1 # Google AI integration
