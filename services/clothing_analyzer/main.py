@@ -8,11 +8,14 @@ import asyncio
 import json
 import logging
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+import io
+import uuid
 
 import numpy as np
 import pandas as pd
@@ -32,6 +35,10 @@ try:
     from data_schema.person_dossier import PersonDossier, MediaAppearance
 except ImportError:
     logger.warning("Data schema not found. Using local schemas.")
+
+# Import der Insights-Services
+sys.path.append("../")
+from common.insights_service import insights_service, InsightType
 
 # Initialize Rich Console for Power-User output
 console = Console()
@@ -344,51 +351,76 @@ class ClothingAnalyzer:
 
     async def analyze_clothing_comprehensive(self, request: ClothingAnalysisRequest) -> ClothingAnalysisResult:
         """
-        Main clothing analysis function with full UC-001 integration.
+        Comprehensive clothing analysis with multiple detection methods.
         """
         start_time = datetime.now()
-        analysis_id = f"ca_{int(start_time.timestamp())}"
-
-        logger.info(f"👗 Starting clothing analysis: {analysis_id}")
 
         try:
-            # Analyze clothing
-            raw_analysis = await self.analyze_image_basic(request.image_data)
+            # Image preprocessing
+            image = Image.open(io.BytesIO(request.image_data))
+            image_array = np.array(image)
 
-            # Classify into structured items
-            clothing_items = self.classify_clothing_items(raw_analysis["detected_items"])
+            # Multi-step analysis
+            basic_analysis = await self.analyze_image_basic(request.image_data)
 
-            # Calculate processing time
-            processing_time = (datetime.now() - start_time).total_seconds()
-
+            # Create result
             result = ClothingAnalysisResult(
-                image_id=f"img_{analysis_id}",
+                image_id=str(uuid.uuid4()),
                 person_id=request.person_id,
-                analysis_id=analysis_id,
-                detected_items=clothing_items,
-                overall_style="casual" if clothing_items else "unknown",
-                material_summary={},
-                style_summary={},
-                confidence_average=np.mean([item.confidence for item in clothing_items]) if clothing_items else 0.0,
-                processing_time=processing_time,
+                analysis_id=str(uuid.uuid4()),
+                detected_items=basic_analysis.get("detected_items", []),
+                overall_style=basic_analysis.get("overall_style", "casual"),
+                material_summary=basic_analysis.get("material_summary", {}),
+                style_summary=basic_analysis.get("style_summary", {}),
+                confidence_average=basic_analysis.get("confidence_average", 0.5),
+                processing_time=(datetime.now() - start_time).total_seconds(),
                 analysis_depth=request.analysis_depth,
-                total_categories_detected=len(clothing_items)
+                total_categories_detected=len(basic_analysis.get("detected_items", []))
             )
 
-            # Cache result in Redis
-            if self.redis_client:
-                await self.redis_client.setex(
-                    f"clothing_analysis:{analysis_id}",
-                    3600,  # 1 hour cache
-                    result.model_dump_json()
-                )
+            # ✅ NEU: Kleidungsanalyse in Insights-Datenbank speichern
+            await self._save_clothing_insight(result, request)
 
-            logger.info(f"✅ Clothing analysis completed in {processing_time:.1f}s")
             return result
 
         except Exception as e:
             logger.error(f"❌ Clothing analysis failed: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+    async def _save_clothing_insight(self, result: ClothingAnalysisResult, request: ClothingAnalysisRequest):
+        """
+        Speichert Kleidungsanalyse in der Insights-Datenbank.
+        """
+        try:
+            # Kleidungsdaten für Insights formatieren
+            clothing_items = [item.category for item in result.detected_items]
+            clothing_summary = f"{result.overall_style} style with {len(clothing_items)} items"
+
+            clothing_data = {
+                "detected_clothing": clothing_items,
+                "overall_style": result.overall_style,
+                "total_items": result.total_categories_detected,
+                "analysis_depth": result.analysis_depth,
+                "materials": list(result.material_summary.keys()),
+                "confidence_average": result.confidence_average
+            }
+
+            # Insights-Service aufrufen
+            insight_id = insights_service.add_clothing_analysis(
+                job_id=request.person_id or "unknown_job",  # Fallback
+                media_id=result.image_id,
+                media_filename="uploaded_image.jpg",  # TODO: Echten Filename extrahieren
+                media_type="image",
+                clothing_data=clothing_data,
+                confidence=result.confidence_average,
+                media_timestamp=None
+            )
+
+            logger.info(f"✅ Clothing insight saved: {insight_id}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save clothing insight: {str(e)}")
+            # Nicht kritisch - Hauptfunktion soll weiterlaufen
 
 # ===================================================================
 # FASTAPI APPLICATION

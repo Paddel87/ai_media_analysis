@@ -1,12 +1,12 @@
 # 🗺️ AI Media Analysis - Project Roadmap
 
-**Version:** Alpha 0.4.4
+**Version:** 0.1.0
 **Datum:** 06.02.2025
 **Status:** VPS-Ready Development mit Performance-Optimierung abgeschlossen
 **Strategy:** VPS-First Self-Service Content-Moderation für Unternehmen
 **🎯 Zielgruppe:** Content-Moderatoren in HR/Security-Teams (Self-Service VPS-Setup)
 
-## 📍 Aktueller Standort - Alpha 0.4.4 ✅
+## 📍 Aktueller Standort - 0.1.0 ✅
 
 ### Development-Infrastructure & Performance-Optimierung abgeschlossen
 - **🛠️ Vollautomatisiertes Setup:** `make dev-setup` reduziert Setup-Zeit auf <5 Minuten
@@ -19,7 +19,7 @@
 - **✅ GitHub Actions:** Pipeline vollständig stabil (Run 41 erfolgreich)
 - **🚀 Performance-Optimierung:** Memory-Management, Concurrency, Caching implementiert
 
-### Erreichte Meilensteine Alpha 0.4.4 ✅
+### Erreichte Meilensteine 0.1.0 ✅
 - **Development-Experience:** Von 30-60 Minuten Setup auf <5 Minuten reduziert
 - **Developer-Onboarding:** Neue Entwickler productive in <10 Minuten
 - **Code-Quality-Automation:** Enterprise-Grade Standards implementiert
@@ -82,14 +82,14 @@
 
 | Phase | Zeitrahmen | Hauptziel | Status |
 |-------|------------|-----------|--------|
-| **Alpha 0.4.4** | ✅ Abgeschlossen | Development-Infrastructure & Performance-Optimierung | ✅ ERREICHT |
-| **Alpha 0.5.0** | 2-3 Wochen | Service-Integration & VPS-Setup | 🔄 AKTIV |
-| **Alpha 0.6.0** | 6-8 Wochen | Content-Moderation-Features + Cloud AI | 🔄 Geplant |
-| **Alpha 0.7.0** | 6-12 Wochen | Professional Content-Moderation-Platform | 🔄 Geplant |
-| **Beta 0.8.0-0.9.0** | 3-6 Monate | Enterprise-Features & Forensik-Support | ⏳ Zukunft |
+| **0.1.0** | ✅ Abgeschlossen | Development-Infrastructure & Performance-Optimierung | ✅ ERREICHT |
+| **0.2.0** | 2-3 Wochen | Service-Integration & VPS-Setup | 🔄 AKTIV |
+| **0.3.0** | 6-8 Wochen | Content-Moderation-Features + Cloud AI | 🔄 Geplant |
+| **0.4.0** | 6-12 Wochen | Professional Content-Moderation-Platform | 🔄 Geplant |
+| **0.8.0-0.9.0** | 3-6 Monate | Enterprise-Features & Forensik-Support | ⏳ Zukunft |
 | **Version 1.0** | 12-18 Monate | Market-Leading VPS Content-Moderation | ⏳ Zukunft |
 
-## 🎯 **Alpha 0.5.0 - Iteration 1: Management-Core Services** ✅ **ABGESCHLOSSEN**
+## 🎯 **0.2.0 - Iteration 1: Management-Core Services** ✅ **ABGESCHLOSSEN**
 
 ### ✅ **Erfolgreiche Implementierung (Dezember 2024)**
 - ✅ **Control Service:** System-Control-Interface mit Redis-Integration (Port 8006)
@@ -100,7 +100,7 @@
 - ✅ **API-Funktionalität:** 15+ REST-Endpoints, standardisierte Health-Checks
 - ✅ **Code-Qualität:** 1.353+ Zeilen Service-Code, unified FastAPI-Pattern
 
-## 🔄 **Alpha 0.6.0 - Iteration 2: AI-Processing Services** 🎯 **NÄCHSTE PRIORITÄT**
+## 🔄 **0.3.0 - Iteration 2: AI-Processing Services** 🎯 **NÄCHSTE PRIORITÄT**
 
 ### **Ziele (Januar 2025)**
 - **🔧 CPU-Dockerfiles:** Dockerfile.cpu für pose_estimation, ocr_detection, clip_nsfw, face_reid
@@ -121,7 +121,7 @@
 - **API-Integration:** Konsistente AI-Service-APIs
 - **Error-Handling:** Graceful Fallbacks bei Model-Loading-Fehlern
 
-## 🎯 Alpha 0.6.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
+## 🎯 0.3.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
 
 ### 🎯 Hauptziel
 **Vollständiger Content-Moderation-Workflow mit optionaler Cloud AI-Beschleunigung**
@@ -162,7 +162,7 @@
   - Clothing/Restraint-Analysis für HR-Compliance-Cases
   - Audio-Transkription mit Sentiment-Analysis für verdächtige Aussagen
 
-### 📊 Erfolgsmetriken Alpha 0.6.0
+### 📊 Erfolgsmetriken 0.3.0
 - [ ] Content-Moderator kann kompletten Workflow ohne Training durchführen
 - [ ] System erkennt >95% der problematischen Inhalte automatisch
 - [ ] Export-Funktionen erstellen verwendbare HR/Legal-Dokumentation
@@ -181,7 +181,7 @@
   - services/clothing_analyzer/ - Erweiterte Kleidungs-/Nacktheit-Erkennung
 - **Export-Engine:** PDF-Report-Generation für HR-Documentation
 
-## 🏁 Alpha 0.7.0 - Professional Content-Moderation-Platform (6-12 Wochen)
+## 🏁 0.4.0 - Professional Content-Moderation-Platform (6-12 Wochen)
 
 ### 🎯 Hauptziel
 **Production-ready für Content-Moderation-Teams mit weltweitem Remote-Zugriff**
@@ -221,7 +221,7 @@
 - **Remote-Management-UI:** Dashboard für HR/Security-Manager (weltweit zugänglich)
 - **Documentation:** Enterprise-VPS-Deployment-Guide, Remote-Team-Administration
 
-## 🏢 Beta 0.8.0-0.9.0 - Enterprise VPS Content-Moderation-Suite (3-6 Monate)
+## 🏢 0.8.0-0.9.0 - Enterprise VPS Content-Moderation-Suite (3-6 Monate)
 
 ### 🎯 Hauptziel
 **Enterprise-Features für große Organisationen mit Multi-VPS-Support**

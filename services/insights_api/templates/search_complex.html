@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Komplexe Personen-Suche - AI Media Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-form {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .quick-search {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .quick-search h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .results {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .results-content {
+            padding: 20px;
+        }
+
+        .person-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s;
+        }
+
+        .person-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .person-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .person-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .confidence-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .person-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-group h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-list {
+            list-style: none;
+        }
+
+        .detail-list li {
+            padding: 3px 0;
+            color: #666;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .shibari-detected {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Komplexe Personen-Suche</h1>
+            <p>Erweiterte Personenanalyse mit Re-ID und komplexen Filteroptionen</p>
+        </div>
+
+        <div class="search-form">
+            <div class="quick-search">
+                <h3>🚀 Schnellsuche</h3>
+                <div class="quick-buttons">
+                    <button class="quick-btn" onclick="searchBlondeShibari()">👱‍♀️ Blondine + Shibari</button>
+                    <button class="quick-btn" onclick="searchHappyRed()">😊 Glücklich + Rot</button>
+                    <button class="quick-btn" onclick="searchBondageStyles()">🔗 Bondage-Styles</button>
+                    <button class="quick-btn" onclick="searchFrequentPersons()">👥 Häufige Personen</button>
+                </div>
+            </div>
+
+            <form id="complexSearchForm">
+                <div class="form-grid">
+                    <!-- Erscheinungsmerkmale -->
+                    <div class="form-group">
+                        <label for="hairColor">🎨 Haarfarbe</label>
+                        <select id="hairColor" class="form-control">
+                            <option value="">Alle Haarfarben</option>
+                            <option value="blonde">Blond</option>
+                            <option value="brunette">Brünett</option>
+                            <option value="redhead">Rothaarig</option>
+                            <option value="black">Schwarz</option>
+                            <option value="gray">Grau</option>
+                            <option value="colorful">Bunt</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ageRange">👶 Altersbereich</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="ageMin" class="form-control" placeholder="Min" min="18" max="99">
+                            <input type="number" id="ageMax" class="form-control" placeholder="Max" min="18" max="99">
+                        </div>
+                    </div>
+
+                    <!-- Emotionale Filter -->
+                    <div class="form-group">
+                        <label>😊 Emotionen</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="happy" value="happy">
+                                <label for="happy">Glücklich</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="surprised" value="surprised">
+                                <label for="surprised">Überrascht</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="neutral" value="neutral">
+                                <label for="neutral">Neutral</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="pain" value="pain">
+                                <label for="pain">Schmerz</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="pleasure" value="pleasure">
+                                <label for="pleasure">Lust</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kleidungsfilter -->
+                    <div class="form-group">
+                        <label>👗 Kleidungsstile</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="casual" value="casual">
+                                <label for="casual">Casual</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="formal" value="formal">
+                                <label for="formal">Formal</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lingerie" value="lingerie">
+                                <label for="lingerie">Lingerie</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="latex" value="latex">
+                                <label for="latex">Latex</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BDSM/Restraint-Filter -->
+                    <div class="form-group">
+                        <label>🔗 Fesselungsarten</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="shibari" value="shibari">
+                                <label for="shibari">Shibari/Kinbaku</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="handcuffs" value="handcuffs">
+                                <label for="handcuffs">Handschellen</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rope" value="rope">
+                                <label for="rope">Seil-Bondage</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="chains" value="chains">
+                                <label for="chains">Ketten</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erweiterte Filter -->
+                    <div class="form-group">
+                        <label for="minAppearances">📊 Mindest-Auftritte</label>
+                        <input type="number" id="minAppearances" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+
+                <button type="submit" class="search-btn">🔍 Personen durchsuchen</button>
+            </form>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="results-header">
+                <h2 id="resultsTitle">Suchergebnisse</h2>
+                <p id="resultsCount"></p>
+            </div>
+            <div class="results-content" id="resultsContent">
+                <!-- Ergebnisse werden hier eingefügt -->
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Durchsuche Personen-Datenbank...</p>
+        </div>
+    </div>
+
+    <script>
+        // Schnellsuche-Funktionen
+        function searchBlondeShibari() {
+            document.getElementById('hairColor').value = 'blonde';
+            document.getElementById('shibari').checked = true;
+            document.getElementById('complexSearchForm').dispatchEvent(new Event('submit'));
+        }
+
+        function searchHappyRed() {
+            document.getElementById('happy').checked = true;
+            // Hier würde man auch rote Kleidung filtern
+            document.getElementById('complexSearchForm').dispatchEvent(new Event('submit'));
+        }
+
+        function searchBondageStyles() {
+            document.getElementById('shibari').checked = true;
+            document.getElementById('rope').checked = true;
+            document.getElementById('chains').checked = true;
+            document.getElementById('complexSearchForm').dispatchEvent(new Event('submit'));
+        }
+
+        function searchFrequentPersons() {
+            document.getElementById('minAppearances').value = '5';
+            document.getElementById('complexSearchForm').dispatchEvent(new Event('submit'));
+        }
+
+        // Hauptsuchfunktion
+        document.getElementById('complexSearchForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Loading anzeigen
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            // Formular-Daten sammeln
+            const formData = {
+                hair_color: document.getElementById('hairColor').value || null,
+                age_min: parseInt(document.getElementById('ageMin').value) || null,
+                age_max: parseInt(document.getElementById('ageMax').value) || null,
+                emotions: getCheckedValues(['happy', 'surprised', 'neutral', 'pain', 'pleasure']),
+                clothing_styles: getCheckedValues(['casual', 'formal', 'lingerie', 'latex']),
+                restraint_types: getCheckedValues(['handcuffs', 'chains']),
+                include_shibari: document.getElementById('shibari').checked || null,
+                min_appearances: parseInt(document.getElementById('minAppearances').value) || 1,
+                limit: 20
+            };
+
+            try {
+                // API-Aufruf
+                const response = await fetch('http://localhost:8021/search/complex', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const results = await response.json();
+                displayResults(results);
+
+            } catch (error) {
+                console.error('Sucherror:', error);
+                document.getElementById('resultsContent').innerHTML =
+                    '<div class="no-results">❌ Fehler bei der Suche. Bitte versuchen Sie es erneut.</div>';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+            }
+        });
+
+        function getCheckedValues(ids) {
+            return ids.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value);
+        }
+
+        function displayResults(results) {
+            const container = document.getElementById('resultsContent');
+            const count = document.getElementById('resultsCount');
+            const title = document.getElementById('resultsTitle');
+
+            if (!results || results.length === 0) {
+                container.innerHTML = '<div class="no-results">🔍 Keine Personen gefunden, die den Suchkriterien entsprechen.</div>';
+                count.textContent = '0 Ergebnisse';
+                title.textContent = 'Keine Treffer';
+                return;
+            }
+
+            count.textContent = `${results.length} Personen gefunden`;
+            title.textContent = 'Gefundene Personen';
+
+            const html = results.map(person => `
+                <div class="person-card">
+                    <div class="person-header">
+                        <div class="person-name">${person.display_name}</div>
+                        <div class="confidence-badge">${Math.round(person.confidence_score * 100)}% Confidence</div>
+                    </div>
+
+                    <div class="person-details">
+                        <div class="detail-group">
+                            <h4>👤 Erscheinung</h4>
+                            <ul class="detail-list">
+                                ${person.hair_color ? `<li>Haarfarbe: <span class="highlight">${person.hair_color}</span></li>` : ''}
+                                ${person.approximate_age ? `<li>Geschätztes Alter: ${person.approximate_age}</li>` : ''}
+                            </ul>
+                        </div>
+
+                        <div class="detail-group">
+                            <h4>😊 Emotionen</h4>
+                            <ul class="detail-list">
+                                ${person.dominant_emotions ? person.dominant_emotions.map(emotion => `<li>${emotion}</li>`).join('') : '<li>Keine Daten</li>'}
+                            </ul>
+                        </div>
+
+                        <div class="detail-group">
+                            <h4>👗 Kleidung</h4>
+                            <ul class="detail-list">
+                                ${person.clothing_styles ? person.clothing_styles.map(style => `<li>${style}</li>`).join('') : '<li>Keine Daten</li>'}
+                            </ul>
+                        </div>
+
+                        <div class="detail-group">
+                            <h4>🔗 Fesselungen</h4>
+                            <ul class="detail-list">
+                                ${person.shibari_detected ? '<li class="shibari-detected">✅ Shibari erkannt</li>' : ''}
+                                ${person.restraint_types ? person.restraint_types.map(type => `<li>${type}</li>`).join('') : '<li>Keine Fesselungen erkannt</li>'}
+                            </ul>
+                        </div>
+
+                        <div class="detail-group">
+                            <h4>📊 Statistiken</h4>
+                            <ul class="detail-list">
+                                <li>Auftritte: ${person.total_appearances}</li>
+                                <li>Erste Sichtung: ${person.first_seen ? new Date(person.first_seen).toLocaleDateString('de-DE') : 'Unbekannt'}</li>
+                                <li>Letzte Sichtung: ${person.last_seen ? new Date(person.last_seen).toLocaleDateString('de-DE') : 'Unbekannt'}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+
+</html>

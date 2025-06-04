@@ -3,6 +3,7 @@ import base64
 import logging
 import os
 import pickle
+import sys
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -15,7 +16,7 @@ import redis
 import requests
 import torch
 from fastapi import FastAPI, HTTPException
-from insightface.app import FaceAnalysis
+from insightface.app import FaceAnalysis  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
 # Logger konfigurieren
@@ -34,6 +35,10 @@ REDIS_DB = int(os.getenv("REDIS_DB", 0))
 
 # Thread Pool für CPU-intensive Operationen
 thread_pool = ThreadPoolExecutor(max_workers=4)
+
+# Import der Insights-Services
+sys.path.append("../")
+from common.insights_service import insights_service, InsightType
 
 
 class ImageAnalysisRequest(BaseModel):
@@ -110,7 +115,7 @@ class FaceReIDService:
 
     async def analyze_face(
         self, image_data: bytes, job_id: str, media_id: str, source_type: str
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """
         Analysiert ein Gesicht mit InsightFace und CLIP
         """
@@ -160,6 +165,9 @@ class FaceReIDService:
 
                 # In Redis speichern
                 self._save_face_to_redis(face_id, result)
+
+                # ✅ NEU: Erkenntnis in Insights-Datenbank speichern
+                await self._save_person_insight(result)
 
                 results.append(result)
 
@@ -278,6 +286,41 @@ class FaceReIDService:
         except Exception as e:
             logger.error(f"Fehler bei der Batch-Verarbeitung: {str(e)}")
             raise
+
+    async def _save_person_insight(self, face_result: Dict):
+        """
+        Speichert Personenerkennung in der Insights-Datenbank.
+        """
+        try:
+            # Emotion-Daten extrahieren
+            emotions = face_result.get("emotions", {})
+            dominant_emotion = max(emotions.items(), key=lambda x: x[1])[0] if emotions else "neutral"
+
+            # Person-Daten für Insights formatieren
+            person_data = {
+                "display_name": f"Person_{face_result['face_id'][:8]}",
+                "emotions": [dominant_emotion],
+                "confidence": face_result["confidence"],
+                "face_id": face_result["face_id"],
+                "embedding_quality": len(face_result.get("embedding", [])) / 512  # Normalisiert
+            }
+
+            # Insights-Service aufrufen
+            insight_id = insights_service.add_person_detection(
+                job_id=face_result["job_id"],
+                media_id=face_result["media_id"],
+                media_filename="unknown.jpg",  # TODO: Echten Filename übergeben
+                media_type=face_result["source_type"],
+                person_data=person_data,
+                confidence=face_result["confidence"],
+                media_timestamp=None  # TODO: Timestamp aus Video extrahieren
+            )
+
+            logger.info(f"✅ Person insight saved: {insight_id}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save person insight: {str(e)}")
+            # Nicht kritisch - Hauptfunktion soll weiterlaufen
 
 
 # Service-Instanz erstellen

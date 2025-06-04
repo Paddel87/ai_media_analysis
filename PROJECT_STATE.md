@@ -1,6 +1,6 @@
 # AI Media Analysis - Enterprise Development Project Status
 
-## AKTUELLER IST-ZUSTAND (Alpha 0.5.0 - Enterprise Development Framework ✅)
+## AKTUELLER IST-ZUSTAND (0.1.0 - Enterprise Development Framework ✅)
 
 ### 🎯 MEILENSTEIN ERREICHT: 5 Hauptentwicklungsregeln erfolgreich implementiert ✅
 
@@ -131,10 +131,9 @@ make compliance-gate       # Linter-Compliance Check
 - **✅ Modulare Service-Organisation:** Infrastructure, AI Processing, Management, UI Services kategorisiert
 - **✅ Performance-Optimierung:** Memory-Management, Concurrency, TTL-Caching implementiert
 
-### Aktive Service-Kategorien (14/24 Services) ✅
+### Aktive Service-Kategorien (13/24 Services) ✅
 - **Infrastructure Services (4/4):** nginx, vector_db, redis, data-persistence
 - **AI Processing Services (5/10):** pose_estimation, ocr_detection, clip_nsfw, face_reid, whisper_transcriber
-- **UI Services (1/2):** streamlit-ui (aktiv) - ui (noch zu integrieren)
 - **Management Services (4/4) ✅:** job_manager, control, embedding_server, llm_service
 
 ### Was definitiv funktioniert ✅
@@ -206,7 +205,7 @@ make compliance-gate       # Linter-Compliance Check
 
 ## VPS-DEPLOYMENT ROADMAP
 
-### Alpha 0.5.0 - Enterprise Development Framework ✅ ACHIEVED
+### 0.1.0 - Enterprise Development Framework ✅ ACHIEVED
 **✅ Ziel:** 5 Hauptentwicklungsregeln implementieren + Enterprise Development Standards
 **✅ Erfolgskriterien:** ALLE ERREICHT
 - ✅ Feature Testing Regel: Umfassende Test-Pipeline mit 80%+ Coverage
@@ -224,7 +223,7 @@ make compliance-gate       # Linter-Compliance Check
 - **Automatisierte Quality Gates:** CI/CD mit automatischer Compliance-Prüfung
 - **Developer Experience:** Umfassende Automation und Diagnose-Tools
 
-### Alpha 0.6.0 - Service-Integration & VPS-Production-Ready (nächste 2-3 Wochen)
+### 0.2.0 - Service-Integration & VPS-Production-Ready (nächste 2-3 Wochen)
 **Ziel:** Alle 24 Services integriert + Production-Ready VPS-Setup für Standard-Server
 **Erfolgskriterien:**
 - Alle 24 Services laufen stabil im docker-compose.yml (derzeit 14/24)
@@ -250,7 +249,7 @@ make compliance-gate       # Linter-Compliance Check
 - ⚡ Config-Management: Centralized Configuration für alle 24 Services
 - ⚡ Environment-Variables: Standardisierte ENV-Konfiguration
 
-### Alpha 0.7.0 - Cloud AI-Integration (4-6 Wochen)
+### 0.3.0 - Cloud AI-Integration (4-6 Wochen)
 **Ziel:** Vollständige VPS + Cloud AI-Integration
 **Erfolgskriterien:**
 - Vast.ai API-Integration funktional
@@ -303,13 +302,13 @@ make pre-merge-check      # 7. Quality Gate vor Commit
 
 ---
 
-**Status:** Alpha 0.5.0 - Enterprise Development Framework vollständig implementiert ✅
-**Next:** Alpha 0.6.0 - Service-Integration + Production VPS-Deployment
+**Status:** 0.1.0 - Enterprise Development Framework vollständig implementiert ✅
+**Next:** 0.2.0 - Service-Integration + Production VPS-Deployment
 **Achievement:** 5/5 Hauptentwicklungsregeln erfolgreich deployt
 
 # AI MEDIA ANALYSIS - PROJECT STATE
 **Letzte Aktualisierung**: 03. Juni 2025, 20:40 Uhr
-**Version**: Alpha 0.6.0 - UC-001 Enhanced Manual Analysis
+**Version**: 0.1.0 - UC-001 Enhanced Manual Analysis
 **Status**: PRODUKTIONSREIF mit kleineren Bugs
 
 ---

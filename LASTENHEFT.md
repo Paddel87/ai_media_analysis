@@ -1,7 +1,7 @@
 # AI Media Analysis System - Lastenheft
 
 **Projekt:** AI Media Analysis System
-**Version:** Alpha 0.4.4
+**Version:** 0.1.0
 **Datum:** 06.02.2025
 **Status:** VPS-Ready Development mit Performance-Optimierung abgeschlossen
 **🎯 Zielgruppe:** Self-Service VPS Content-Moderation für Unternehmen (weltweiter Zugriff)
@@ -38,8 +38,8 @@
 #### **Optional (spätere Branch):**
 - **Desktop-App-Installation:** Lokale Installation für Einzelnutzer (Version 1.0+)
 
-### 1.3 Aktueller Status - Alpha 0.4.4
-- **Phase:** Alpha 0.4.4 - Development-Infrastructure & Performance-Optimierung abgeschlossen
+### 1.3 Aktueller Status - 0.1.0
+- **Phase:** 0.1.0 - Development-Infrastructure & Performance-Optimierung abgeschlossen
 - **CI/CD:** Vollständig stabil (GitHub Actions Run 41 erfolgreich)
 - **Development-Infrastructure:** Professional-Grade Automation implementiert
 - **Service-Architecture:** **10 aktive Services** in docker-compose.yml konfiguriert
@@ -47,7 +47,7 @@
 - **VPS-Readiness:** Alle 10 aktiven Services für Standard-Server optimiert
 - **Performance-Features:** Memory-Management, Concurrency, Caching optimiert
 
-### 1.4 Development-Infrastructure & Performance-Erfolge Alpha 0.4.4 ✅
+### 1.4 Development-Infrastructure & Performance-Erfolge 0.1.0 ✅
 - **🛠️ Vollautomatisiertes Setup:** `make dev-setup` (<5 Minuten)
 - **⚡ 60+ Makefile-Commands:** Comprehensive Development-Automation
 - **🛡️ Pre-Commit-Hooks:** Automatische Code-Quality-Sicherung
@@ -121,7 +121,7 @@
 
 ## 3. ENTWICKLUNGS-ROADMAP - VPS-FIRST SELF-SERVICE
 
-### 3.1 Alpha 0.5.0 - Self-Service VPS-Setup & SSL-Automation (2-3 Wochen)
+### 3.1 0.2.0 - Self-Service VPS-Setup & SSL-Automation (2-3 Wochen)
 **Ziel:** Content-Moderatoren können VPS ohne IT-Support einrichten und weltweit zugreifen
 
 **Priorität 1: Service-Integration abschließen**
@@ -143,7 +143,7 @@
 - Content-Moderator kann von überall Videos hochladen und analysieren lassen
 - Alle Services zeigen "ready-to-use" Status im Health-Dashboard
 
-### 3.2 Alpha 0.6.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
+### 3.2 0.3.0 - Content-Moderation-Features + Cloud AI-Integration (6-8 Wochen)
 **Ziel:** Vollständiger Content-Moderation-Workflow mit VPS-Cloud-Hybrid-Architecture
 
 **Features:**
@@ -163,7 +163,7 @@
 - Cloud AI-Integration reduziert Analyse-Zeit um 70% (bei Nutzung)
 - Export-Funktionen erstellen verwendbare HR/Legal-Dokumentation
 
-### 3.3 Alpha 0.7.0 - Professional VPS Content-Moderation-Platform (6-12 Wochen)
+### 3.3 0.4.0 - Professional VPS Content-Moderation-Platform (6-12 Wochen)
 **Ziel:** Production-ready für Content-Moderation-Teams mit weltweitem Remote-Zugriff
 
 **Features:**
@@ -180,7 +180,7 @@
 
 ## 4. FUNKTIONALE ANFORDERUNGEN - VPS-OPTIMIERT
 
-### 4.1 Core VPS-Services (Alpha 0.5.0 Ziel)
+### 4.1 Core VPS-Services (0.2.0 Ziel)
 
 #### 4.1.1 Infrastructure Services ✅ (4/4 aktiv)
 **Redis Service**
@@ -196,7 +196,7 @@
 **Nginx Service**
 - **Status:** Bereit für SSL-Production-Setup
 - **Functions:** Load-Balancing, SSL-Termination, Request-Routing
-- **SSL:** Let's Encrypt Integration (Alpha 0.5.0 Ziel)
+- **SSL:** Let's Encrypt Integration (0.2.0 Ziel)
 
 **Data Persistence Service**
 - **Status:** VPS-ready, aktiv konfiguriert
@@ -258,7 +258,7 @@
 - [ ] **clip_service:** Enhanced CLIP-Integration
 - [ ] **ui:** Production Web-Interface (vs. streamlit-ui)
 
-### 4.2 🆕 UC-001: Erweiterte Medienanalyse-Services (Alpha 0.6.0)
+### 4.2 🆕 UC-001: Erweiterte Medienanalyse-Services (0.3.0)
 
 #### 4.2.1 Personen-Dossier-System
 **Person Dossier Service**
@@ -284,7 +284,7 @@
 - **CLIP-Integration:** Erweiterte semantische Kleidungs-Klassifikation
 - **Such-Filter:** Nach spezifischen Kleidungstypen und Materialien
 
-### 4.3 Development-Infrastructure (Alpha 0.4.4 ✅)
+### 4.3 Development-Infrastructure (0.1.0 ✅)
 
 #### 4.3.1 Professional Development-Standards
 - **Pre-Commit-Hooks:** Automatische Code-Quality-Sicherung
@@ -435,7 +435,7 @@ Korrektur-Features:
 
 ## 8. ABNAHMEKRITERIEN - PHASENWEISE
 
-### 8.1 Alpha 0.4.4 Kriterien ✅ ERREICHT
+### 8.1 0.1.0 Kriterien ✅ ERREICHT
 - [x] Development-Infrastructure vollständig automatisiert (<5 Min Setup)
 - [x] GitHub Actions Pipeline vollständig stabil
 - [x] 24 Services in einheitlicher services/ Struktur
@@ -443,14 +443,14 @@ Korrektur-Features:
 - [x] VPS-Readiness: Alle Services für Standard-Server optimiert
 - [x] Cross-Platform Development-Support (Windows/Linux/macOS)
 
-### 8.2 Alpha 0.5.0 Kriterien (AKTIV)
+### 8.2 0.2.0 Kriterien (AKTIV)
 - [ ] `make vps-deploy` funktioniert auf Standard-Hetzner-VPS ohne IT-Kenntnisse
 - [ ] SSL-Setup automatisiert mit Let's Encrypt
 - [ ] Alle Services starten mit CPU-only Dockerfiles
 - [ ] Health-Monitoring zeigt alle Services als "healthy"
 - [ ] Performance-Benchmarks für 8GB, 16GB, 32GB VPS etabliert
 
-### 8.3 Alpha 0.6.0 Kriterien
+### 8.3 0.3.0 Kriterien
 - [ ] **Upload-to-Analysis-Workflow:** Video/Bild-Upload → Analyse → Dossier in <2 Minuten
 - [ ] **Personen-Dossiers:** Automatische Erstellung mit Porträt, Körpermaße, Job-Historie
 - [ ] **Kleidungsanalyse:** Erkennung von 200+ Kategorien (Casual→Dessous) mit >85% Genauigkeit
@@ -461,7 +461,7 @@ Korrektur-Features:
 - [ ] **Performance:** 5 parallele Video-Analysen ohne Performance-Degradation
 - [ ] **Cloud AI-Integration:** Vast.ai-Instanzen werden automatisch für UC-001-Tasks genutzt
 
-### 8.4 Alpha 0.7.0 Beta-Transition-Kriterien
+### 8.4 0.4.0 Beta-Transition-Kriterien
 - [ ] End-to-End: Upload → Cloud AI-Analyse → Resultate in UI
 - [ ] System läuft stabil >48 Stunden unter Last
 - [ ] Performance: <2s für Standard-Analyse via Cloud AI
@@ -508,6 +508,6 @@ Korrektur-Features:
 
 **🎯 Mission:** Die führende VPS-Native AI-Platform mit erweiterten Medienanalyse-Capabilities zu entwickeln.
 
-**⚡ Execution:** Bewährte Development-Standards + strategische UC-001-Integration in Alpha 0.6.0.
+**⚡ Execution:** Bewährte Development-Standards + strategische UC-001-Integration in 0.3.0.
 
 **🚀 Vision:** Market-Leader in intelligenten VPS-AI-Solutions mit unvergleichlichen Personen-Dossier-Features.

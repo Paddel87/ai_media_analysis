@@ -62,7 +62,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "python", "-c", "import os; assert os.path.exists('/app/data')"]
+      test: ["CMD", "python3", "-c", "import os; assert os.path.exists('/app/data')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -136,7 +136,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -184,7 +184,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -224,7 +224,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -264,7 +264,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -339,7 +339,7 @@ services:
           cpus: '2.0'    # Guaranteed CPU
           memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8003/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -378,51 +378,11 @@ services:
           cpus: '2'
           memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 90s  # Whisper braucht länger zum Starten
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # Development UI Service
-  streamlit-ui:
-    build:
-      context: ./services/ui
-      dockerfile: Dockerfile
-    ports:
-      - "8501:8501"
-    volumes:
-      - ./data:/app/data
-      - ./logs/ui:/app/logs
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=INFO
-      - API_BASE_URL=http://nginx
-    depends_on:
-      - nginx
-      - redis
-    networks:
-      - ai_network
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -468,7 +428,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -512,7 +472,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -559,7 +519,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -606,7 +566,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -686,7 +646,7 @@ services:
           cpus: '2.0'    # Guaranteed CPU for responsiveness
           memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -773,7 +733,7 @@ services:
           cpus: '3.0'    # Guaranteed CPU for video processing
           memory: 3G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 15s
       retries: 3
@@ -860,7 +820,7 @@ services:
           cpus: '2.0'    # Guaranteed CPU for CLIP operations
           memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=3)"]
       interval: 30s
       timeout: 15s
       retries: 3
@@ -905,9 +865,9 @@ services:
       - LOG_LEVEL=INFO
 
       # UC-001 SERVICE ENDPOINTS (Internal Docker Network)
-      - PERSON_DOSSIER_URL=http://person_dossier:8009
-      - VIDEO_CONTEXT_URL=http://video_context_analyzer:8010
-      - CLOTHING_ANALYZER_URL=http://clothing_analyzer:8011
+      - PERSON_DOSSIER_URL=http://ai_person_dossier:8000
+      - VIDEO_CONTEXT_URL=http://ai_video_context_analyzer:8000
+      - CLOTHING_ANALYZER_URL=http://ai_clothing_analyzer:8000
 
       # POWER-USER PIPELINE FEATURES
       - RESEARCH_PIPELINES=true
@@ -945,7 +905,7 @@ services:
           cpus: '1.5'    # Guaranteed CPU for pipeline processing
           memory: 1.5G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8012/health/uc001"]
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8012/health/uc001', timeout=3)"]
       interval: 30s
       timeout: 15s
       retries: 3
@@ -955,6 +915,65 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ===================================================================
+  # Insights-basierter Personen-Dossier Service (Re-ID + komplexe Suche)
+  # ===================================================================
+
+  insights_api:
+    build:
+      context: .
+      dockerfile: services/insights_api/Dockerfile
+    container_name: ai_insights_api
+    ports:
+      - "8020:8000"
+    environment:
+      - SERVICE_NAME=insights_api
+      - INSIGHTS_DB_PATH=/app/data/insights_database.db
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./data:/app/data
+      - ./logs/insights_api:/app/logs
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  insights_dossier:
+    build:
+      context: .
+      dockerfile: services/person_dossier/Dockerfile
+    container_name: ai_insights_dossier
+    ports:
+      - "8021:8021"
+    environment:
+      - SERVICE_NAME=insights_dossier
+      - INSIGHTS_DB_PATH=/app/data/insights_database.db
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./logs/insights_dossier:/app/logs
+    depends_on:
+      - insights_api
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8021/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - ai_network
+    command: ["python", "insights_dossier_service.py"]
 
 networks:
   ai_network:

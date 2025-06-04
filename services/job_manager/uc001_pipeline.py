@@ -146,20 +146,20 @@ class UC001PipelineOrchestrator:
         self.services = {
             "person_dossier": UC001ServiceEndpoint(
                 name="person_dossier",
-                url="http://person_dossier:8009",
-                port=8009,
+                url=os.getenv("PERSON_DOSSIER_URL", "http://ai_person_dossier:8000"),
+                port=8000,
                 health_endpoint="/health"
             ),
             "video_context_analyzer": UC001ServiceEndpoint(
                 name="video_context_analyzer",
-                url="http://video_context_analyzer:8010",
-                port=8010,
+                url=os.getenv("VIDEO_CONTEXT_URL", "http://ai_video_context_analyzer:8000"),
+                port=8000,
                 health_endpoint="/health"
             ),
             "clothing_analyzer": UC001ServiceEndpoint(
                 name="clothing_analyzer",
-                url="http://clothing_analyzer:8011",
-                port=8011,
+                url=os.getenv("CLOTHING_ANALYZER_URL", "http://ai_clothing_analyzer:8000"),
+                port=8000,
                 health_endpoint="/health"
             )
         }

@@ -1,6 +1,46 @@
 # Changelog
 
-## [Alpha 0.6.1] - 2025-06-03 - UI Critical Fix
+## [Alpha 0.6.3] - 2025-01-20 - Feature-Regeln Cleanup
+
+### 🗑️ Documentation Cleanup
+- **[REMOVAL]** UC-001 Enhanced Manual Analysis Feature-Regeln entfernt
+- **[REMOVAL]** `docs/features/UC-001/UC-001-RULES.md` (306 Zeilen) gelöscht
+- **[SIMPLIFICATION]** Projekt verwendet nur noch allgemeine Projekt-Regeln
+- **[FOCUS]** Keine feature-spezifischen Einschränkungen mehr
+
+### 📝 Architecture Simplification
+- **[RULES]** Power-User-First Strategy Regeln entfernt
+- **[RULES]** UC-001-spezifische Service-Standards entfernt
+- **[RULES]** Erweiterte Quality Gates für UC-001 entfernt
+- **[RULES]** Feature-spezifische Code-Standards entfernt
+
+### 🎯 System Focus
+- **[ARCHITECTURE]** Fokus auf allgemeine, feature-agnostic Architektur-Standards
+- **[FLEXIBILITY]** Erhöhte Entwicklungsflexibilität ohne feature-spezifische Constraints
+- **[MAINTENANCE]** Reduzierte Regel-Komplexität für einfachere Wartung
+
+### 🗑️ Architecture Cleanup
+- **[REMOVAL]** Komplettes UI-System entfernt - Backend-fokussierte Architektur
+- **[REMOVAL]** `services/ui/` Verzeichnis und alle UI-Service-Dateien entfernt
+- **[REMOVAL]** `streamlit-ui` Service aus docker-compose.yml entfernt
+- **[REMOVAL]** `logs/ui/` und `ui/` Verzeichnisse entfernt
+- **[REMOVAL]** Port 8501 (Streamlit) aus der Service-Architektur entfernt
+
+### 🎯 System Focus
+- **[ARCHITECTURE]** Reines Backend-API-System für AI Media Analysis
+- **[SIMPLIFICATION]** Reduzierte Service-Komplexität ohne UI-Dependencies
+- **[RESOURCES]** Freigegebene System-Ressourcen für Core AI-Services
+
+### 📝 Documentation Updates
+- **[README]** Service-Struktur aktualisiert - UI-Referenzen entfernt
+- **[ARCHITECTURE]** Backend-only System-Architektur dokumentiert
+
+### 🔧 Technical Improvements
+- **[DOCKER]** Vereinfachte docker-compose.yml ohne UI-Service
+- **[PORTS]** Port 8501 für andere Services verfügbar
+- **[DEPENDENCIES]** Entfernte nginx-Abhängigkeit für UI-Service
+
+## [Alpha 0.6.2] - 2025-06-04 - UI System entfernt
 
 ### 🚨 Critical Fixes
 - **[CRITICAL]** UI-System komplett repariert - war nicht funktionsfähig

@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # CPU-OPTIMIZED: Performance-first dependency installation
-COPY requirements.txt .
+COPY services/person_dossier/requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
@@ -34,17 +34,23 @@ RUN mkdir -p /app/data/dossiers && \
     mkdir -p /app/logs && \
     mkdir -p /app/config
 
+# COMMON SERVICES INTEGRATION (Required for insights_service)
+COPY services/common ./services/common
+
 # DATA SCHEMA INTEGRATION (UC-001 REQUIREMENT)
-COPY data_schema ./data_schema
+COPY services/person_dossier/data_schema ./data_schema
+COPY data_schema ./data_schema_root
 
 # APPLICATION CODE
-COPY main.py .
-COPY *.py .
+COPY services/person_dossier/main.py .
+COPY services/person_dossier/insights_dossier_service.py .
+COPY services/person_dossier/*.py .
 
 # OPTION A PRIMARY: Performance settings
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONOPTIMIZE=2
 ENV NUMBA_THREADING_LAYER=workqueue
+ENV PYTHONPATH=/app
 
 # UC-001 POWER-USER CONFIGURATION
 ENV UC001_ENABLED=true
@@ -53,10 +59,12 @@ ENV USER_CORRECTIONS=true
 ENV CPU_PRIMARY=true
 ENV PERFORMANCE_MONITORING=true
 
-# HEALTH CHECK for Power-User monitoring
+# HEALTH CHECK for Power-User monitoring - updated for insights_dossier port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8000/health || curl -f http://localhost:8021/health || exit 1
 
 EXPOSE 8000
+EXPOSE 8021
 
+# Default command - can be overridden in docker-compose
 CMD ["python", "main.py"]

@@ -137,7 +137,7 @@ Basis: services/ui/ erweitern
 - End-to-End UC-001 Workflow-Tests
 - Performance-Optimierung (Quality Gates einhalten)
 - Dokumentation finalisieren
-- Alpha 0.6.0 Release vorbereiten
+- 0.1.0 Release vorbereiten
 ```
 
 ---
@@ -298,7 +298,7 @@ git commit -m "docs: UC-001 implementation progress"
 - **Technical Excellence**: VPS-First mit Cloud AI-Integration
 
 ### **Nach UC-001 Implementation:**
-- **Alpha 0.6.0 Release**: Production-ready UC-001 Features
+- **0.1.0 Release**: Production-ready UC-001 Features
 - **Beta 0.7.0**: Multi-User und Enterprise-Features
 - **Version 1.0**: Market-Leading VPS-native AI-Platform
 
@@ -318,7 +318,7 @@ make uc001-help
 
 **Erstellt**: 03. Juni 2025
 **Status**: BEREIT FÜR UC-001 IMPLEMENTATION
-**Nächster Meilenstein**: Alpha 0.6.0 mit vollständigem UC-001 Feature-Set
+**Nächster Meilenstein**: 0.1.0 mit vollständigem UC-001 Feature-Set
 
 ## 🔥 SOFORTIGE PRIORITÄTEN (Nächste Session)
 

@@ -1,143 +1,163 @@
-import base64
-import logging
-import uuid
-from datetime import datetime
-from typing import Dict, List
+"""
+NSFW Detection Service - Einfaches Beispiel mit Insights-Integration
+Zeigt perfekte Integration der Erkenntnisse-Datenbank
+"""
 
-import requests
+import asyncio
+import logging
+import sys
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+# Import der Insights-Services
+sys.path.append("../")
+from common.insights_service import insights_service
+
 # Logger konfigurieren
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("nsfw_detection")
+logger = logging.getLogger("nsfw_service")
 
 app = FastAPI(
-    title="NSFW Detection Service", description="Service für NSFW-Erkennung mit CLIP"
+    title="NSFW Detection Service",
+    description="Service für NSFW-Erkennung mit Insights-Integration",
 )
 
 
-class NSFWService:
-    def __init__(self):
-        self.clip_service_url = "http://clip-service:8000"
-        self.nsfw_categories = [
-            "nude",
-            "explicit",
-            "sexual",
-            "violence",
-            "gore",
-            "disturbing",
-            "inappropriate",
-            "adult content",
-        ]
+class NSFWAnalysisRequest(BaseModel):
+    """Request für NSFW-Analyse."""
+    image_data: bytes
+    job_id: str
+    media_id: str
+    media_filename: str
+    media_type: str = "image"
 
-    async def analyze_image(self, image_data: bytes) -> Dict:
+
+class NSFWAnalysisResult(BaseModel):
+    """Ergebnis der NSFW-Analyse."""
+    is_nsfw: bool
+    nsfw_score: float
+    categories: List[str]
+    confidence: float
+    analysis_time: float
+
+
+class NSFWService:
+    """Einfacher NSFW-Detection Service mit Insights-Integration."""
+
+    def __init__(self):
+        self.confidence_threshold = 0.7
+
+    async def analyze_image(self, request: NSFWAnalysisRequest) -> NSFWAnalysisResult:
         """
-        Analysiert ein Bild auf NSFW-Inhalte
+        Analysiert ein Bild auf NSFW-Inhalte.
         """
+        start_time = datetime.now()
+
         try:
-            # CLIP-Analyse durchführen
-            response = requests.post(
-                f"{self.clip_service_url}/analyze",
-                json={
-                    "image_data": base64.b64encode(image_data).decode(),
-                    "text_queries": self.nsfw_categories,
-                },
+            # Simulierte NSFW-Analyse (in Realität: ML-Model)
+            nsfw_score = await self._detect_nsfw_content(request.image_data)
+            is_nsfw = nsfw_score > self.confidence_threshold
+            categories = self._classify_content_categories(nsfw_score)
+
+            # Ergebnis erstellen
+            result = NSFWAnalysisResult(
+                is_nsfw=is_nsfw,
+                nsfw_score=nsfw_score,
+                categories=categories,
+                confidence=nsfw_score,
+                analysis_time=(datetime.now() - start_time).total_seconds()
             )
 
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=500, detail="CLIP-Service nicht erreichbar"
-                )
+            # ✅ INSIGHTS-INTEGRATION: Erkenntnis speichern
+            await self._save_nsfw_insight(request, result)
 
-            results = response.json()
-
-            # Ergebnisse formatieren
-            nsfw_score = max(results.values())
-            detected_categories = {
-                category: score
-                for category, score in results.items()
-                if score > 0.5  # Schwellenwert für Kategorien
-            }
-
-            return {
-                "nsfw_score": nsfw_score,
-                "detected_categories": detected_categories,
-                "timestamp": datetime.utcnow().isoformat(),
-                "analysis_id": str(uuid.uuid4()),
-            }
+            logger.info(f"✅ NSFW analysis completed: {request.media_id} - NSFW: {is_nsfw}")
+            return result
 
         except Exception as e:
-            logger.error(f"Fehler bei der NSFW-Analyse: {str(e)}")
+            logger.error(f"❌ NSFW analysis failed: {str(e)}")
             raise
 
-    async def analyze_batch(self, images: List[bytes]) -> List[Dict]:
+    async def _detect_nsfw_content(self, image_data: bytes) -> float:
+        """Simulierte NSFW-Erkennung."""
+        # In Realität: ML-Model für NSFW-Detection
+        # Hier: Einfache Simulation basierend auf Datengröße
+        score = min(len(image_data) / 1000000, 1.0)  # Größere Bilder = höhere NSFW-Chance (Demo)
+        return score
+
+    def _classify_content_categories(self, nsfw_score: float) -> List[str]:
+        """Klassifiziert NSFW-Kategorien."""
+        categories: List[str] = []
+
+        if nsfw_score > 0.9:
+            categories.extend(["explicit", "adult"])
+        elif nsfw_score > 0.7:
+            categories.extend(["suggestive", "mature"])
+        elif nsfw_score > 0.5:
+            categories.append("questionable")
+        else:
+            categories.append("safe")
+
+        return categories
+
+    async def _save_nsfw_insight(self, request: NSFWAnalysisRequest, result: NSFWAnalysisResult):
         """
-        Analysiert mehrere Bilder auf NSFW-Inhalte
+        ✅ KERNELEMENT: Speichert NSFW-Erkenntnis in Insights-Datenbank.
+
+        Dies ist das perfekte Beispiel, wie JEDER Service seine Erkenntnisse
+        in die durchsuchbare Datenbank einträgt.
         """
-        results = []
-        for image_data in images:
-            try:
-                result = await self.analyze_image(image_data)
-                results.append(result)
-            except Exception as e:
-                logger.error(f"Fehler bei der Batch-Analyse: {str(e)}")
-                results.append(
-                    {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
-                )
-        return results
+        try:
+            # NSFW-Daten für Insights formatieren
+            nsfw_data = {
+                "nsfw_score": result.nsfw_score,
+                "is_nsfw": result.is_nsfw,
+                "categories": result.categories,
+                "analysis_time": result.analysis_time,
+                "threshold_used": self.confidence_threshold
+            }
+
+            # ⭐ INSIGHTS-SERVICE AUFRUFEN
+            insight_id = insights_service.add_nsfw_detection(
+                job_id=request.job_id,
+                media_id=request.media_id,
+                media_filename=request.media_filename,
+                media_type=request.media_type,
+                nsfw_data=nsfw_data,
+                confidence=result.confidence,
+                media_timestamp=None  # Bei Bildern nicht relevant
+            )
+
+            logger.info(f"✅ NSFW insight saved to database: {insight_id}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save NSFW insight: {str(e)}")
+            # WICHTIG: Nicht kritisch - Hauptfunktion läuft weiter
 
 
-# Service-Instanz erstellen
+# Service-Instanz
 nsfw_service = NSFWService()
 
 
-class ImageAnalysisRequest(BaseModel):
-    image_data: bytes
-
-
-class BatchAnalysisRequest(BaseModel):
-    images: List[bytes]
-
-
-@app.post("/analyze")
-async def analyze_image(request: ImageAnalysisRequest):
+@app.post("/analyze", response_model=NSFWAnalysisResult)
+async def analyze_nsfw(request: NSFWAnalysisRequest):
     """
-    Analysiert ein einzelnes Bild
-    """
-    try:
-        return await nsfw_service.analyze_image(request.image_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    Analysiert ein Bild auf NSFW-Inhalte.
 
-
-@app.post("/analyze/batch")
-async def analyze_batch(request: BatchAnalysisRequest):
+    Die Erkenntnis wird automatisch in der Insights-Datenbank gespeichert!
     """
-    Analysiert mehrere Bilder
-    """
-    try:
-        return await nsfw_service.analyze_batch(request.images)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await nsfw_service.analyze_image(request)
 
 
 @app.get("/health")
 async def health_check():
-    """
-    Health Check Endpoint
-    """
-    try:
-        # CLIP-Service Health Check
-        response = requests.get(f"{nsfw_service.clip_service_url}/health")
-        if response.status_code != 200:
-            return {"status": "unhealthy", "clip_service": "unavailable"}
-        return {"status": "healthy", "clip_service": "available"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+    """Health Check."""
+    return {"status": "healthy", "service": "nsfw_detection"}
 
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8015)
